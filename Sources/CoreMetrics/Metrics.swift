@@ -120,10 +120,9 @@ public enum Metrics {
 
 private final class CachingMetricsHandler: MetricsHandler {
     private let wrapped: MetricsHandler
-    private let lock = Lock() // TODO: consider lock per cache?
-    private var counters = [String: Counter]()
-    private var Recorders = [String: Recorder]()
-    private var timers = [String: Timer]()
+    private var counters = Cache<Counter>()
+    private var recorders = Cache<Recorder>()
+    private var timers = Cache<Timer>()
 
     public static func wrap(_ handler: MetricsHandler) -> CachingMetricsHandler {
         if let caching = handler as? CachingMetricsHandler {
@@ -138,35 +137,43 @@ private final class CachingMetricsHandler: MetricsHandler {
     }
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
-        return self.make(label: label, dimensions: dimensions, cache: &self.counters, maker: self.wrapped.makeCounter)
+        return counters.getOrSet(label: label, dimensions:dimensions, maker: self.wrapped.makeCounter)
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
         let maker = { (label: String, dimensions: [(String, String)]) -> Recorder in
             self.wrapped.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
-        return self.make(label: label, dimensions: dimensions, cache: &self.Recorders, maker: maker)
+        return recorders.getOrSet(label: label, dimensions:dimensions, maker: maker)
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
-        return self.make(label: label, dimensions: dimensions, cache: &self.timers, maker: self.wrapped.makeTimer)
+        return timers.getOrSet(label: label, dimensions:dimensions, maker: self.wrapped.makeTimer)
     }
 
-    private func make<Item>(label: String, dimensions: [(String, String)], cache: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
-        let fqn = self.fqn(label: label, dimensions: dimensions)
-        return self.lock.withLock {
-            if let item = cache[fqn] {
-                return item
-            } else {
-                let item = maker(label, dimensions)
-                cache[fqn] = item
-                return item
+    private class Cache<T> {
+        private var items = [String: T]()
+        // using a mutex is never ideal, we will need to explore optimization options
+        // once we see how real life workloads behaves
+        // for example, for short opetations like hashmap lookup mutexes are worst than r/w locks in 99% reads, but better than them in mixed r/w mode
+        private let lock = Lock()
+        
+        func getOrSet(label: String, dimensions: [(String, String)], maker: (String, [(String, String)]) -> T) -> T {
+            let key = self.fqn(label: label, dimensions: dimensions)            
+            return self.lock.withLock {
+                if let item = items[key] {
+                    return item
+                } else {
+                    let item = maker(label, dimensions)
+                    items[key] = item
+                    return item
+                }
             }
         }
-    }
-
-    private func fqn(label: String, dimensions: [(String, String)]) -> String {
-        return [[label], dimensions.compactMap { $0.1 }].flatMap { $0 }.joined(separator: ".")
+        
+        private func fqn(label: String, dimensions: [(String, String)]) -> String {
+            return [[label], dimensions.compactMap { "\($0.0).\($0.1)" }].flatMap { $0 }.joined(separator: ".")
+        }
     }
 }
 

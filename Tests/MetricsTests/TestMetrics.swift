@@ -4,40 +4,31 @@ import Foundation
 
 internal class TestMetrics: MetricsHandler {
     private let lock = NSLock() // TODO: consider lock per cache?
-    var counters = [String: Counter]()
-    var recorders = [String: Recorder]()
-    var timers = [String: Timer]()
+    var counters = [Counter]()
+    var recorders = [Recorder]()
+    var timers = [Timer]()
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
-        return self.make(label: label, dimensions: dimensions, cache: &self.counters, maker: TestCounter.init)
+        return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
         let maker = { (label: String, dimensions: [(String, String)]) -> Recorder in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
-        return self.make(label: label, dimensions: dimensions, cache: &self.recorders, maker: maker)
+        return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
-        return self.make(label: label, dimensions: dimensions, cache: &self.timers, maker: TestTimer.init)
+        return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
     }
 
-    private func make<Item>(label: String, dimensions: [(String, String)], cache: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
-        let fqn = self.fqn(label: label, dimensions: dimensions)
+    private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [Item], maker: (String, [(String, String)]) -> Item) -> Item {
+        let item = maker(label, dimensions)
         return self.lock.withLock {
-            if let item = cache[fqn] {
-                return item
-            } else {
-                let item = maker(label, dimensions)
-                cache[fqn] = item
-                return item
-            }
+            registry.append(item)
+            return item
         }
-    }
-
-    private func fqn(label: String, dimensions: [(String, String)]) -> String {
-        return [[label], dimensions.compactMap { $0.1 }].flatMap { $0 }.joined(separator: ".")
     }
 }
 
