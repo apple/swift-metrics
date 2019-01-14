@@ -38,10 +38,10 @@ gauge.record(100)
 `Timer`: A timer collects observations within a time window (usually things like request durations) and provides aggregated information about the data sample, for example min, max and various quantiles. It is similar to a `Recorder` but specialized for values that represent durations.
 
 ```swift
-counter.recordMilliseconds(100)
+timer.recordMilliseconds(100)
 ```
 
-How would i used  `counter`, `recorder`, `gauge` and `timer` in my application or library? Following is a contrived example for request processing code that emits metrics about total request count per url, request size and duration and response size:
+How would you use  `counter`, `recorder`, `gauge` and `timer` in you application or library? Here is a contrived example for request processing code that emits metrics for: total request count per url, request size and duration and response size:
 
 ```swift
     func processRequest(request: Request) -> Response {
@@ -66,7 +66,7 @@ To ensure performance, `Metrics.makeXxx` will returned a cached copy of the metr
 
 ### Implementing a metrics backend (eg prometheus client library)
 
-As seen before, `Metrics.makeXxx` is what gives us a metric object but that raises the question what kind of metrics backend will I actually get when calling `Metrics.makeXxx`? The answer: It's configurable _per application_. The application, likely in the `main` function sets up the metrics backend it wishes the whole application to use, libraries should never change the metrics implementation as that is something owned by the application. Configuring the metrics backend is also straightforward:
+As seen above, the general function `Metrics.makeXxx` provides a metric object. This raises the question of what metrics backend I will actually get when calling `Metrics.makeXxx`? The answer is that it's configurable _per application_. The application sets up the metrics backend it wishes the whole application to use. Libraries should never change the metrics implementation as that is something owned by the application. Configuring the metrics backend is straightforward:
 
 ```swift
     Metrics.bootstrap(MyFavouriteMetricsImplementation.init)
@@ -84,7 +84,7 @@ public protocol MetricsHandler {
 }
 ```
 
-Here is an example for such implementation
+Here is an example in-memory implementation:
 
 ```swift
 class SimpleMetricsLibrary: MetricsHandler {
