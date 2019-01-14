@@ -219,7 +219,7 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(counter3.label, name3, "expected label to match")
         XCTAssertNotEqual(counter3, counter, "expected caching to work with dimensions")
     }
-    
+
     func testCachingWithDimensions() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -246,14 +246,14 @@ class MetricsTests: XCTestCase {
         XCTAssertNotEqual(counter3, counter, "expected caching to work with dimensions")
         // different dimensions "key"
         let name4 = name
-        let dimensions4 = dimensions.map{ ($0.0 + "-test" , $0.1) }
+        let dimensions4 = dimensions.map { ($0.0 + "-test", $0.1) }
         let counter4 = Metrics.global.makeCounter(label: name4, dimensions: dimensions4) as! TestCounter
         XCTAssertEqual(counter4.label, name4, "expected label to match")
         XCTAssertEqual(counter4.dimensions.description, dimensions4.description, "expected dimensions to match")
         XCTAssertNotEqual(counter4, counter, "expected caching to work with dimensions")
         // different dimensions "value"
         let name5 = name
-        let dimensions5 = dimensions.map{ ($0.0, $0.1 + "-test") }
+        let dimensions5 = dimensions.map { ($0.0, $0.1 + "-test") }
         let counter5 = Metrics.global.makeCounter(label: name5, dimensions: dimensions5) as! TestCounter
         XCTAssertEqual(counter5.label, name5, "expected label to match")
         XCTAssertEqual(counter5.dimensions.description, dimensions5.description, "expected dimensions to match")

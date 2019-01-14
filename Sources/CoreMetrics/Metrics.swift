@@ -137,18 +137,18 @@ private final class CachingMetricsHandler: MetricsHandler {
     }
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
-        return counters.getOrSet(label: label, dimensions:dimensions, maker: self.wrapped.makeCounter)
+        return self.counters.getOrSet(label: label, dimensions: dimensions, maker: self.wrapped.makeCounter)
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
         let maker = { (label: String, dimensions: [(String, String)]) -> Recorder in
             self.wrapped.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
-        return recorders.getOrSet(label: label, dimensions:dimensions, maker: maker)
+        return self.recorders.getOrSet(label: label, dimensions: dimensions, maker: maker)
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
-        return timers.getOrSet(label: label, dimensions:dimensions, maker: self.wrapped.makeTimer)
+        return self.timers.getOrSet(label: label, dimensions: dimensions, maker: self.wrapped.makeTimer)
     }
 
     private class Cache<T> {
@@ -157,9 +157,9 @@ private final class CachingMetricsHandler: MetricsHandler {
         // once we see how real life workloads behaves
         // for example, for short opetations like hashmap lookup mutexes are worst than r/w locks in 99% reads, but better than them in mixed r/w mode
         private let lock = Lock()
-        
+
         func getOrSet(label: String, dimensions: [(String, String)], maker: (String, [(String, String)]) -> T) -> T {
-            let key = self.fqn(label: label, dimensions: dimensions)            
+            let key = self.fqn(label: label, dimensions: dimensions)
             return self.lock.withLock {
                 if let item = items[key] {
                     return item
@@ -170,7 +170,7 @@ private final class CachingMetricsHandler: MetricsHandler {
                 }
             }
         }
-        
+
         private func fqn(label: String, dimensions: [(String, String)]) -> String {
             return [[label], dimensions.compactMap { "\($0.0).\($0.1)" }].flatMap { $0 }.joined(separator: ".")
         }
