@@ -118,6 +118,21 @@ public enum Metrics {
     }
 }
 
+public extension Metrics {
+    @inlinable
+    func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
+        return Metrics.global.makeCounter(label: label, dimensions: dimensions)
+    }
+    @inlinable
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
+        return Metrics.global.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+    }
+    @inlinable
+    func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
+        return Metrics.global.makeTimer(label: label, dimensions: dimensions)
+    }
+}
+
 private final class CachingMetricsHandler: MetricsHandler {
     private let wrapped: MetricsHandler
     private var counters = Cache<Counter>()
