@@ -1,3 +1,7 @@
+//
+// THIS IS NOT PART OF THE PITCH, JUST AN EXAMPLE
+//
+
 // copied from https://github.com/evgenyneu/SigmaSwiftStatistics/blob/master/SigmaSwiftStatistics/Quantiles.swift
 
 //
