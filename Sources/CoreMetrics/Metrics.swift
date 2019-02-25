@@ -122,8 +122,7 @@ public enum Metrics {
 
     public static func bootstrap(_ handler: MetricsHandler) {
         self.lock.withWriterLockVoid {
-            // using a wrapper to avoid redundant and potentially expensive factory calls
-            self._handler = CachingMetricsHandler.wrap(handler)
+            self._handler = handler
         }
     }
 
@@ -137,72 +136,15 @@ public extension Metrics {
     func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
         return Metrics.global.makeCounter(label: label, dimensions: dimensions)
     }
+
     @inlinable
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
         return Metrics.global.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
     }
+
     @inlinable
     func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
         return Metrics.global.makeTimer(label: label, dimensions: dimensions)
-    }
-}
-
-private final class CachingMetricsHandler: MetricsHandler {
-    private let wrapped: MetricsHandler
-    private var counters = Cache<Counter>()
-    private var recorders = Cache<Recorder>()
-    private var timers = Cache<Timer>()
-
-    public static func wrap(_ handler: MetricsHandler) -> CachingMetricsHandler {
-        if let caching = handler as? CachingMetricsHandler {
-            return caching
-        } else {
-            return CachingMetricsHandler(handler)
-        }
-    }
-
-    private init(_ wrapped: MetricsHandler) {
-        self.wrapped = wrapped
-    }
-
-    public func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
-        return self.counters.getOrSet(label: label, dimensions: dimensions, maker: self.wrapped.makeCounter)
-    }
-
-    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
-        let maker = { (label: String, dimensions: [(String, String)]) -> Recorder in
-            self.wrapped.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
-        }
-        return self.recorders.getOrSet(label: label, dimensions: dimensions, maker: maker)
-    }
-
-    public func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
-        return self.timers.getOrSet(label: label, dimensions: dimensions, maker: self.wrapped.makeTimer)
-    }
-
-    private class Cache<T> {
-        private var items = [String: T]()
-        // using a mutex is never ideal, we will need to explore optimization options
-        // once we see how real life workloads behaves
-        // for example, for short opetations like hashmap lookup mutexes are worst than r/w locks in 99% reads, but better than them in mixed r/w mode
-        private let lock = Lock()
-
-        func getOrSet(label: String, dimensions: [(String, String)], maker: (String, [(String, String)]) -> T) -> T {
-            let key = self.fqn(label: label, dimensions: dimensions)
-            return self.lock.withLock {
-                if let item = items[key] {
-                    return item
-                } else {
-                    let item = maker(label, dimensions)
-                    items[key] = item
-                    return item
-                }
-            }
-        }
-
-        private func fqn(label: String, dimensions: [(String, String)]) -> String {
-            return [[label], dimensions.compactMap { "\($0.0).\($0.1)" }].flatMap { $0 }.joined(separator: ".")
-        }
     }
 }
 

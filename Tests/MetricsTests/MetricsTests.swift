@@ -26,7 +26,7 @@ class MetricsExtensionsTests: XCTestCase {
         Metrics.global.timed(label: name) {
             Thread.sleep(forTimeInterval: delay)
         }
-        let timer = Metrics.global.makeTimer(label: name) as! TestTimer
+        let timer = metrics.timers[name] as! TestTimer
         XCTAssertEqual(1, timer.values.count, "expected number of entries to match")
         XCTAssertGreaterThan(timer.values[0].1, Int64(delay * 1_000_000_000), "expected delay to match")
     }

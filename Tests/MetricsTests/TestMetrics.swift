@@ -18,9 +18,9 @@ import Foundation
 
 internal class TestMetrics: MetricsHandler {
     private let lock = NSLock() // TODO: consider lock per cache?
-    var counters = [Counter]()
-    var recorders = [Recorder]()
-    var timers = [Timer]()
+    var counters = [String: Counter]()
+    var recorders = [String: Recorder]()
+    var timers = [String: Timer]()
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
         return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
@@ -37,10 +37,10 @@ internal class TestMetrics: MetricsHandler {
         return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
     }
 
-    private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [Item], maker: (String, [(String, String)]) -> Item) -> Item {
+    private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
         let item = maker(label, dimensions)
         return self.lock.withLock {
-            registry.append(item)
+            registry[label] = item
             return item
         }
     }
