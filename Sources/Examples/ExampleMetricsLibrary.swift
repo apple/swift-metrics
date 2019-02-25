@@ -17,7 +17,7 @@
 
 import Metrics
 
-class ExampleMetricsLibrary: MetricsHandler {
+class ExampleMetricsLibrary: MetricsFactory {
     private let config: Config
     private let lock = NSLock()
     var counters = [ExampleCounter]()
@@ -29,16 +29,16 @@ class ExampleMetricsLibrary: MetricsHandler {
         self.config = config
     }
 
-    func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
+    func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return self.register(label: label, dimensions: dimensions, registry: &self.counters, maker: ExampleCounter.init)
     }
 
-    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         let options = aggregate ? self.config.recorder.aggregationOptions : nil
         return self.makeRecorder(label: label, dimensions: dimensions, options: options)
     }
 
-    func makeRecorder(label: String, dimensions: [(String, String)], options: [AggregationOption]?) -> Recorder {
+    func makeRecorder(label: String, dimensions: [(String, String)], options: [AggregationOption]?) -> RecorderHandler {
         guard let options = options else {
             return self.register(label: label, dimensions: dimensions, registry: &self.gauges, maker: ExampleGauge.init)
         }
@@ -48,11 +48,11 @@ class ExampleMetricsLibrary: MetricsHandler {
         return self.register(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
     }
 
-    func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
+    func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return self.makeTimer(label: label, dimensions: dimensions, options: self.config.timer.aggregationOptions)
     }
 
-    func makeTimer(label: String, dimensions: [(String, String)], options: [AggregationOption]) -> Timer {
+    func makeTimer(label: String, dimensions: [(String, String)], options: [AggregationOption]) -> TimerHandler {
         let maker = { (label: String, dimensions: [(String, String)]) -> ExampleTimer in
             ExampleTimer(label: label, dimensions: dimensions, options: options)
         }
@@ -99,7 +99,7 @@ class ExampleMetricsLibrary: MetricsHandler {
     }
 }
 
-class ExampleCounter: Counter, CustomStringConvertible {
+class ExampleCounter: CounterHandler, CustomStringConvertible {
     let label: String
     let dimensions: [(String, String)]
     init(label: String, dimensions: [(String, String)]) {
@@ -120,7 +120,7 @@ class ExampleCounter: Counter, CustomStringConvertible {
     }
 }
 
-class ExampleRecorder: Recorder, CustomStringConvertible {
+class ExampleRecorder: RecorderHandler, CustomStringConvertible {
     let label: String
     let dimensions: [(String, String)]
     let options: [AggregationOption]
@@ -226,7 +226,7 @@ class ExampleRecorder: Recorder, CustomStringConvertible {
     }
 }
 
-class ExampleGauge: Recorder, CustomStringConvertible {
+class ExampleGauge: RecorderHandler, CustomStringConvertible {
     let label: String
     let dimensions: [(String, String)]
     init(label: String, dimensions: [(String, String)]) {
@@ -250,7 +250,7 @@ class ExampleGauge: Recorder, CustomStringConvertible {
     }
 }
 
-class ExampleTimer: ExampleRecorder, Timer {
+class ExampleTimer: ExampleRecorder, TimerHandler {
     func recordNanoseconds(_ duration: Int64) {
         super.record(duration)
     }

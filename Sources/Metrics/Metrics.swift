@@ -1,11 +1,12 @@
 @_exported import CoreMetrics
-@_exported import protocol CoreMetrics.Timer
+@_exported import class CoreMetrics.Timer
 @_exported import Foundation
 
-public extension MetricsHandler {
+// Convenience for measuring duration of a closure
+public extension Timer {
     @inlinable
-    func timed<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
-        let timer = self.makeTimer(label: label, dimensions: dimensions)
+    public static func measure<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
+        let timer = Timer(label: label, dimensions: dimensions)
         let start = Date()
         defer {
             timer.record(Date().timeIntervalSince(start))
@@ -14,14 +15,15 @@ public extension MetricsHandler {
     }
 }
 
+// Convenience for using Foundation and Dispatch
 public extension Timer {
     @inlinable
-    func record(_ duration: TimeInterval) {
+    public func record(_ duration: TimeInterval) {
         self.recordSeconds(duration)
     }
 
     @inlinable
-    func record(_ duration: DispatchTimeInterval) {
+    public func record(_ duration: DispatchTimeInterval) {
         switch duration {
         case .nanoseconds(let value):
             self.recordNanoseconds(Int64(value))

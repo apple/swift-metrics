@@ -17,23 +17,23 @@
 
 import Metrics
 
-class SimpleMetricsLibrary: MetricsHandler {
+class SimpleMetricsLibrary: MetricsFactory {
     init() {}
 
-    func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
+    func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return ExampleCounter(label, dimensions)
     }
 
-    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
-        let maker: (String, [(String, String)]) -> Recorder = aggregate ? ExampleRecorder.init : ExampleGauge.init
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+        let maker: (String, [(String, String)]) -> RecorderHandler = aggregate ? ExampleRecorder.init : ExampleGauge.init
         return maker(label, dimensions)
     }
 
-    func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
+    func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return ExampleTimer(label, dimensions)
     }
 
-    private class ExampleCounter: Counter {
+    private class ExampleCounter: CounterHandler {
         init(_: String, _: [(String, String)]) {}
 
         let lock = NSLock()
@@ -45,7 +45,7 @@ class SimpleMetricsLibrary: MetricsHandler {
         }
     }
 
-    private class ExampleRecorder: Recorder {
+    private class ExampleRecorder: RecorderHandler {
         init(_: String, _: [(String, String)]) {}
 
         private let lock = NSLock()
@@ -88,7 +88,7 @@ class SimpleMetricsLibrary: MetricsHandler {
         }
     }
 
-    private class ExampleGauge: Recorder {
+    private class ExampleGauge: RecorderHandler {
         init(_: String, _: [(String, String)]) {}
 
         let lock = NSLock()
@@ -103,7 +103,7 @@ class SimpleMetricsLibrary: MetricsHandler {
         }
     }
 
-    private class ExampleTimer: ExampleRecorder, Timer {
+    private class ExampleTimer: ExampleRecorder, TimerHandler {
         func recordNanoseconds(_ duration: Int64) {
             super.record(duration)
         }

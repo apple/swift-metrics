@@ -13,27 +13,27 @@
 //===----------------------------------------------------------------------===//
 
 @testable import CoreMetrics
-@testable import protocol CoreMetrics.Timer
+@testable import class CoreMetrics.Timer
 import Foundation
 
-internal class TestMetrics: MetricsHandler {
+internal class TestMetrics: MetricsFactory {
     private let lock = NSLock() // TODO: consider lock per cache?
-    var counters = [String: Counter]()
-    var recorders = [String: Recorder]()
-    var timers = [String: Timer]()
+    var counters = [String: CounterHandler]()
+    var recorders = [String: RecorderHandler]()
+    var timers = [String: TimerHandler]()
 
-    public func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
+    public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
     }
 
-    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
-        let maker = { (label: String, dimensions: [(String, String)]) -> Recorder in
+    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+        let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
         return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
     }
 
-    public func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
+    public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
     }
 
@@ -46,7 +46,7 @@ internal class TestMetrics: MetricsHandler {
     }
 }
 
-internal class TestCounter: Counter, Equatable {
+internal class TestCounter: CounterHandler, Equatable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
@@ -72,7 +72,7 @@ internal class TestCounter: Counter, Equatable {
     }
 }
 
-internal class TestRecorder: Recorder, Equatable {
+internal class TestRecorder: RecorderHandler, Equatable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
@@ -105,7 +105,7 @@ internal class TestRecorder: Recorder, Equatable {
     }
 }
 
-internal class TestTimer: Timer, Equatable {
+internal class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
     let dimensions: [(String, String)]

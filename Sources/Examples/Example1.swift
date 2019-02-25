@@ -21,7 +21,7 @@ enum Example1 {
     static func main() {
         // bootstrap with our example metrics library
         let metrics = ExampleMetricsLibrary()
-        Metrics.bootstrap(metrics)
+        MetricsSystem.bootstrap(metrics)
 
         let server = Server()
         let client = Client(server: server)
@@ -38,7 +38,7 @@ enum Example1 {
     }
 
     class Client {
-        private let activeRequestsGauge = Metrics.global.makeGauge(label: "Client::ActiveRequests")
+        private let activeRequestsGauge = Gauge(label: "Client::ActiveRequests")
         private let server: Server
         init(server: Server) {
             self.server = server
@@ -46,9 +46,9 @@ enum Example1 {
 
         func run(iterations: Int) {
             let group = DispatchGroup()
-            let requestsCounter = Metrics.global.makeCounter(label: "Client::TotalRequests")
-            let requestTimer = Metrics.global.makeTimer(label: "Client::doSomethig")
-            let resultRecorder = Metrics.global.makeRecorder(label: "Client::doSomethig::result")
+            let requestsCounter = Counter(label: "Client::TotalRequests")
+            let requestTimer = Timer(label: "Client::doSomethig")
+            let resultRecorder = Recorder(label: "Client::doSomethig::result")
             for _ in 0 ... iterations {
                 group.enter()
                 let start = Date()
@@ -78,10 +78,10 @@ enum Example1 {
 
     class Server {
         let library = RandomLibrary()
-        let requestsCounter = Metrics.global.makeCounter(label: "Server::TotalRequests")
+        let requestsCounter = Counter(label: "Server::TotalRequests")
 
         func doSomethig(callback: @escaping (Int64) -> Void) {
-            let timer = Metrics.global.makeTimer(label: "Server::doSomethig")
+            let timer = Timer(label: "Server::doSomethig")
             let start = Date()
             requestsCounter.increment()
             DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(Int.random(in: 5 ... 500))) {
