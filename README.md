@@ -29,7 +29,7 @@ counter.increment(100)
 recorder.record(100)
 ```
 
-`Gauges`: A Gauge is a metric that represents a single numerical value that can arbitrarily go up and down. Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
+`Gauge`: A Gauge is a metric that represents a single numerical value that can arbitrarily go up and down. Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
 
 ```swift
 gauge.record(100)
@@ -45,10 +45,10 @@ How would you use  `counter`, `recorder`, `gauge` and `timer` in you application
 
 ```swift
     func processRequest(request: Request) -> Response {
-      let requestCounter = Metrics.makeCounter("request.count", ["url": request.url])
-      let requestTimer = Metrics.makeTimer("request.duration", ["url": request.url])
-      let requestSizeRecorder = Metrics.makeRecorder("request.size", ["url": request.url])
-      let responseSizeRecorder = Metrics.makeRecorder("response.size", ["url": request.url])
+      let requestCounter = Counter("request.count", ["url": request.url])
+      let requestTimer = Timer("request.duration", ["url": request.url])
+      let requestSizeRecorder = Recorder("request.size", ["url": request.url])
+      let responseSizeRecorder = Recorder("response.size", ["url": request.url])
 
       requestCounter.increment()
       requestSizeRecorder.record(request.size)
@@ -60,50 +60,75 @@ How would you use  `counter`, `recorder`, `gauge` and `timer` in you application
     }
 ```
 
-To ensure performance, `Metrics.makeXxx` can return a cached copy of the metric object so can be called on the hot path.
-
 ## Detailed design
 
 ### Implementing a metrics backend (eg prometheus client library)
 
-As seen above, the general function `Metrics.makeXxx` provides a metric object. This raises the question of what metrics backend I will actually get when calling `Metrics.makeXxx`? The answer is that it's configurable _per application_. The application sets up the metrics backend it wishes the whole application to use. Libraries should never change the metrics implementation as that is something owned by the application. Configuring the metrics backend is straightforward:
+As seen above, the constructors `Counter`, `Timer`, `Recorder` and `Gauge` provides a metric object. This raises the question of what metrics backend I will actually get when calling these constructors? The answer is that it's configurable _per application_. The application sets up the metrics backend it wishes the whole application to use. Libraries should never change the metrics implementation as that is something owned by the application. Configuring the metrics backend is straightforward:
 
 ```swift
-    Metrics.bootstrap(MyFavouriteMetricsImplementation.init)
+    MetricsSystem.bootstrap(MyFavouriteMetricsImplementation.init)
 ```
 
-This instructs the `Metrics` system to install `MyFavouriteMetricsImplementation` as the metrics backend (`MetricsHandler`) to use. This should only be done once at the beginning of the program.  
+This instructs the `MetricsSystem` to install `MyFavouriteMetricsImplementation` as the metrics backend (`MetricsFactory`) to use. This should only be done once at the beginning of the program.  
 
-Given the above, an implementation of a metric backend needs to conform to `protocol MetricsHandler`:
+Given the above, an implementation of a metric backend needs to conform to `protocol MetricsFactory`:
 
 ```swift
-public protocol MetricsHandler {
-    func makeCounter(label: String, dimensions: [(String, String)]) -> Counter
-    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder
-    func makeTimer(label: String, dimensions: [(String, String)]) -> Timer
+public protocol MetricsFactory {
+    func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
+    func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
 }
 ```
 
-Here is an example in-memory implementation:
+The `MetricsFactory` is responsible for instantiating the concrete metrics classes that capture the metrics and perform aggregation and calculation of various quantiles as needed.
+
+**Counter**
 
 ```swift
-class SimpleMetricsLibrary: MetricsHandler {
+public protocol CounterHandler: AnyObject {
+    func increment<DataType: BinaryInteger>(_ value: DataType)
+}
+```
+
+**Timer**
+
+```swift
+public protocol TimerHandler: AnyObject {
+    func recordNanoseconds(_ duration: Int64)
+}
+```
+
+**Recorder**
+
+```swift
+public protocol RecorderHandler: AnyObject {
+    func record<DataType: BinaryInteger>(_ value: DataType)
+    func record<DataType: BinaryFloatingPoint>(_ value: DataType)
+}
+```
+
+Here is a full example of an in-memory implementation:
+
+```swift
+class SimpleMetricsLibrary: MetricsFactory {
     init() {}
 
-    func makeCounter(label: String, dimensions: [(String, String)]) -> Counter {
+    func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return ExampleCounter(label, dimensions)
     }
 
-    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> Recorder {
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         let maker:(String,  [(String, String)]) -> Recorder = aggregate ? ExampleRecorder.init : ExampleGauge.init
         return maker(label, dimensions)
     }
 
-    func makeTimer(label: String, dimensions: [(String, String)]) -> Timer {
+    func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return ExampleTimer(label, dimensions)
     }
 
-    private class ExampleCounter: Counter {
+    private class ExampleCounter: CounterHandler {
         init(_: String, _: [(String, String)]) {}
 
         let lock = NSLock()
@@ -115,7 +140,7 @@ class SimpleMetricsLibrary: MetricsHandler {
         }
     }
 
-    private class ExampleRecorder: Recorder {
+    private class ExampleRecorder: RecorderHandler {
         init(_: String, _: [(String, String)]) {}
 
         private let lock = NSLock()
@@ -158,7 +183,7 @@ class SimpleMetricsLibrary: MetricsHandler {
         }
     }
 
-    private class ExampleGauge: Recorder {
+    private class ExampleGauge: RecorderHandler {
         init(_: String, _: [(String, String)]) {}
 
         let lock = NSLock()
@@ -173,20 +198,13 @@ class SimpleMetricsLibrary: MetricsHandler {
         }
     }
 
-    private class ExampleTimer: ExampleRecorder, Timer {
+    private class ExampleTimer: ExampleRecorder, TimerHandler {
         func recordNanoseconds(_ duration: Int64) {
             super.record(duration)
         }
     }
 }
 ```
-
-which is installed using
-
-```swift
-    Metrics.bootstrap(SimpleMetricsLibrary.init)
-```
-
 
 ## State
 
