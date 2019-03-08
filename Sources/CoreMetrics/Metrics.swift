@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// This is the Counter protocol a metrics library implements
+/// This is the Counter protocol a metrics library implements. It must have reference semantics
 public protocol CounterHandler: AnyObject {
     func increment<DataType: BinaryInteger>(_ value: DataType)
 }
 
-// This is the user facing Counter API. It must have reference semantics, and its behviour depend ons the `CounterHandler` implementation
+// This is the user facing Counter API. Its behavior depends on the `CounterHandler` implementation
 public class Counter: CounterHandler {
     @usableFromInline
     var handler: CounterHandler
@@ -50,13 +50,13 @@ public extension Counter {
     }
 }
 
-/// This is the Recorder protocol a metrics library implements
+/// This is the Recorder protocol a metrics library implements. It must have reference semantics
 public protocol RecorderHandler: AnyObject {
     func record<DataType: BinaryInteger>(_ value: DataType)
     func record<DataType: BinaryFloatingPoint>(_ value: DataType)
 }
 
-// This is the user facing Recorder API. It must have reference semantics, and its behviour depend ons the `RecorderHandler` implementation
+// This is the user facing Recorder API. Its behavior depends on the `RecorderHandler` implementation
 public class Recorder: RecorderHandler {
     @usableFromInline
     var handler: RecorderHandler
@@ -98,12 +98,12 @@ public class Gauge: Recorder {
     }
 }
 
-// This is the Timer protocol a metrics library implements
+// This is the Timer protocol a metrics library implements. It must have reference semantics
 public protocol TimerHandler: AnyObject {
     func recordNanoseconds(_ duration: Int64)
 }
 
-// This is the user facing Timer API. It must have reference semantics, and its behviour depend ons the `RecorderHandler` implementation
+// This is the user facing Timer API. Its behavior depends on the `RecorderHandler` implementation
 public class Timer: TimerHandler {
     @usableFromInline
     var handler: TimerHandler
@@ -167,7 +167,7 @@ public protocol MetricsFactory {
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
 }
 
-// This is the metrics system itself, it's mostly used set the type of the `MetricsFactory` implementation.
+// This is the metrics system itself, it's mostly used set the type of the `MetricsFactory` implementation
 public enum MetricsSystem {
     fileprivate static let lock = ReadWriteLock()
     fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
