@@ -189,7 +189,7 @@ public enum MetricsSystem {
         }
     }
 
-    internal static var factory: MetricsFactory {
+    public static var factory: MetricsFactory {
         return self.lock.withReaderLock { self._factory }
     }
 }
