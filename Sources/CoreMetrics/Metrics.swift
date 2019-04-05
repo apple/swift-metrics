@@ -14,7 +14,7 @@
 
 /// This is the Counter protocol a metrics library implements. It must have reference semantics
 public protocol CounterHandler: AnyObject {
-    func increment<DataType: BinaryInteger>(_ value: DataType)
+    func increment(_ value: Int64)
     func reset()
 }
 
@@ -35,7 +35,7 @@ public class Counter {
 
     @inlinable
     public func increment<DataType: BinaryInteger>(_ value: DataType) {
-        self.handler.increment(value)
+        self.handler.increment(Int64(value))
     }
 
     @inlinable
@@ -58,8 +58,8 @@ public extension Counter {
 
 /// This is the Recorder protocol a metrics library implements. It must have reference semantics
 public protocol RecorderHandler: AnyObject {
-    func record<DataType: BinaryInteger>(_ value: DataType)
-    func record<DataType: BinaryFloatingPoint>(_ value: DataType)
+    func record(_ value: Int64)
+    func record(_ value: Double)
 }
 
 // This is the user facing Recorder API. Its behavior depends on the `RecorderHandler` implementation
@@ -81,12 +81,12 @@ public class Recorder {
 
     @inlinable
     public func record<DataType: BinaryInteger>(_ value: DataType) {
-        self.handler.record(value)
+        self.handler.record(Int64(value))
     }
 
     @inlinable
     public func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-        self.handler.record(value)
+        self.handler.record(Double(value))
     }
 }
 
@@ -225,7 +225,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
             self.counters = factories.map { $0.makeCounter(label: label, dimensions: dimensions) }
         }
 
-        func increment<DataType: BinaryInteger>(_ value: DataType) {
+        func increment(_ value: Int64) {
             self.counters.forEach { $0.increment(value) }
         }
 
@@ -240,11 +240,11 @@ public final class MultiplexMetricsHandler: MetricsFactory {
             self.recorders = factories.map { $0.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate) }
         }
 
-        func record<DataType: BinaryInteger>(_ value: DataType) {
+        func record(_ value: Int64) {
             self.recorders.forEach { $0.record(value) }
         }
 
-        func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
+        func record(_ value: Double) {
             self.recorders.forEach { $0.record(value) }
         }
     }
@@ -278,9 +278,9 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderH
         return self
     }
 
-    public func increment<DataType: BinaryInteger>(_: DataType) {}
+    public func increment(_: Int64) {}
     public func reset() {}
-    public func record<DataType: BinaryInteger>(_: DataType) {}
-    public func record<DataType: BinaryFloatingPoint>(_: DataType) {}
+    public func record(_: Int64) {}
+    public func record(_: Double) {}
     public func recordNanoseconds(_: Int64) {}
 }

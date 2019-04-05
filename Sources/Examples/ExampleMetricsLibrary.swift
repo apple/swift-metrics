@@ -138,27 +138,25 @@ class ExampleRecorder: RecorderHandler, CustomStringConvertible {
 
     private let lock = NSLock()
     var values = [(Int64, Double)]()
-    func record<DataType: BinaryInteger>(_ value: DataType) {
+    func record(_ value: Int64) {
         self.record(Double(value))
     }
 
-    func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-        // this may loose precision, but good enough as an example
-        let v = Double(value)
+    func record(_ value: Double) {
         // TODO: sliding window
-        lock.withLock {
-            values.append((Date().nanoSince1970, v))
+        self.lock.withLock {
+            values.append((Date().nanoSince1970, value))
         }
-        options.forEach { option in
+        self.options.forEach { option in
             switch option {
             case .count:
                 self.count += 1
             case .sum:
-                self.sum += v
+                self.sum += value
             case .min:
-                if 0 == self.min || v < self.min { self.min = v }
+                self.min = Swift.min(self.min, value)
             case .max:
-                if 0 == self.max || v > self.max { self.max = v }
+                self.max = Swift.max(self.max, value)
             case .quantiles(let items):
                 self.computeQuantiles(items)
             }
@@ -224,7 +222,7 @@ class ExampleRecorder: RecorderHandler, CustomStringConvertible {
         self.lock.withLock {
             self._quantiels.removeAll()
             items.forEach { item in
-                if let result = Sigma.quantiles.method1(self.values.map { Double($0.1) }, probability: Double(item)) {
+                if let result = Sigma.quantiles.method1(self.values.map { $0.1 }, probability: Double(item)) {
                     self._quantiels[item] = result
                 }
             }
@@ -242,13 +240,12 @@ class ExampleGauge: RecorderHandler, CustomStringConvertible {
 
     let lock = NSLock()
     var _value: Double = 0
-    func record<DataType: BinaryInteger>(_ value: DataType) {
+    func record(_ value: Int64) {
         self.record(Double(value))
     }
 
-    func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-        // this may loose precision but good enough as an example
-        self.lock.withLock { _value = Double(value) }
+    func record(_ value: Double) {
+        self.lock.withLock { _value = value }
     }
 
     var description: String {

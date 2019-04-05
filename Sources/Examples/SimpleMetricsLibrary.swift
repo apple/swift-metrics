@@ -38,9 +38,9 @@ class SimpleMetricsLibrary: MetricsFactory {
 
         let lock = NSLock()
         var value: Int64 = 0
-        func increment<DataType: BinaryInteger>(_ value: DataType) {
+        func increment(_ value: Int64) {
             self.lock.withLock {
-                self.value += Int64(value)
+                self.value += value
             }
         }
 
@@ -56,20 +56,18 @@ class SimpleMetricsLibrary: MetricsFactory {
 
         private let lock = NSLock()
         var values = [(Int64, Double)]()
-        func record<DataType: BinaryInteger>(_ value: DataType) {
+        func record(_ value: Int64) {
             self.record(Double(value))
         }
 
-        func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-            // this may loose precision, but good enough as an example
-            let v = Double(value)
+        func record(_ value: Double) {
             // TODO: sliding window
-            lock.withLock {
-                values.append((Date().nanoSince1970, v))
+            self.lock.withLock {
+                values.append((Date().nanoSince1970, value))
                 self._count += 1
-                self._sum += v
-                self._min = Swift.min(self._min, v)
-                self._max = Swift.max(self._max, v)
+                self._sum += value
+                self._min = Swift.min(self._min, value)
+                self._max = Swift.max(self._max, value)
             }
         }
 
@@ -99,13 +97,12 @@ class SimpleMetricsLibrary: MetricsFactory {
 
         let lock = NSLock()
         var _value: Double = 0
-        func record<DataType: BinaryInteger>(_ value: DataType) {
+        func record(_ value: Int64) {
             self.record(Double(value))
         }
 
-        func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-            // this may loose precision but good enough as an example
-            self.lock.withLock { _value = Double(value) }
+        func record(_ value: Double) {
+            self.lock.withLock { _value = value }
         }
     }
 

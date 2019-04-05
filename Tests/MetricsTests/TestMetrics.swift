@@ -60,9 +60,9 @@ internal class TestCounter: CounterHandler, Equatable {
         self.dimensions = dimensions
     }
 
-    func increment<DataType: BinaryInteger>(_ value: DataType) {
+    func increment(_ value: Int64) {
         self.lock.withLock {
-            self.values.append((Date(), Int64(value)))
+            self.values.append((Date(), value))
         }
         print("adding \(value) to \(self.label)")
     }
@@ -71,6 +71,7 @@ internal class TestCounter: CounterHandler, Equatable {
         self.lock.withLock {
             self.values = []
         }
+        print("reseting \(self.label)")
     }
 
     public static func == (lhs: TestCounter, rhs: TestCounter) -> Bool {
@@ -94,11 +95,11 @@ internal class TestRecorder: RecorderHandler, Equatable {
         self.aggregate = aggregate
     }
 
-    func record<DataType: BinaryInteger>(_ value: DataType) {
+    func record(_ value: Int64) {
         self.record(Double(value))
     }
 
-    func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
+    func record(_ value: Double) {
         self.lock.withLock {
             // this may loose precision but good enough as an example
             values.append((Date(), Double(value)))

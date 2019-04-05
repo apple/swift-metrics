@@ -104,8 +104,8 @@ public protocol TimerHandler: AnyObject {
 
 ```swift
 public protocol RecorderHandler: AnyObject {
-    func record<DataType: BinaryInteger>(_ value: DataType)
-    func record<DataType: BinaryFloatingPoint>(_ value: DataType)
+    func record(_ value: Int64)
+    func record(_ value: Double)
 }
 ```
 
@@ -120,7 +120,7 @@ class SimpleMetricsLibrary: MetricsFactory {
     }
 
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-        let maker:(String,  [(String, String)]) -> Recorder = aggregate ? ExampleRecorder.init : ExampleGauge.init
+        let maker: (String, [(String, String)]) -> RecorderHandler = aggregate ? ExampleRecorder.init : ExampleGauge.init
         return maker(label, dimensions)
     }
 
@@ -133,9 +133,15 @@ class SimpleMetricsLibrary: MetricsFactory {
 
         let lock = NSLock()
         var value: Int64 = 0
-        func increment<DataType: BinaryInteger>(_ value: DataType) {
+        func increment(_ value: Int64) {
             self.lock.withLock {
-                self.value += Int64(value)
+                self.value += value
+            }
+        }
+
+        func reset() {
+            self.lock.withLock {
+                self.value = 0
             }
         }
     }
@@ -145,20 +151,18 @@ class SimpleMetricsLibrary: MetricsFactory {
 
         private let lock = NSLock()
         var values = [(Int64, Double)]()
-        func record<DataType: BinaryInteger>(_ value: DataType) {
+        func record(_ value: Int64) {
             self.record(Double(value))
         }
 
-        func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-            // this may loose precision, but good enough as an example
-            let v = Double(value)
+        func record(_ value: Double) {
             // TODO: sliding window
             lock.withLock {
-                values.append((Date().nanoSince1970, v))
+                values.append((Date().nanoSince1970, value))
                 self._count += 1
-                self._sum += v
-                if 0 == self._min || v < self._min { self._min = v }
-                if 0 == self._max || v > self._max { self._max = v }
+                self._sum += value
+                self._min = Swift.min(self._min, value)
+                self._max = Swift.max(self._max, value)
             }
         }
 
@@ -188,13 +192,12 @@ class SimpleMetricsLibrary: MetricsFactory {
 
         let lock = NSLock()
         var _value: Double = 0
-        func record<DataType: BinaryInteger>(_ value: DataType) {
+        func record(_ value: Int64) {
             self.record(Double(value))
         }
 
-        func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-            // this may loose precision but good enough as an example
-            self.lock.withLock { _value = Double(value) }
+        func record(_ value: Double) {
+            self.lock.withLock { _value = value }
         }
     }
 
