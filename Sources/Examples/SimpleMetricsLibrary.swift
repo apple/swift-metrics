@@ -43,6 +43,12 @@ class SimpleMetricsLibrary: MetricsFactory {
                 self.value += Int64(value)
             }
         }
+
+        func reset() {
+            self.lock.withLock {
+                self.value = 0
+            }
+        }
     }
 
     private class ExampleRecorder: RecorderHandler {
@@ -55,15 +61,15 @@ class SimpleMetricsLibrary: MetricsFactory {
         }
 
         func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-            // this may loose percision, but good enough as an example
+            // this may loose precision, but good enough as an example
             let v = Double(value)
             // TODO: sliding window
             lock.withLock {
                 values.append((Date().nanoSince1970, v))
                 self._count += 1
                 self._sum += v
-                if 0 == self._min || v < self._min { self._min = v }
-                if 0 == self._max || v > self._max { self._max = v }
+                self._min = Swift.min(self._min, v)
+                self._max = Swift.max(self._max, v)
             }
         }
 
@@ -98,7 +104,7 @@ class SimpleMetricsLibrary: MetricsFactory {
         }
 
         func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-            // this may loose percision but good enough as an example
+            // this may loose precision but good enough as an example
             self.lock.withLock { _value = Double(value) }
         }
     }

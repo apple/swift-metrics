@@ -67,6 +67,12 @@ internal class TestCounter: CounterHandler, Equatable {
         print("adding \(value) to \(self.label)")
     }
 
+    func reset() {
+        self.lock.withLock {
+            self.values = []
+        }
+    }
+
     public static func == (lhs: TestCounter, rhs: TestCounter) -> Bool {
         return lhs.id == rhs.id
     }
@@ -94,7 +100,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
 
     func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
         self.lock.withLock {
-            // this may loose percision but good enough as an example
+            // this may loose precision but good enough as an example
             values.append((Date(), Double(value)))
         }
         print("recoding \(value) in \(self.label)")

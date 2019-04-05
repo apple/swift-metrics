@@ -115,6 +115,12 @@ class ExampleCounter: CounterHandler, CustomStringConvertible {
         }
     }
 
+    func reset() {
+        self.lock.withLock {
+            self.value = 0
+        }
+    }
+
     var description: String {
         return "counter [label: \(self.label) dimensions:\(self.dimensions) values:\(self.value)]"
     }
@@ -137,7 +143,7 @@ class ExampleRecorder: RecorderHandler, CustomStringConvertible {
     }
 
     func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-        // this may loose percision, but good enough as an example
+        // this may loose precision, but good enough as an example
         let v = Double(value)
         // TODO: sliding window
         lock.withLock {
@@ -241,7 +247,7 @@ class ExampleGauge: RecorderHandler, CustomStringConvertible {
     }
 
     func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-        // this may loose percision but good enough as an example
+        // this may loose precision but good enough as an example
         self.lock.withLock { _value = Double(value) }
     }
 

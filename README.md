@@ -62,7 +62,7 @@ How would you use  `counter`, `recorder`, `gauge` and `timer` in you application
 
 ## Detailed design
 
-### Implementing a metrics backend (eg prometheus client library)
+### Implementing a metrics backend (e.g. prometheus client library)
 
 As seen above, the constructors `Counter`, `Timer`, `Recorder` and `Gauge` provides a metric object. This raises the question of what metrics backend I will actually get when calling these constructors? The answer is that it's configurable _per application_. The application sets up the metrics backend it wishes the whole application to use. Libraries should never change the metrics implementation as that is something owned by the application. Configuring the metrics backend is straightforward:
 

@@ -15,10 +15,11 @@
 /// This is the Counter protocol a metrics library implements. It must have reference semantics
 public protocol CounterHandler: AnyObject {
     func increment<DataType: BinaryInteger>(_ value: DataType)
+    func reset()
 }
 
 // This is the user facing Counter API. Its behavior depends on the `CounterHandler` implementation
-public class Counter: CounterHandler {
+public class Counter {
     @usableFromInline
     var handler: CounterHandler
     public let label: String
@@ -41,10 +42,15 @@ public class Counter: CounterHandler {
     public func increment() {
         self.increment(1)
     }
+
+    @inlinable
+    public func reset() {
+        self.handler.reset()
+    }
 }
 
 public extension Counter {
-    public convenience init(label: String, dimensions: [(String, String)] = []) {
+    convenience init(label: String, dimensions: [(String, String)] = []) {
         let handler = MetricsSystem.factory.makeCounter(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
     }
@@ -57,7 +63,7 @@ public protocol RecorderHandler: AnyObject {
 }
 
 // This is the user facing Recorder API. Its behavior depends on the `RecorderHandler` implementation
-public class Recorder: RecorderHandler {
+public class Recorder {
     @usableFromInline
     var handler: RecorderHandler
     public let label: String
@@ -85,7 +91,7 @@ public class Recorder: RecorderHandler {
 }
 
 public extension Recorder {
-    public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
+    convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
         let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
     }
@@ -103,8 +109,8 @@ public protocol TimerHandler: AnyObject {
     func recordNanoseconds(_ duration: Int64)
 }
 
-// This is the user facing Timer API. Its behavior depends on the `RecorderHandler` implementation
-public class Timer: TimerHandler {
+// This is the user facing Timer API. Its behavior depends on the `TimerHandler` implementation
+public class Timer {
     @usableFromInline
     var handler: TimerHandler
     public let label: String
@@ -155,7 +161,7 @@ public class Timer: TimerHandler {
 }
 
 public extension Timer {
-    public convenience init(label: String, dimensions: [(String, String)] = []) {
+    convenience init(label: String, dimensions: [(String, String)] = []) {
         let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
     }
@@ -222,6 +228,10 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         func increment<DataType: BinaryInteger>(_ value: DataType) {
             self.counters.forEach { $0.increment(value) }
         }
+
+        func reset() {
+            self.counters.forEach { $0.reset() }
+        }
     }
 
     private class MuxRecorder: RecorderHandler {
@@ -269,6 +279,7 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderH
     }
 
     public func increment<DataType: BinaryInteger>(_: DataType) {}
+    public func reset() {}
     public func record<DataType: BinaryInteger>(_: DataType) {}
     public func record<DataType: BinaryFloatingPoint>(_: DataType) {}
     public func recordNanoseconds(_: Int64) {}
