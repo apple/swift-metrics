@@ -39,6 +39,7 @@ extension MetricsTests {
                 ("testGaugeBlock", testGaugeBlock),
                 ("testMUX", testMUX),
                 ("testCustomFactory", testCustomFactory),
+                ("testReleasingMetrics", testReleasingMetrics),
            ]
    }
 }

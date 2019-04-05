@@ -29,14 +29,18 @@ public protocol CounterHandler: AnyObject {
     /// - parameters:
     ///     - by: Amount to increment by.
     func increment(by: Int64)
+
     /// Reset the counter back to zero.
     func reset()
 }
 
+/// All metric types conform to this protocol, allowing for APIs accepting "any metric."
+public protocol Metric {}
+
 /// A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero.
 /// For example, you can use a counter to represent the number of requests served, tasks completed, or errors.
 /// This is the user facing Counter API. Its behavior depends on the `CounterHandler` implementation
-public class Counter {
+public class Counter: Metric {
     @usableFromInline
     var handler: CounterHandler
     public let label: String
@@ -117,7 +121,7 @@ public protocol RecorderHandler: AnyObject {
 
 /// A recorder collects observations within a time window (usually things like response sizes) and *can* provide aggregated information about the data sample, for example count, sum, min, max and various quantiles.
 /// This is the user facing Recorder API. Its behavior depends on the `RecorderHandler` implementation
-public class Recorder {
+public class Recorder: Metric {
     @usableFromInline
     var handler: RecorderHandler
     public let label: String
@@ -207,7 +211,7 @@ public protocol TimerHandler: AnyObject {
 /// A timer collects observations within a time window (usually things like request durations) and provides aggregated information about the data sample.
 /// For example min, max and various quantiles. It is similar to a `Recorder` but specialized for values that represent durations.
 /// This is the user facing Timer API. Its behavior depends on the `TimerHandler` implementation
-public class Timer {
+public class Timer: Metric {
     @usableFromInline
     var handler: TimerHandler
     public let label: String
@@ -319,6 +323,7 @@ public protocol MetricsFactory {
     ///     - label: The label for the CounterHandler.
     ///     - dimensions: The dimensions for the CounterHandler.
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
+
     /// Create a backing `RecorderHandler`.
     ///
     /// - parameters:
@@ -326,12 +331,41 @@ public protocol MetricsFactory {
     ///     - dimensions: The dimensions for the RecorderHandler.
     ///     - aggregate: Is data aggregation expected.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
+
     /// Create a backing `TimerHandler`.
     ///
     /// - parameters:
     ///     - label: The label for the TimerHandler.
     ///     - dimensions: The dimensions for the TimerHandler.
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
+
+    /// Signals the `MetricsFactory` that the passed in `MetricHandler` will no longer be updated.
+    /// Implementing this functionality is _optional_, and depends on the semantics of the concrete `MetricsFactory`.
+    ///
+    /// In response to this call, the factory _may_ release resources associated with this metric,
+    /// e.g. in case the metric contains references to "heavy" resources, such as file handles, connections,
+    /// or large in-memory data structures.
+    ///
+    /// # Intended usage
+    ///
+    /// Metrics library implementations are _not_ required to act on this signal immediately (or at all).
+    /// However, the presence of this API allows middle-ware libraries wanting to emit metrics for resources with
+    /// well-defined life-cycles to behave pro-actively, and signal when a given metric is known to not be used anymore,
+    /// which can make an positive impact with regards to resource utilization in case of metrics libraries which keep
+    /// references to "heavy" resources.
+    ///
+    /// It is expected that some metrics libraries, may choose to omit implementing this functionality.
+    /// One such example may be a library which directly emits recorded values to some underlying shared storage engine,
+    /// which means that the `MetricHandler` objects themselves are light-weight by nature, and thus no lifecycle
+    /// management and releasing of such metrics handlers is necessary.
+    func release<M: Metric>(metric: M)
+}
+
+extension MetricsFactory {
+    public func release<M: Metric>(metric: M) {
+        // no-op by default.
+        // Libraries which do maintain metric lifecycle should implement this method.
+    }
 }
 
 /// The `MetricsSystem` is a global facility where the default metrics backend implementation (`MetricsFactory`) can be
@@ -363,7 +397,7 @@ public enum MetricsSystem {
         }
     }
 
-    /// Returns a refernece to the configured factory.
+    /// Returns a reference to the configured factory.
     public static var factory: MetricsFactory {
         return self.lock.withReaderLock { self._factory }
     }

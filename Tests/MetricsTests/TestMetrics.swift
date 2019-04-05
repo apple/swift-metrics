@@ -16,6 +16,7 @@
 @testable import class CoreMetrics.Timer
 import Foundation
 
+
 internal class TestMetrics: MetricsFactory {
     private let lock = NSLock() // TODO: consider lock per cache?
     var counters = [String: CounterHandler]()
@@ -38,10 +39,23 @@ internal class TestMetrics: MetricsFactory {
     }
 
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
-        let item = maker(label, dimensions)
         return self.lock.withLock {
+            let item = maker(label, dimensions)
             registry[label] = item
             return item
+        }
+    }
+
+    public func release<M: Metric>(metric: M) {
+        switch metric {
+        case let counter as Counter:
+            self.counters.removeValue(forKey: counter.label)
+        case let recorder as Recorder:
+            self.recorders.removeValue(forKey: recorder.label)
+        case let timer as Timer:
+            self.timers.removeValue(forKey: timer.label)
+        default:
+            return // nothing to do, not a metric that we created/stored
         }
     }
 }
