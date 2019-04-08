@@ -14,7 +14,7 @@
 
 /// A `CounterHandler` is an implementation of a `Counter` backend.
 ///
-/// This type is an implementation detail and should not normally be used, unless implementing your own metrics backend.
+/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the swift-metrics API, please refer to the documentation of `Counter`.
 ///
 /// # Implementation requirements
@@ -24,7 +24,7 @@
 ///
 /// - The `CounterHandler` must be a `class`.
 public protocol CounterHandler: AnyObject {
-    /// Increment the counter
+    /// Increment the counter.
     ///
     /// - parameters:
     ///     - value: Amount to increment by.
@@ -33,7 +33,7 @@ public protocol CounterHandler: AnyObject {
     func reset()
 }
 
-/// A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero on restart.
+/// A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero.
 /// For example, you can use a counter to represent the number of requests served, tasks completed, or errors.
 /// This is the user facing Counter API. Its behavior depends on the `CounterHandler` implementation
 public class Counter {
@@ -42,10 +42,10 @@ public class Counter {
     public let label: String
     public let dimensions: [(String, String)]
 
-    /// Create a new Counter
+    /// Create a new Counter.
     ///
     /// This initializer provides an escape hatch for situations one must use a custom factory instead of the gloabl one
-    /// we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason
+    /// we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason.
     ///
     /// - parameters:
     ///     - label: The label for the Counter.
@@ -57,7 +57,7 @@ public class Counter {
         self.handler = handler
     }
 
-    /// Increment the counter
+    /// Increment the counter.
     ///
     /// - parameters:
     ///     - value: Amount to increment by.
@@ -80,7 +80,7 @@ public class Counter {
 }
 
 public extension Counter {
-    /// Create a new Counter
+    /// Create a new Counter.
     ///
     /// - parameters:
     ///     - label: The label for the Counter.
@@ -93,7 +93,7 @@ public extension Counter {
 
 /// A `RecorderHandler` is an implementation of a `Recorder` backend.
 ///
-/// This type is an implementation detail and should not normally be used, unless implementing your own metrics backend.
+/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the swift-metrics API, please refer to the documentation of `Recorder`.
 ///
 /// # Implementation requirements
@@ -103,12 +103,12 @@ public extension Counter {
 ///
 /// - The `RecorderHandler` must be a `class`.
 public protocol RecorderHandler: AnyObject {
-    /// Record a value
+    /// Record a value.
     ///
     /// - parameters:
     ///     - value: Value to record.
     func record(_ value: Int64)
-    /// Record a value
+    /// Record a value.
     ///
     /// - parameters:
     ///     - value: Value to record.
@@ -124,10 +124,10 @@ public class Recorder {
     public let dimensions: [(String, String)]
     public let aggregate: Bool
 
-    /// Create a new Recorder
+    /// Create a new Recorder.
     ///
     /// This initializer provides an escape hatch for situations one must use a custom factory instead of the gloabl one
-    /// we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason
+    /// we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason.
     ///
     /// - parameters:
     ///     - label: The label for the Recorder.
@@ -140,7 +140,7 @@ public class Recorder {
         self.handler = handler
     }
 
-    /// Record a value
+    /// Record a value.
     ///
     /// - parameters:
     ///     - value: Value to record.
@@ -149,7 +149,7 @@ public class Recorder {
         self.handler.record(Int64(value))
     }
 
-    /// Record a value
+    /// Record a value.
     ///
     /// - parameters:
     ///     - value: Value to record.
@@ -160,7 +160,7 @@ public class Recorder {
 }
 
 public extension Recorder {
-    /// Create a new Recorder
+    /// Create a new Recorder.
     ///
     /// - parameters:
     ///     - label: The label for the Recorder.
@@ -175,7 +175,7 @@ public extension Recorder {
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
 /// Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
 public class Gauge: Recorder {
-    /// Create a new Gauge
+    /// Create a new Gauge.
     ///
     /// - parameters:
     ///     - label: The label for the Gauge.
@@ -187,7 +187,7 @@ public class Gauge: Recorder {
 
 /// A `TimerHandler` is an implementation of a `Timer` backend.
 ///
-/// This type is an implementation detail and should not normally be used, unless implementing your own metrics backend.
+/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the swift-metrics API, please refer to the documentation of `Timer`.
 ///
 /// # Implementation requirements
@@ -197,7 +197,7 @@ public class Gauge: Recorder {
 ///
 /// - The `TimerHandler` must be a `class`.
 public protocol TimerHandler: AnyObject {
-    /// Record a duration in nanoseconds
+    /// Record a duration in nanoseconds.
     ///
     /// - parameters:
     ///     - value: Duration to record.
@@ -213,10 +213,10 @@ public class Timer {
     public let label: String
     public let dimensions: [(String, String)]
 
-    /// Create a new Timer
+    /// Create a new Timer.
     ///
     /// This initializer provides an escape hatch for situations one must use a custom factory instead of the gloabl one
-    /// we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason
+    /// we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason.
     ///
     /// - parameters:
     ///     - label: The label for the Timer.
@@ -228,7 +228,7 @@ public class Timer {
         self.handler = handler
     }
 
-    /// Record a duration in nanoseconds
+    /// Record a duration in nanoseconds.
     ///
     /// - parameters:
     ///     - value: Duration to record.
@@ -237,7 +237,7 @@ public class Timer {
         self.handler.recordNanoseconds(duration)
     }
 
-    /// Record a duration in microseconds
+    /// Record a duration in microseconds.
     ///
     /// - parameters:
     ///     - value: Duration to record.
@@ -246,7 +246,7 @@ public class Timer {
         self.recordNanoseconds(Int64(duration) * 1000)
     }
 
-    /// Record a duration in microseconds
+    /// Record a duration in microseconds.
     ///
     /// - parameters:
     ///     - value: Duration to record.
@@ -255,7 +255,7 @@ public class Timer {
         self.recordNanoseconds(Int64(duration * 1000))
     }
 
-    /// Record a duration in milliseconds
+    /// Record a duration in milliseconds.
     ///
     /// - parameters:
     ///     - value: Duration to record.
@@ -264,7 +264,7 @@ public class Timer {
         self.recordNanoseconds(Int64(duration) * 1_000_000)
     }
 
-    /// Record a duration in milliseconds
+    /// Record a duration in milliseconds.
     ///
     /// - parameters:
     ///     - value: Duration to record.
@@ -273,7 +273,7 @@ public class Timer {
         self.recordNanoseconds(Int64(duration * 1_000_000))
     }
 
-    /// Record a duration in seconds
+    /// Record a duration in seconds.
     ///
     /// - parameters:
     ///     - value: Duration to record.
@@ -282,7 +282,7 @@ public class Timer {
         self.recordNanoseconds(Int64(duration) * 1_000_000_000)
     }
 
-    /// Record a duration in seconds
+    /// Record a duration in seconds.
     ///
     /// - parameters:
     ///     - value: Duration to record.
@@ -293,7 +293,7 @@ public class Timer {
 }
 
 public extension Timer {
-    /// Create a new Timer
+    /// Create a new Timer.
     ///
     /// - parameters:
     ///     - label: The label for the Timer.
@@ -310,23 +310,23 @@ public extension Timer {
 /// * `Recorder` -> `RecorderHandler`
 /// * `Timer` -> `TimerHandler`
 ///
-/// This type is an implementation detail and should not normally be used, unless implementing your own metrics backend.
+/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the swift-metrics API, please refer to the documentation of `MetricsSystem`.
 public protocol MetricsFactory {
-    /// Create a backing `CounterHandler`
+    /// Create a backing `CounterHandler`.
     ///
     /// - parameters:
     ///     - label: The label for the CounterHandler.
     ///     - dimensions: The dimensions for the CounterHandler.
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
-    /// Create a backing `RecorderHandler`
+    /// Create a backing `RecorderHandler`.
     ///
     /// - parameters:
     ///     - label: The label for the CounterHandler.
     ///     - dimensions: The dimensions for the CounterHandler.
     ///     - aggregate: Are in-memory aggregation expected.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
-    /// Create a backing `TimerHandler`
+    /// Create a backing `TimerHandler`.
     ///
     /// - parameters:
     ///     - label: The label for the CounterHandler.
@@ -430,7 +430,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     }
 }
 
-/// Ships with the metrics module, used for initial bootstraping
+/// Ships with the metrics module, used for initial bootstraping.
 public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderHandler, TimerHandler {
     public static let instance = NOOPMetricsHandler()
 

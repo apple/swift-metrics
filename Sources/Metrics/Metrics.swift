@@ -17,7 +17,7 @@
 @_exported import Foundation
 
 public extension Timer {
-    /// Convenience for measuring duration of a closure
+    /// Convenience for measuring duration of a closure.
     ///
     /// - parameters:
     ///     - label: The label for the Timer.
@@ -35,7 +35,7 @@ public extension Timer {
 }
 
 public extension Timer {
-    /// Convenience for recording a duration based on TimeInterval
+    /// Convenience for recording a duration based on TimeInterval.
     ///
     /// - parameters:
     ///     - duration: The duration to record.
@@ -44,7 +44,8 @@ public extension Timer {
         self.recordSeconds(duration)
     }
 
-    /// Convenience for recording a duration based on DispatchTimeInterval
+    /// Convenience for recording a duration based on DispatchTimeInterval.
+    ///
     /// - parameters:
     ///     - duration: The duration to record.
     @inlinable

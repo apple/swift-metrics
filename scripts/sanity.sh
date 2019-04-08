@@ -29,7 +29,7 @@ else
 fi
 
 printf "=> Checking license headers... "
-tmp=$(mktemp /tmp/.swift-log-sanity_XXXXXX)
+tmp=$(mktemp /tmp/.swift-metrics-sanity_XXXXXX)
 
 for language in swift-or-c bash dtrace; do
   declare -a matching_files

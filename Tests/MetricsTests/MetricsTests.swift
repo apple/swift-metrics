@@ -86,7 +86,7 @@ extension DispatchTimeInterval {
         case .nanoseconds(let value):
             return value
         case .microseconds(let value):
-            return value * 1_000
+            return value * 1000
         case .milliseconds(let value):
             return value * 1_000_000
         case .seconds(let value):
