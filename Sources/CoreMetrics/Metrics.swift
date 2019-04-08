@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// A `CounterHandler` is an implementation of a `Counter` backend.
+/// A `CounterHandler` represents a backend implementation of a `Counter`.
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the swift-metrics API, please refer to the documentation of `Counter`.
@@ -91,7 +91,7 @@ public extension Counter {
     }
 }
 
-/// A `RecorderHandler` is an implementation of a `Recorder` backend.
+/// A `RecorderHandler` represents a backend implementation of a `Recorder`.
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the swift-metrics API, please refer to the documentation of `Recorder`.
@@ -185,7 +185,7 @@ public class Gauge: Recorder {
     }
 }
 
-/// A `TimerHandler` is an implementation of a `Timer` backend.
+/// A `TimerHandler` represents a backend implementation of a `Timer`.
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the swift-metrics API, please refer to the documentation of `Timer`.
@@ -305,7 +305,7 @@ public extension Timer {
 }
 
 /// The `MetricsFactory` is the bridge between the `MetricsSystem` and the metrics backend implementation.
-/// `MetricsFactory` role is to initialize concrete implementations of the various metrics types:
+/// `MetricsFactory` role is to initialize concrete implementations of the various metric types:
 /// * `Counter` -> `CounterHandler`
 /// * `Recorder` -> `RecorderHandler`
 /// * `Timer` -> `TimerHandler`
@@ -322,15 +322,15 @@ public protocol MetricsFactory {
     /// Create a backing `RecorderHandler`.
     ///
     /// - parameters:
-    ///     - label: The label for the CounterHandler.
-    ///     - dimensions: The dimensions for the CounterHandler.
-    ///     - aggregate: Are in-memory aggregation expected.
+    ///     - label: The label for the RecorderHandler.
+    ///     - dimensions: The dimensions for the RecorderHandler.
+    ///     - aggregate: Is data aggregation expected.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
     /// Create a backing `TimerHandler`.
     ///
     /// - parameters:
-    ///     - label: The label for the CounterHandler.
-    ///     - dimensions: The dimensions for the CounterHandler.
+    ///     - label: The label for the TimerHandler.
+    ///     - dimensions: The dimensions for the TimerHandler.
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
 }
 
