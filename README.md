@@ -31,7 +31,6 @@ and to your application/library target, add "Metrics" to your dependencies:
 
 ```swift
 // 1) let's import the metrics API package
-
 import Metrics
 
 // 2) we need to create a concrete metric object, the label works similarly to a `DispatchQueue` label
