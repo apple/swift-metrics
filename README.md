@@ -43,7 +43,7 @@ counter.increment()
 
 ### Selecting a metrics backend implementation (applications only)
 
-Note: If you are building a library, you don't need to concern yourself with this section. It is the end users of your library- the applications -who will decide which metrics backend to use. Libraries should never change the metrics implementation as that is something owned by the application.
+Note: If you are building a library, you don't need to concern yourself with this section. It is the end users of your library (the applications) who will decide which metrics backend to use. Libraries should never change the metrics implementation as that is something owned by the application.
 
 swift-metrics only provides the metrics system API. As an application owner, you need to select a metrics backend (such as the ones mentioned above) to make the metrics information useful.
 
@@ -72,7 +72,7 @@ This API was designed with the contributors to the Swift on Server community and
 [discussion](https://forums.swift.org/t/discussion-server-metrics-api/) |
 [feedback](https://forums.swift.org/t/feedback-server-metrics-api/)
 
-### Metric Types
+### Metric types
 
 The API supports four metric types:
 
@@ -104,7 +104,7 @@ timer.recordMilliseconds(100)
 
 Note: Unless you need to implement a custom metrics backend, everything in this section is likely not relevant, so please feel free to skip.
 
-As seen above, each of `Counter`, `Timer`, `Recorder` and `Gauge` constructors provides a metric object.  This raises the question of which metrics backend is actually be used when calling these constructors? The answer is that it's configurable _per application_. The application sets up the metrics backend it wishes to use. Configuring the metrics backend is straightforward:
+As seen above, each of `Counter`, `Timer`, `Recorder` and `Gauge` constructors provides a metric object. This raises the question of which metrics backend is actually be used when calling these constructors? The answer is that it's configurable _per application_. The application sets up the metrics backend it wishes to use. Configuring the metrics backend is straightforward:
 
 ```swift
 MetricsSystem.bootstrap(MyFavoriteMetricsImplementation.init)
