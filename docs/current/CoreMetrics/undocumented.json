@@ -1,0 +1,68 @@
+{
+  "warnings": [
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 42,
+      "symbol": "Counter.label",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 43,
+      "symbol": "Counter.dimensions",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 123,
+      "symbol": "Recorder.label",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 124,
+      "symbol": "Recorder.dimensions",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 125,
+      "symbol": "Recorder.aggregate",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 213,
+      "symbol": "Timer.label",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 214,
+      "symbol": "Timer.dimensions",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 375,
+      "symbol": "MultiplexMetricsHandler.init(factories:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 435,
+      "symbol": "NOOPMetricsHandler.instance",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/code"
+}
