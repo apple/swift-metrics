@@ -28,7 +28,7 @@ class MetricsTests: XCTestCase {
         for _ in 0 ... total {
             group.enter()
             DispatchQueue(label: "\(name)-queue").async {
-                counter.increment(Int.random(in: 0 ... 1000))
+                counter.increment(by: Int.random(in: 0 ... 1000))
                 group.leave()
             }
         }
@@ -45,7 +45,7 @@ class MetricsTests: XCTestCase {
         // run the test
         let name = "counter-\(NSUUID().uuidString)"
         let value = Int.random(in: Int.min ... Int.max)
-        Counter(label: name).increment(value)
+        Counter(label: name).increment(by: value)
         let counter = metrics.counters[name] as! TestCounter
         XCTAssertEqual(counter.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(counter.values[0].1, Int64(value), "expected value to match")
@@ -215,7 +215,7 @@ class MetricsTests: XCTestCase {
         let name = NSUUID().uuidString
         let value = Int.random(in: Int.min ... Int.max)
         let mux = Counter(label: name)
-        mux.increment(value)
+        mux.increment(by: value)
         factories.forEach { factory in
             let counter = factory.counters.first?.1 as! TestCounter
             XCTAssertEqual(counter.label, name, "expected label to match")
@@ -231,7 +231,7 @@ class MetricsTests: XCTestCase {
 
     func testCustomFactory() {
         class CustomHandler: CounterHandler {
-            func increment<DataType>(_: DataType) where DataType: BinaryInteger {}
+            func increment<DataType>(by: DataType) where DataType: BinaryInteger {}
             func reset() {}
         }
 

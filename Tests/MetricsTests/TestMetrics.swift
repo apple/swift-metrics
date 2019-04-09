@@ -60,11 +60,11 @@ internal class TestCounter: CounterHandler, Equatable {
         self.dimensions = dimensions
     }
 
-    func increment(_ by: Int64) {
+    func increment(by amount: Int64) {
         self.lock.withLock {
-            self.values.append((Date(), by))
+            self.values.append((Date(), amount))
         }
-        print("adding \(by) to \(self.label)")
+        print("adding \(amount) to \(self.label)")
     }
 
     func reset() {
