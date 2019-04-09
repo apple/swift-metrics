@@ -27,8 +27,8 @@ public protocol CounterHandler: AnyObject {
     /// Increment the counter.
     ///
     /// - parameters:
-    ///     - value: Amount to increment by.
-    func increment(_ value: Int64)
+    ///     - by: Amount to increment by.
+    func increment(_ by: Int64)
     /// Reset the counter back to zero.
     func reset()
 }
@@ -60,10 +60,10 @@ public class Counter {
     /// Increment the counter.
     ///
     /// - parameters:
-    ///     - value: Amount to increment by.
+    ///     - by: Amount to increment by.
     @inlinable
-    public func increment<DataType: BinaryInteger>(_ value: DataType) {
-        self.handler.increment(Int64(value))
+    public func increment<DataType: BinaryInteger>(_ by: DataType) {
+        self.handler.increment(Int64(by))
     }
 
     /// Increment the counter by one.
@@ -394,8 +394,8 @@ public final class MultiplexMetricsHandler: MetricsFactory {
             self.counters = factories.map { $0.makeCounter(label: label, dimensions: dimensions) }
         }
 
-        func increment(_ value: Int64) {
-            self.counters.forEach { $0.increment(value) }
+        func increment(_ by: Int64) {
+            self.counters.forEach { $0.increment(by) }
         }
 
         func reset() {

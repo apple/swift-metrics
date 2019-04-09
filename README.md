@@ -128,7 +128,7 @@ The `MetricsFactory` is responsible for instantiating the concrete metrics class
 
 ```swift
 public protocol CounterHandler: AnyObject {
-    func increment<DataType: BinaryInteger>(_ value: DataType)
+    func increment(_ by: Int64)
 }
 ```
 
@@ -173,9 +173,9 @@ class SimpleMetricsLibrary: MetricsFactory {
 
         let lock = NSLock()
         var value: Int64 = 0
-        func increment(_ value: Int64) {
+        func increment(_ by: Int64) {
             self.lock.withLock {
-                self.value += value
+                self.value += by
             }
         }
 
