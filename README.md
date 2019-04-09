@@ -79,7 +79,7 @@ The API supports four metric types:
 `Counter`: A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero on restart. For example, you can use a counter to represent the number of requests served, tasks completed, or errors.
 
 ```swift
-counter.increment(100)
+counter.increment(by: 100)
 ```
 
 `Recorder`: A recorder collects observations within a time window (usually things like response sizes) and *can* provide aggregated information about the data sample, for example count, sum, min, max and various quantiles.
@@ -128,7 +128,7 @@ The `MetricsFactory` is responsible for instantiating the concrete metrics class
 
 ```swift
 public protocol CounterHandler: AnyObject {
-    func increment<DataType: BinaryInteger>(_ value: DataType)
+    func increment(by: Int64)
 }
 ```
 
@@ -173,9 +173,9 @@ class SimpleMetricsLibrary: MetricsFactory {
 
         let lock = NSLock()
         var value: Int64 = 0
-        func increment(_ value: Int64) {
+        func increment(by amount: Int64) {
             self.lock.withLock {
-                self.value += value
+                self.value += amount
             }
         }
 
