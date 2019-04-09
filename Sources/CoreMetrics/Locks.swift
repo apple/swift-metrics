@@ -49,7 +49,7 @@ internal final class Lock {
 
     /// Release the lock.
     ///
-    /// Whenver possible, consider using `withLock` instead of this method and
+    /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
     public func unlock() {
         let err = pthread_mutex_unlock(self.mutex)
@@ -67,7 +67,7 @@ extension Lock {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    public func withLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lock()
         defer {
             self.unlock()
@@ -77,7 +77,7 @@ extension Lock {
 
     // specialise Void return (for performance)
     @inlinable
-    public func withLockVoid(_ body: () throws -> Void) rethrows {
+    internal func withLockVoid(_ body: () throws -> Void) rethrows {
         try self.withLock(body)
     }
 }
@@ -122,7 +122,7 @@ internal final class ReadWriteLock {
 
     /// Release the lock.
     ///
-    /// Whenver possible, consider using `withLock` instead of this method and
+    /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
     public func unlock() {
         let err = pthread_rwlock_unlock(self.rwlock)
@@ -140,7 +140,7 @@ extension ReadWriteLock {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    public func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lockRead()
         defer {
             self.unlock()
@@ -157,7 +157,7 @@ extension ReadWriteLock {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    public func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lockWrite()
         defer {
             self.unlock()
@@ -167,13 +167,13 @@ extension ReadWriteLock {
 
     // specialise Void return (for performance)
     @inlinable
-    public func withReaderLockVoid(_ body: () throws -> Void) rethrows {
+    internal func withReaderLockVoid(_ body: () throws -> Void) rethrows {
         try self.withReaderLock(body)
     }
 
     // specialise Void return (for performance)
     @inlinable
-    public func withWriterLockVoid(_ body: () throws -> Void) rethrows {
+    internal func withWriterLockVoid(_ body: () throws -> Void) rethrows {
         try self.withWriterLock(body)
     }
 }

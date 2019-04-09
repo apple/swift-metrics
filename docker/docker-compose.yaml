@@ -1,0 +1,34 @@
+# this file is not designed to be run directly
+# instead, use the docker-compose.<os>.<swift> files
+# eg docker-compose -f docker/docker-compose.yaml -f docker/docker-compose.1804.50.yaml run test
+version: "3"
+
+services:
+
+  runtime-setup:
+    image: swift-metrics:default
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+  common: &common
+    image: swift-metrics:default
+    depends_on: [runtime-setup]
+    volumes:
+      - ~/.ssh:/root/.ssh
+      - ..:/code
+    working_dir: /code
+
+  sanity:
+    <<: *common
+    command: /bin/bash -cl "./scripts/sanity.sh"
+
+  docs:
+    <<: *common
+    environment:
+      - CI
+    command: /bin/bash -cl "./scripts/generate_docs.sh"
+
+  test:
+    <<: *common
+    command: /bin/bash -cl "swift test"

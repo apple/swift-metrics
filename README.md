@@ -1,21 +1,80 @@
-# SSWG Metrics api
+# swift-metrics
 
-* Proposal: SSWG-xxxx
-* Authors: [Tomer Doron](https://github.com/tomerd)
-* Status: **Implemented**
-* Pitch: [Server: Pitches/Metrics](https://forums.swift.org/t/metrics)
+A Metrics API package for Swift.
 
-## Introduction
+Almost all production server software needs to emit metrics information for observability. Because it's unlikely that all parties can agree on one specific metrics backend implementation, this API is designed to establish a standard that can be implemented by various metrics libraries which then post the metrics data to backends like [Prometheus](http://prometheus.io/), [Grafana](http://grafana.com/), publish over [statsd](https://github.com/statsd/statsd), write to disk, etc.
 
-Almost all production server software needs to emit metrics information for observability. The SSWG aims to provide a number of packages that can be shared across the whole Swift on Server ecosystem so we need some amount of standardisation. Because it's unlikely that all parties can agree on one full metrics implementation, this proposal is attempting to establish a metrics API that can be implemented by various metrics backends which then post the metrics data to backends like prometheus, graphite, publish over statsd, write to disk, etc.
+This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to swift-metrics itself, we need metrics compatible libraries which send the metrics over to backend such as the ones mentioned above.
 
-## Motivation
+What swift-metrics provides today is covered in the [API docs](https://apple.github.io/swift-metrics/). At this moment, we have not tagged a version for swift-metrics, but we will do so soon.
 
-As outlined above we should standardise on an API that if well adopted would allow application owners to mix and match libraries from different vendors with a consistent metrics solution.
+## Getting started
 
-## Proposed solution
+If you have a server-side Swift application, or maybe a cross-platform (e.g. Linux, macOS) application or library, and you would like to emit metrics, targeting this metrics API package is a great idea. Below you'll find all you need to know to get started.
 
-The proposed solution is to introduce the following types that encapsulate metrics data:
+### Adding the dependency
+
+To add a dependency on the metrics API package, you need to declare it in your `Package.swift`:
+
+```swift
+// it's early days here so we haven't tagged a version yet, but will soon
+.package(url: "https://github.com/apple/swift-metrics.git", .branch("master")),
+```
+
+and to your application/library target, add "Metrics" to your dependencies:
+
+```swift
+.target(name: "BestExampleApp", dependencies: ["Metrics"]),
+```
+
+###  Emitting metrics information
+
+```swift
+// 1) let's import the metrics API package
+
+import Metrics
+
+// 2) we need to create a concrete metric object, the label works similarly to a `DispatchQueue` label
+let counter = Counter(label: "com.example.BestExampleApp.numberOfRequests")
+
+// 3) we're now ready to use it
+counter.increment()
+```
+
+### Selecting a metrics backend implementation (applications only)
+
+Note: If you are building a library, you don't need to concern yourself with this section. It is the end users of your library (the applications) who will decide which metrics backend to use. Libraries should never change the metrics implementation as that is something owned by the application.
+
+swift-metrics only provides the metrics system API. As an application owner, you need to select a metrics backend (such as the ones mentioned above) to make the metrics information useful.
+
+Selecting a backend is done by adding a dependency on the desired backend client implementation and invoking `MetricsSystem.bootstrap(SelectedMetricsImplementation.init)` at the beginning of the program. This instructs the `MetricsSystem` to install `SelectedMetricsImplementation` (actual name will differ) as the metrics backend to use.
+
+As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementing a metrics backend" section below explaining how to do so. List of existing swift-metrics API compatible libraries:
+
+- Your library? [Get in touch!](https://forums.swift.org/c/server)
+
+## Detailed design
+
+### Architecture
+
+We believe that for the Swift on Server ecosystem, it's crucial to have a metrics API that can be adopted by anybody so a multitude of libraries from different parties can all provide metrics information. More concretely this means that we believe all the metrics events from all libraries should end up in the same place, be one of the backend mentioned above or wherever else the application owner may choose.
+
+In the real-world there are so many opinions over how exactly a metrics system should behave, how metrics should be aggregated and calculated, and where/how they should be persisted. We think it's not feasible to wait for one metrics package to support everything that a specific deployment needs whilst still being easy enough to use and remain performant. That's why we decided to split the problem into two:
+
+1. a metrics API
+2. a metrics backend implementation
+
+This package only provides the metrics API itself and therefore swift-metrics is a "metrics API package". swift-metrics (using `MetricsSystem.bootstrap`) can be configured to choose any compatible metrics backend implementation. This way packages can adopt the API and the application can choose any compatible metrics backend implementation without requiring any changes from any of the libraries.
+
+This API was designed with the contributors to the Swift on Server community and approved by the SSWG (Swift Server Work Group) to the "sandbox level" of the SSWG's incubation process.
+
+[pitch](https://forums.swift.org/t/metrics/19353) |
+[discussion](https://forums.swift.org/t/discussion-server-metrics-api/) |
+[feedback](https://forums.swift.org/t/feedback-server-metrics-api/)
+
+### Metric types
+
+The API supports four metric types:
 
 `Counter`: A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero on restart. For example, you can use a counter to represent the number of requests served, tasks completed, or errors.
 
@@ -41,36 +100,17 @@ gauge.record(100)
 timer.recordMilliseconds(100)
 ```
 
-How would you use  `counter`, `recorder`, `gauge` and `timer` in you application or library? Here is a contrived example for request processing code that emits metrics for: total request count per url, request size and duration and response size:
+### Implementing a metrics backend (e.g. Prometheus client library)
+
+Note: Unless you need to implement a custom metrics backend, everything in this section is likely not relevant, so please feel free to skip.
+
+As seen above, each of `Counter`, `Timer`, `Recorder` and `Gauge` constructors provides a metric object. This raises the question of which metrics backend is actually be used when calling these constructors? The answer is that it's configurable _per application_. The application sets up the metrics backend it wishes to use. Configuring the metrics backend is straightforward:
 
 ```swift
-    func processRequest(request: Request) -> Response {
-      let requestCounter = Counter("request.count", ["url": request.url])
-      let requestTimer = Timer("request.duration", ["url": request.url])
-      let requestSizeRecorder = Recorder("request.size", ["url": request.url])
-      let responseSizeRecorder = Recorder("response.size", ["url": request.url])
-
-      requestCounter.increment()
-      requestSizeRecorder.record(request.size)
-
-      let start = Date()
-      let response = ...
-      requestTimer.record(Date().timeIntervalSince(start))
-      responseSizeRecorder.record(response.size)
-    }
+MetricsSystem.bootstrap(MyFavoriteMetricsImplementation.init)
 ```
 
-## Detailed design
-
-### Implementing a metrics backend (e.g. prometheus client library)
-
-As seen above, the constructors `Counter`, `Timer`, `Recorder` and `Gauge` provides a metric object. This raises the question of what metrics backend I will actually get when calling these constructors? The answer is that it's configurable _per application_. The application sets up the metrics backend it wishes the whole application to use. Libraries should never change the metrics implementation as that is something owned by the application. Configuring the metrics backend is straightforward:
-
-```swift
-    MetricsSystem.bootstrap(MyFavouriteMetricsImplementation.init)
-```
-
-This instructs the `MetricsSystem` to install `MyFavouriteMetricsImplementation` as the metrics backend (`MetricsFactory`) to use. This should only be done once at the beginning of the program.  
+This instructs the `MetricsSystem` to install `MyFavoriteMetricsImplementation` as the metrics backend (`MetricsFactory`) to use. This should only be done once at the beginning of the program.  
 
 Given the above, an implementation of a metric backend needs to conform to `protocol MetricsFactory`:
 
@@ -209,18 +249,4 @@ class SimpleMetricsLibrary: MetricsFactory {
 }
 ```
 
-## State
-
-This is an early proposal so there are still plenty of things to decide and tweak and I'd invite everybody to participate.
-
-### Feedback Wishes
-
-Feedback that would really be great is:
-
-- if anything, what does this proposal *not cover* that you will definitely need
-- if anything, what could we remove from this and still be happy?
-- API-wise: what do you like, what don't you like?
-
-Feel free to post this as message on the SSWG forum and/or github issues in this repo.
-
-### Open Questions
+Do not hesitate to get in touch as well, over on https://forums.swift.org/c/server
