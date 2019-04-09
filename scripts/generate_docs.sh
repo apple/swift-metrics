@@ -56,25 +56,25 @@ tmp=`mktemp -d`
 mkdir -p "$tmp/docs/$version"
 module_switcher="$tmp/docs/$version/README.md"
 jazzy_args=(--clean
-            --author 'swift-metrics team'
+            --author 'SwiftMetrics team'
             --readme "$module_switcher"
             --author_url https://github.com/apple/swift-metrics
             --github_url https://github.com/apple/swift-metrics
             --theme fullwidth
             --xcodebuild-arguments -scheme,swift-metrics-Package)
 cat > "$module_switcher" <<"EOF"
-# swift-metrics docs
+# SwiftMetrics Docs
 
-swift-metrics is a Swift metrics API package.
+SwiftMetrics is a Swift metrics API package.
 
-To get started with swift-metrics, [`import Metrics`](../CoreMetrics/index.html). The most important types are:
+To get started with SwiftMetrics, [`import Metrics`](../CoreMetrics/index.html). The most important types are:
 
 * [`Counter`](https://apple.github.io/swift-metrics/docs/current/CoreMetrics/Classes/Counter.html)
 * [`Timer`](https://apple.github.io/swift-metrics/docs/current/CoreMetrics/Classes/Timer.html)
 * [`Recorder`](https://apple.github.io/swift-metrics/docs/current/CoreMetrics/Classes/Recorder.html)
 * [`Gauge`](https://apple.github.io/swift-metrics/docs/current/CoreMetrics/Classes/Gauge.html)
 
-swift-metrics contains multiple modules:
+SwiftMetrics contains multiple modules:
 EOF
 
 for module in "${modules[@]}"; do
