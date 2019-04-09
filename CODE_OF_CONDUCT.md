@@ -1,10 +1,10 @@
 # Code of Conduct
-To be a truly great community, SwiftLog needs to welcome developers from all walks of life,
+To be a truly great community, swift-metrics needs to welcome developers from all walks of life,
 with different backgrounds, and with a wide range of experience. A diverse and friendly
 community will have more great ideas, more unique perspectives, and produce more great
-code. We will work diligently to make the SwiftLog community welcoming to everyone.
+code. We will work diligently to make the swift-metrics community welcoming to everyone.
 
-To give clarity of what is expected of our members, SwiftLog has adopted the code of conduct
+To give clarity of what is expected of our members, swift-metrics has adopted the code of conduct
 defined by [contributor-covenant.org](https://www.contributor-covenant.org). This document is used across many open source
 communities, and we think it articulates our values well. The full text is copied below:
 
@@ -41,7 +41,7 @@ This code of conduct applies both within project spaces and in public spaces whe
 individual is representing the project or its community.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by
-contacting a project maintainer at [swift-log-conduct@group.apple.com](mailto:swift-log-conduct@group.apple.com). All complaints will be reviewed and
+contacting a project maintainer at [swift-metrics-conduct@group.apple.com](mailto:swift-metrics-conduct@group.apple.com). All complaints will be reviewed and
 investigated and will result in a response that is deemed necessary and appropriate to the
 circumstances. Maintainers are obligated to maintain confidentiality with regard to the reporter
 of an incident.
@@ -49,7 +49,7 @@ of an incident.
 *This policy is adapted from the Contributor Code of Conduct [version 1.3.0](https://contributor-covenant.org/version/1/3/0/).*
 
 ### Reporting
-A working group of community members is committed to promptly addressing any [reported issues](mailto:swift-log-conduct@group.apple.com).
+A working group of community members is committed to promptly addressing any [reported issues](mailto:swift-metrics-conduct@group.apple.com).
 Working group members are volunteers appointed by the project lead, with a
 preference for individuals with varied backgrounds and perspectives. Membership is expected
 to change regularly, and may grow or shrink.
