@@ -243,7 +243,7 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordMicroseconds<DataType: BinaryInteger>(_ duration: DataType) {
-        self.recordNanoseconds(Int64(duration) * 1000)
+        self.recordNanoseconds(Int64(duration * 1000))
     }
 
     /// Record a duration in microseconds.
@@ -261,7 +261,7 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordMilliseconds<DataType: BinaryInteger>(_ duration: DataType) {
-        self.recordNanoseconds(Int64(duration) * 1_000_000)
+        self.recordNanoseconds(Int64(duration * 1_000_000))
     }
 
     /// Record a duration in milliseconds.
@@ -279,7 +279,7 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordSeconds<DataType: BinaryInteger>(_ duration: DataType) {
-        self.recordNanoseconds(Int64(duration) * 1_000_000_000)
+        self.recordNanoseconds(Int64(duration * 1_000_000_000))
     }
 
     /// Record a duration in seconds.
