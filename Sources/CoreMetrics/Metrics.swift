@@ -15,7 +15,7 @@
 /// A `CounterHandler` represents a backend implementation of a `Counter`.
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-/// To use the swift-metrics API, please refer to the documentation of `Counter`.
+/// To use the SwiftMetrics API, please refer to the documentation of `Counter`.
 ///
 /// # Implementation requirements
 ///
@@ -94,7 +94,7 @@ public extension Counter {
 /// A `RecorderHandler` represents a backend implementation of a `Recorder`.
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-/// To use the swift-metrics API, please refer to the documentation of `Recorder`.
+/// To use the SwiftMetrics API, please refer to the documentation of `Recorder`.
 ///
 /// # Implementation requirements
 ///
@@ -188,7 +188,7 @@ public class Gauge: Recorder {
 /// A `TimerHandler` represents a backend implementation of a `Timer`.
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-/// To use the swift-metrics API, please refer to the documentation of `Timer`.
+/// To use the SwiftMetrics API, please refer to the documentation of `Timer`.
 ///
 /// # Implementation requirements
 ///
@@ -311,7 +311,7 @@ public extension Timer {
 /// * `Timer` -> `TimerHandler`
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-/// To use the swift-metrics API, please refer to the documentation of `MetricsSystem`.
+/// To use the SwiftMetrics API, please refer to the documentation of `MetricsSystem`.
 public protocol MetricsFactory {
     /// Create a backing `CounterHandler`.
     ///

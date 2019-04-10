@@ -1,12 +1,12 @@
-# swift-metrics
+# SwiftMetrics
 
 A Metrics API package for Swift.
 
 Almost all production server software needs to emit metrics information for observability. Because it's unlikely that all parties can agree on one specific metrics backend implementation, this API is designed to establish a standard that can be implemented by various metrics libraries which then post the metrics data to backends like [Prometheus](http://prometheus.io/), [Grafana](http://grafana.com/), publish over [statsd](https://github.com/statsd/statsd), write to disk, etc.
 
-This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to swift-metrics itself, we need metrics compatible libraries which send the metrics over to backend such as the ones mentioned above.
+This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to SwiftMetrics itself, we need metrics compatible libraries which send the metrics over to backend such as the ones mentioned above.
 
-What swift-metrics provides today is covered in the [API docs](https://apple.github.io/swift-metrics/). At this moment, we have not tagged a version for swift-metrics, but we will do so soon.
+What SwiftMetrics provides today is covered in the [API docs](https://apple.github.io/swift-metrics/). At this moment, we have not tagged a version for SwiftMetrics, but we will do so soon.
 
 ## Getting started
 
@@ -44,11 +44,11 @@ counter.increment()
 
 Note: If you are building a library, you don't need to concern yourself with this section. It is the end users of your library (the applications) who will decide which metrics backend to use. Libraries should never change the metrics implementation as that is something owned by the application.
 
-swift-metrics only provides the metrics system API. As an application owner, you need to select a metrics backend (such as the ones mentioned above) to make the metrics information useful.
+SwiftMetrics only provides the metrics system API. As an application owner, you need to select a metrics backend (such as the ones mentioned above) to make the metrics information useful.
 
 Selecting a backend is done by adding a dependency on the desired backend client implementation and invoking `MetricsSystem.bootstrap(SelectedMetricsImplementation.init)` at the beginning of the program. This instructs the `MetricsSystem` to install `SelectedMetricsImplementation` (actual name will differ) as the metrics backend to use.
 
-As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementing a metrics backend" section below explaining how to do so. List of existing swift-metrics API compatible libraries:
+As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementing a metrics backend" section below explaining how to do so. List of existing SwiftMetrics API compatible libraries:
 
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
 
@@ -63,7 +63,7 @@ In the real-world there are so many opinions over how exactly a metrics system s
 1. a metrics API
 2. a metrics backend implementation
 
-This package only provides the metrics API itself and therefore swift-metrics is a "metrics API package". swift-metrics (using `MetricsSystem.bootstrap`) can be configured to choose any compatible metrics backend implementation. This way packages can adopt the API and the application can choose any compatible metrics backend implementation without requiring any changes from any of the libraries.
+This package only provides the metrics API itself and therefore SwiftMetrics is a "metrics API package". SwiftMetrics can be configured (using `MetricsSystem.bootstrap`) to choose any compatible metrics backend implementation. This way packages can adopt the API and the application can choose any compatible metrics backend implementation without requiring any changes from any of the libraries.
 
 This API was designed with the contributors to the Swift on Server community and approved by the SSWG (Swift Server Work Group) to the "sandbox level" of the SSWG's incubation process.
 
