@@ -27,6 +27,7 @@ extension MetricsUtilTests {
    static var allTests : [(String, (MetricsUtilTests) -> () throws -> Void)] {
       return [
                 ("testRegistries", testRegistries),
+                ("testKeepAroundALittleBitRegistries", testKeepAroundALittleBitRegistries),
            ]
    }
 }

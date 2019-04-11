@@ -89,27 +89,22 @@ class MetricsUtilTests: XCTestCase {
 
 class AtLeastOnceCounterHandler: CounterHandler {
     let container: AtLeastOnceCounterContainer
-    var count: Int64 = 0
 
     init(container: AtLeastOnceCounterContainer) {
         self.container = container
     }
 
-    deinit {
-        self.container.lastValue = self.count
-    }
-
     func increment(by: Int64) {
-        self.count += by
+        self.container.value += by
     }
     func reset() {
-        self.count = 0
+        self.container.value = 0
     }
 
 }
 class AtLeastOnceCounterContainer {
-    weak var counter: AtLeastOnceCounterHandler? = nil
-    var lastValue: Int64? = nil
+    weak var handler: AtLeastOnceCounterHandler? = nil
+    var value: Int64 = 0
 }
 
 /// This is an example of how one would implement a "always at least once expose a metric"
@@ -121,7 +116,7 @@ func testKeepAroundALittleBitRegistries() throws {
             public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
                 let container = AtLeastOnceCounterContainer()
                 let counter = AtLeastOnceCounterHandler(container: container)
-                container.counter = counter
+                container.handler = counter
                 counters[label] = container
                 return counter
             }
@@ -140,12 +135,12 @@ func testKeepAroundALittleBitRegistries() throws {
                 s.reserveCapacity(self.counters.count)
 
                 for (label, container) in self.counters {
-                    if let counter = container.counter {
+                    if container.handler != nil {
                         // counter still has strong refs in user land
-                        s.append("\(label):\(counter.count)")
+                        s.append("\(label):\(container.value)")
                     } else {
                         // counter was released, we make sure to at least once report it
-                        s.append("\(label):\(container.lastValue ?? 0) RELEASED")
+                        s.append("\(label):\(container.value) RELEASED")
                         self.counters.removeValue(forKey: label)
                     }
                 }
