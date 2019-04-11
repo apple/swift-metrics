@@ -14,7 +14,7 @@
 
 @_exported import CoreMetrics
 @_exported import class CoreMetrics.Timer
-@_exported import Foundation
+import Foundation
 
 public extension Timer {
     /// Convenience for measuring duration of a closure.
