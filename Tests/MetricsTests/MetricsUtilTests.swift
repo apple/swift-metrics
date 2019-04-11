@@ -85,4 +85,92 @@ class MetricsUtilTests: XCTestCase {
         XCTAssertEqual(metrics.timers.count, 0, "expected number of entries to match")
         XCTAssertEqual(metrics.recorders.count, 0, "expected number of entries to match")
     }
+
+
+class AtLeastOnceCounterHandler: CounterHandler {
+    let container: AtLeastOnceCounterContainer
+    var count: Int64 = 0
+
+    init(container: AtLeastOnceCounterContainer) {
+        self.container = container
+    }
+
+    deinit {
+        self.container.lastValue = self.count
+    }
+
+    func increment(by: Int64) {
+        self.count += by
+    }
+    func reset() {
+        self.count = 0
+    }
+
+}
+class AtLeastOnceCounterContainer {
+    weak var counter: AtLeastOnceCounterHandler? = nil
+    var lastValue: Int64? = nil
+}
+
+/// This is an example of how one would implement a "always at least once expose a metric"
+func testKeepAroundALittleBitRegistries() throws {
+        // this example is not thread safe but good enough for what are testing
+        class PrintAtLeastOnceMetrics: MetricsFactory {
+            var counters: [String: AtLeastOnceCounterContainer] = [:]
+
+            public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+                let container = AtLeastOnceCounterContainer()
+                let counter = AtLeastOnceCounterHandler(container: container)
+                container.counter = counter
+                counters[label] = container
+                return counter
+            }
+
+            public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+                fatalError()
+            }
+
+            public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+                fatalError()
+            }
+
+            // assume this is invoked periodically, on a timer (print metrics every 3 seconds) or by an external system (scrape)
+            public func scrape() -> [String] {
+                var s: [String] = []
+                s.reserveCapacity(self.counters.count)
+
+                for (label, container) in self.counters {
+                    if let counter = container.counter {
+                        // counter still has strong refs in user land
+                        s.append("\(label):\(counter.count)")
+                    } else {
+                        // counter was released, we make sure to at least once report it
+                        s.append("\(label):\(container.lastValue ?? 0) RELEASED")
+                        self.counters.removeValue(forKey: label)
+                    }
+                }
+                return s
+            }
+        }
+
+        // bootstrap with our test metrics
+        let metrics = PrintAtLeastOnceMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        // run the test
+        func measureSomething() {
+            let counter = Counter(label: "one")
+            counter.increment()
+        }
+        measureSomething()
+        // counter was released, yet we never scraped it yet; our impl guarantees that every metric will be scraped at least once
+        // this matters for: some short lived resource, that we want to know how many ops it performed for example,
+        // and we "did not make it in time" with scraping the data from it
+        let scraped1 = metrics.scrape()
+        XCTAssertEqual(scraped1.count, 1)
+        XCTAssertEqual(scraped1.first ?? "", "one:1 RELEASED")
+
+        let scraped2 = metrics.scrape()
+        XCTAssertEqual(scraped2.count, 0)
+    }
 }
