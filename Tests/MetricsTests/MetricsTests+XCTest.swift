@@ -23,13 +23,11 @@ import XCTest
 ///
 
 extension MetricsExtensionsTests {
-
-   static var allTests : [(String, (MetricsExtensionsTests) -> () throws -> Void)] {
-      return [
-                ("testTimerBlock", testTimerBlock),
-                ("testTimerWithTimeInterval", testTimerWithTimeInterval),
-                ("testTimerWithDispatchTime", testTimerWithDispatchTime),
-           ]
-   }
+    static var allTests: [(String, (MetricsExtensionsTests) -> () throws -> Void)] {
+        return [
+            ("testTimerBlock", testTimerBlock),
+            ("testTimerWithTimeInterval", testTimerWithTimeInterval),
+            ("testTimerWithDispatchTime", testTimerWithDispatchTime),
+        ]
+    }
 }
-
