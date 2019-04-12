@@ -23,10 +23,10 @@ import XCTest
 ///
 
 #if os(Linux) || os(FreeBSD)
-   @testable import MetricsTests
+    @testable import MetricsTests
 
-   XCTMain([
-         testCase(MetricsExtensionsTests.allTests),
-         testCase(MetricsTests.allTests),
+    XCTMain([
+        testCase(MetricsExtensionsTests.allTests),
+        testCase(MetricsTests.allTests),
     ])
 #endif
