@@ -358,14 +358,11 @@ public protocol MetricsFactory {
     /// One such example may be a library which directly emits recorded values to some underlying shared storage engine,
     /// which means that the `MetricHandler` objects themselves are light-weight by nature, and thus no lifecycle
     /// management and releasing of such metrics handlers is necessary.
-    func release<M: Metric>(metric: M)
-}
-
-extension MetricsFactory {
-    public func release<M: Metric>(metric: M) {
-        // no-op by default.
-        // Libraries which do maintain metric lifecycle should implement this method.
-    }
+    func remove<M: Metric>(metric: M)
+    // alternatively, delete the Metric type and provide overloads:
+    // func remove<C: Counter>(_ counter: C)
+    // func remove<R: Recorder>(_ recorder: R)
+    // func remove<T: Timer>(_ timer: T)
 }
 
 /// The `MetricsSystem` is a global facility where the default metrics backend implementation (`MetricsFactory`) can be
@@ -421,6 +418,13 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return MuxTimer(factories: self.factories, label: label, dimensions: dimensions)
     }
+
+    public func remove<M: Metric>(metric: M) {
+        for factory in self.factories {
+            factory.remove(metric: metric)
+        }
+    }
+
 
     private class MuxCounter: CounterHandler {
         let counters: [CounterHandler]
@@ -480,6 +484,10 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderH
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return self
+    }
+
+    public func remove<M: Metric>(metric: M) {
+        // no-op
     }
 
     public func increment(by: Int64) {}

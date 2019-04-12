@@ -46,7 +46,7 @@ internal class TestMetrics: MetricsFactory {
         }
     }
 
-    public func release<M: Metric>(metric: M) {
+    public func remove<M: Metric>(metric: M) {
         switch metric {
         case let counter as Counter:
             self.counters.removeValue(forKey: counter.label)
