@@ -46,7 +46,13 @@ Note: If you are building a library, you don't need to concern yourself with thi
 
 SwiftMetrics only provides the metrics system API. As an application owner, you need to select a metrics backend (such as the ones mentioned above) to make the metrics information useful.
 
-Selecting a backend is done by adding a dependency on the desired backend client implementation and invoking `MetricsSystem.bootstrap(SelectedMetricsImplementation.init)` at the beginning of the program. This instructs the `MetricsSystem` to install `SelectedMetricsImplementation` (actual name will differ) as the metrics backend to use.
+Selecting a backend is done by adding a dependency on the desired backend client implementation and invoking the `MetricsSystem.bootstrap` function at the beginning of the program: 
+
+```swift 
+MetricsSystem.bootstrap(SelectedMetricsImplementation())
+```
+
+This instructs the `MetricsSystem` to install `SelectedMetricsImplementation` (actual name will differ) as the metrics backend to use.
 
 As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementing a metrics backend" section below explaining how to do so. List of existing SwiftMetrics API compatible libraries:
 
