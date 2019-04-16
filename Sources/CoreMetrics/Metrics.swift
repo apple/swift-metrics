@@ -243,7 +243,12 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordMicroseconds<DataType: BinaryInteger>(_ duration: DataType) {
-        self.recordNanoseconds(Int64(duration * 1000))
+        let result = Int64(duration).multipliedReportingOverflow(by: 1000)
+        if result.overflow {
+            self.recordNanoseconds(Int64.max)
+        } else {
+            self.recordNanoseconds(result.partialValue)
+        }
     }
 
     /// Record a duration in microseconds.
@@ -252,7 +257,7 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordMicroseconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
-        self.recordNanoseconds(Int64(duration * 1000))
+        self.recordNanoseconds(Double(duration * 1000) < Double(Int64.max) ? Int64(duration * 1000) : Int64.max)
     }
 
     /// Record a duration in milliseconds.
@@ -261,7 +266,12 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordMilliseconds<DataType: BinaryInteger>(_ duration: DataType) {
-        self.recordNanoseconds(Int64(duration * 1_000_000))
+        let result = Int64(duration).multipliedReportingOverflow(by: 1_000_000)
+        if result.overflow {
+            self.recordNanoseconds(Int64.max)
+        } else {
+            self.recordNanoseconds(result.partialValue)
+        }
     }
 
     /// Record a duration in milliseconds.
@@ -270,7 +280,7 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordMilliseconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
-        self.recordNanoseconds(Int64(duration * 1_000_000))
+        self.recordNanoseconds(Double(duration * 1_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000) : Int64.max)
     }
 
     /// Record a duration in seconds.
@@ -279,7 +289,12 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordSeconds<DataType: BinaryInteger>(_ duration: DataType) {
-        self.recordNanoseconds(Int64(duration * 1_000_000_000))
+        let result = Int64(duration).multipliedReportingOverflow(by: 1_000_000_000)
+        if result.overflow {
+            self.recordNanoseconds(Int64.max)
+        } else {
+            self.recordNanoseconds(result.partialValue)
+        }
     }
 
     /// Record a duration in seconds.
@@ -288,7 +303,7 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordSeconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
-        self.recordNanoseconds(Int64(duration * 1_000_000_000))
+        self.recordNanoseconds(Double(duration * 1_000_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000_000) : Int64.max)
     }
 }
 

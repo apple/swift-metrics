@@ -154,7 +154,27 @@ public protocol RecorderHandler: AnyObject {
 }
 ```
 
-Here is a full example of an in-memory implementation:
+#### Dealing with Overflows
+
+Implementaton of metric objects that deal with integers, like `Counter` and `Timer` should be careful with overflow. The expected behavior is to cap at `.max`, and never crash the program due to overflow . For example:
+
+```swift
+class ExampleCounter: CounterHandler {
+    var value: Int64 = 0
+    func increment(by amount: Int64) {
+        let result = self.value.addingReportingOverflow(amount)
+        if result.overflow {
+            self.value = Int64.max
+        } else {
+            self.value = result.partialValue
+        }
+    }
+}
+```
+
+#### Full example
+
+Here is a full, but contrived, example of an in-memory implementation:
 
 ```swift
 class SimpleMetricsLibrary: MetricsFactory {
