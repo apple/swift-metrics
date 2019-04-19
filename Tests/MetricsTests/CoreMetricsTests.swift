@@ -240,4 +240,93 @@ class MetricsTests: XCTestCase {
         let counter2 = Counter(label: "foo", dimensions: [], handler: CustomHandler())
         XCTAssertTrue(counter2.handler is CustomHandler, "expected custom log handler")
     }
+
+    func testDestroyingGauge() throws {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let name = "gauge-\(NSUUID().uuidString)"
+        let value = Double.random(in: -1000 ... 1000)
+
+        let gauge = Gauge(label: name)
+        gauge.record(value)
+
+        let recorder = gauge.handler as! TestRecorder
+        XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(recorder.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(metrics.recorders.count, 1, "recorder should have been stored")
+
+        let identity = ObjectIdentifier(recorder)
+        gauge.destroy()
+        XCTAssertEqual(metrics.recorders.count, 0, "recorder should have been released")
+
+        let gaugeAgain = Gauge(label: name)
+        gaugeAgain.record(-value)
+
+        let recorderAgain = gaugeAgain.handler as! TestRecorder
+        XCTAssertEqual(recorderAgain.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(recorderAgain.values.first!.1, -value, "expected value to match")
+
+        let identityAgain = ObjectIdentifier(recorderAgain)
+        XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
+    }
+
+    func testDestroyingCounter() throws {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let name = "counter-\(NSUUID().uuidString)"
+        let value = Int.random(in: 0 ... 1000)
+
+        let counter = Counter(label: name)
+        counter.increment(by: value)
+
+        let testCounter = counter.handler as! TestCounter
+        XCTAssertEqual(testCounter.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testCounter.values.first!.1, Int64(value), "expected value to match")
+        XCTAssertEqual(metrics.counters.count, 1, "counter should have been stored")
+
+        let identity = ObjectIdentifier(counter)
+        counter.destroy()
+        XCTAssertEqual(metrics.counters.count, 0, "counter should have been released")
+
+        let counterAgain = Counter(label: name)
+        counterAgain.increment(by: value)
+
+        let testCounterAgain = counterAgain.handler as! TestCounter
+        XCTAssertEqual(testCounterAgain.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testCounterAgain.values.first!.1, Int64(value), "expected value to match")
+
+        let identityAgain = ObjectIdentifier(counterAgain)
+        XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
+    }
+
+    func testDestroyingTimer() throws {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let name = "timer-\(NSUUID().uuidString)"
+        let value = Int64.random(in: 0 ... 1000)
+
+        let timer = Timer(label: name)
+        timer.recordNanoseconds(value)
+
+        let testTimer = timer.handler as! TestTimer
+        XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
+
+        let identity = ObjectIdentifier(timer)
+        timer.destroy()
+        XCTAssertEqual(metrics.timers.count, 0, "timer should have been released")
+
+        let timerAgain = Timer(label: name)
+        timerAgain.recordNanoseconds(value)
+        let testTimerAgain = timerAgain.handler as! TestTimer
+        XCTAssertEqual(testTimerAgain.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testTimerAgain.values.first!.1, value, "expected value to match")
+
+        let identityAgain = ObjectIdentifier(timerAgain)
+        XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
+    }
 }

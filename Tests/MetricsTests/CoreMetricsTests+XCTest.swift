@@ -38,6 +38,9 @@ extension MetricsTests {
             ("testGaugeBlock", testGaugeBlock),
             ("testMUX", testMUX),
             ("testCustomFactory", testCustomFactory),
+            ("testDestroyingGauge", testDestroyingGauge),
+            ("testDestroyingCounter", testDestroyingCounter),
+            ("testDestroyingTimer", testDestroyingTimer),
         ]
     }
 }
