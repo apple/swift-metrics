@@ -34,6 +34,7 @@ extension MetricsTests {
             ("testTimers", testTimers),
             ("testTimerBlock", testTimerBlock),
             ("testTimerVariants", testTimerVariants),
+            ("testTimerOverflow", testTimerOverflow),
             ("testGauge", testGauge),
             ("testGaugeBlock", testGaugeBlock),
             ("testMUX", testMUX),

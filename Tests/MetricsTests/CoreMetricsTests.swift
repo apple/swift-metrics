@@ -180,6 +180,43 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(testTimer.values[3].1, sec * 1_000_000_000, "expected value to match")
     }
 
+    func testTimerOverflow() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let timer = Timer(label: "test-timer")
+        let testTimer = timer.handler as! TestTimer
+        // nano (integer)
+        timer.recordNanoseconds(Int64.max)
+        XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[0].1, Int64.max, "expected value to match")
+        // micro (integer)
+        timer.recordMicroseconds(Int64.max)
+        XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[1].1, Int64.max, "expected value to match")
+        // micro (double)
+        timer.recordMicroseconds(Double(Int64.max) + 1)
+        XCTAssertEqual(testTimer.values.count, 3, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[1].1, Int64.max, "expected value to match")
+        // milli (integer)
+        timer.recordMilliseconds(Int64.max)
+        XCTAssertEqual(testTimer.values.count, 4, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[2].1, Int64.max, "expected value to match")
+        // milli (double)
+        timer.recordMilliseconds(Double(Int64.max) + 1)
+        XCTAssertEqual(testTimer.values.count, 5, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[2].1, Int64.max, "expected value to match")
+        // seconds (integer)
+        timer.recordSeconds(Int64.max)
+        XCTAssertEqual(testTimer.values.count, 6, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[3].1, Int64.max, "expected value to match")
+        // seconds (double)
+        timer.recordSeconds(Double(Int64.max) * 1)
+        XCTAssertEqual(testTimer.values.count, 7, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[3].1, Int64.max, "expected value to match")
+    }
+
     func testGauge() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
