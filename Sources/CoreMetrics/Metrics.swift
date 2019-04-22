@@ -29,6 +29,7 @@ public protocol CounterHandler: AnyObject {
     /// - parameters:
     ///     - by: Amount to increment by.
     func increment(by: Int64)
+
     /// Reset the counter back to zero.
     func reset()
 }
@@ -77,6 +78,7 @@ public class Counter {
     public func reset() {
         self.handler.reset()
     }
+
 }
 
 public extension Counter {
@@ -88,6 +90,13 @@ public extension Counter {
     convenience init(label: String, dimensions: [(String, String)] = []) {
         let handler = MetricsSystem.factory.makeCounter(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
+    }
+
+    /// Signal the underlying metrics library that this counter will never be updated again.
+    /// In response library MAY decide to eagerly release any resources held by this counter.
+    @inlinable
+    func destroy() {
+        MetricsSystem.factory.destroyCounter(self.handler)
     }
 }
 
@@ -168,6 +177,13 @@ public extension Recorder {
     convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
         let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
+    }
+
+    /// Signal the underlying metrics library that this recorder will never be updated again.
+    /// In response library MAY decide to eagerly release any resources held by this recorder.
+    @inlinable
+    func destroy() {
+        MetricsSystem.factory.destroyRecorder(self.handler)
     }
 }
 
@@ -317,6 +333,13 @@ public extension Timer {
         let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
     }
+
+    /// Signal the underlying metrics library that this timer will never be updated again.
+    /// In response library MAY decide to eagerly release any resources held by this timer.
+    @inlinable
+    func destroy() {
+        MetricsSystem.factory.destroyTimer(self.handler)
+    }
 }
 
 /// The `MetricsFactory` is the bridge between the `MetricsSystem` and the metrics backend implementation.
@@ -327,6 +350,22 @@ public extension Timer {
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the SwiftMetrics API, please refer to the documentation of `MetricsSystem`.
+///
+/// # Destroying metrics
+///
+/// Since _some_ metrics implementations may need to allocate (potentially "heavy") resources for metrics, destroying
+/// metrics offers a signal to libraries when a metric is "known to never be updated again."
+///
+/// While many metrics are bound to the entire lifetime of an application and thus never need to be destroyed eagerly,
+/// some metrics have well defined unique life-cycles, and it may be beneficial to release any resources held by them
+/// more eagerly than awaiting the applications termination. In such cases, a library or application should invoke
+/// a metric's appropriate `destroy()` method, which in turn results in the corresponding handler that it is backed by
+/// to be passed to `destroyCounter(handler:)`, `destroyRecorder(handler:)` or `destroyTimer(handler:)` where the factory
+/// can decide to free any corresponding resources.
+///
+/// While some libraries may not need to implement this destroying as they may be stateless or similar,
+/// libraries using the metrics API should always assume a library WILL make use of this signal, and shall not
+/// neglect calling these methods when appropriate.
 public protocol MetricsFactory {
     /// Create a backing `CounterHandler`.
     ///
@@ -334,6 +373,7 @@ public protocol MetricsFactory {
     ///     - label: The label for the CounterHandler.
     ///     - dimensions: The dimensions for the CounterHandler.
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
+
     /// Create a backing `RecorderHandler`.
     ///
     /// - parameters:
@@ -341,12 +381,34 @@ public protocol MetricsFactory {
     ///     - dimensions: The dimensions for the RecorderHandler.
     ///     - aggregate: Is data aggregation expected.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
+
     /// Create a backing `TimerHandler`.
     ///
     /// - parameters:
     ///     - label: The label for the TimerHandler.
     ///     - dimensions: The dimensions for the TimerHandler.
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
+
+    /// Invoked when the corresponding `Counter`'s `destroy()` function is invoked.
+    /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
+    ///
+    /// - parameters:
+    ///     - handler: The handler to be destroyed.
+    func destroyCounter(_ handler: CounterHandler)
+
+    /// Invoked when the corresponding `Recorder`'s `destroy()` function is invoked.
+    /// Upon receiving this signal the factory may eagerly release any resources related to this recorder.
+    ///
+    /// - parameters:
+    ///     - handler: The handler to be destroyed.
+    func destroyRecorder(_ handler: RecorderHandler)
+
+    /// Invoked when the corresponding `Timer`'s `destroy()` function is invoked.
+    /// Upon receiving this signal the factory may eagerly release any resources related to this timer.
+    ///
+    /// - parameters:
+    ///     - handler: The handler to be destroyed.
+    func destroyTimer(_ handler: TimerHandler)
 }
 
 /// The `MetricsSystem` is a global facility where the default metrics backend implementation (`MetricsFactory`) can be
@@ -378,7 +440,7 @@ public enum MetricsSystem {
         }
     }
 
-    /// Returns a refernece to the configured factory.
+    /// Returns a reference to the configured factory.
     public static var factory: MetricsFactory {
         return self.lock.withReaderLock { self._factory }
     }
@@ -402,6 +464,25 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return MuxTimer(factories: self.factories, label: label, dimensions: dimensions)
     }
+
+    public func destroyCounter(_ handler: CounterHandler) {
+        for factory in self.factories {
+            factory.destroyCounter(handler)
+        }
+    }
+
+    public func destroyRecorder(_ handler: RecorderHandler) {
+        for factory in self.factories {
+            factory.destroyRecorder(handler)
+        }
+    }
+
+    public func destroyTimer(_ handler: TimerHandler) {
+        for factory in self.factories {
+            factory.destroyTimer(handler)
+        }
+    }
+
 
     private class MuxCounter: CounterHandler {
         let counters: [CounterHandler]
@@ -447,6 +528,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
 
 /// Ships with the metrics module, used for initial bootstraping.
 public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderHandler, TimerHandler {
+
     public static let instance = NOOPMetricsHandler()
 
     private init() {}
@@ -454,14 +536,16 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderH
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return self
     }
-
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         return self
     }
-
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return self
     }
+
+    public func destroyCounter(_ handler: CounterHandler) {}
+    public func destroyRecorder(_ handler: RecorderHandler) {}
+    public func destroyTimer(_ handler: TimerHandler) {}
 
     public func increment(by: Int64) {}
     public func reset() {}

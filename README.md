@@ -192,6 +192,11 @@ class SimpleMetricsLibrary: MetricsFactory {
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return ExampleTimer(label, dimensions)
     }
+    
+    // implementation is stateless, so nothing to do on destroy calls
+    func destroyCounter(_ handler: CounterHandler) {}
+    func destroyRecorder(_ handler: RecorderHandler) {}
+    func destroyTimer(_ handler: TimerHandler) {}
 
     private class ExampleCounter: CounterHandler {
         init(_: String, _: [(String, String)]) {}
