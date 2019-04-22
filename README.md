@@ -17,8 +17,9 @@ If you have a server-side Swift application, or maybe a cross-platform (e.g. Lin
 To add a dependency on the metrics API package, you need to declare it in your `Package.swift`:
 
 ```swift
-// it's early days here so we haven't tagged a version yet, but will soon
-.package(url: "https://github.com/apple/swift-metrics.git", .branch("master")),
+// SwiftMetrics is converging towards the 1.0.0 release as of April 22nd 2019, the tag is 1.0.0-convergence.1
+// To depend on this release, you can use
+.package(url: "https://github.com/apple/swift-metrics.git", from: "1.0.0-convergence.1"),
 ```
 
 and to your application/library target, add "Metrics" to your dependencies:
@@ -46,9 +47,9 @@ Note: If you are building a library, you don't need to concern yourself with thi
 
 SwiftMetrics only provides the metrics system API. As an application owner, you need to select a metrics backend (such as the ones mentioned above) to make the metrics information useful.
 
-Selecting a backend is done by adding a dependency on the desired backend client implementation and invoking the `MetricsSystem.bootstrap` function at the beginning of the program: 
+Selecting a backend is done by adding a dependency on the desired backend client implementation and invoking the `MetricsSystem.bootstrap` function at the beginning of the program:
 
-```swift 
+```swift
 MetricsSystem.bootstrap(SelectedMetricsImplementation())
 ```
 
@@ -192,7 +193,7 @@ class SimpleMetricsLibrary: MetricsFactory {
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return ExampleTimer(label, dimensions)
     }
-    
+
     // implementation is stateless, so nothing to do on destroy calls
     func destroyCounter(_ handler: CounterHandler) {}
     func destroyRecorder(_ handler: RecorderHandler) {}

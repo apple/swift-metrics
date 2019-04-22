@@ -78,7 +78,6 @@ public class Counter {
     public func reset() {
         self.handler.reset()
     }
-
 }
 
 public extension Counter {
@@ -483,7 +482,6 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
     }
 
-
     private class MuxCounter: CounterHandler {
         let counters: [CounterHandler]
         public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)]) {
@@ -528,7 +526,6 @@ public final class MultiplexMetricsHandler: MetricsFactory {
 
 /// Ships with the metrics module, used for initial bootstraping.
 public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderHandler, TimerHandler {
-
     public static let instance = NOOPMetricsHandler()
 
     private init() {}
@@ -543,9 +540,9 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderH
         return self
     }
 
-    public func destroyCounter(_ handler: CounterHandler) {}
-    public func destroyRecorder(_ handler: RecorderHandler) {}
-    public func destroyTimer(_ handler: TimerHandler) {}
+    public func destroyCounter(_: CounterHandler) {}
+    public func destroyRecorder(_: RecorderHandler) {}
+    public func destroyTimer(_: TimerHandler) {}
 
     public func increment(by: Int64) {}
     public func reset() {}
