@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           CoreMetrics Docs
         </a>
-         (85% documented)
+         (88% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -122,6 +122,21 @@
 
 <p>This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 To use the SwiftMetrics API, please refer to the documentation of <code><a href="../Enums/MetricsSystem.html">MetricsSystem</a></code>.</p>
+<h1 id='destroying-metrics' class='heading'>Destroying metrics</h1>
+
+<p>Since <em>some</em> metrics implementations may need to allocate (potentially <q>heavy</q>) resources for metrics, destroying
+metrics offers a signal to libraries when a metric is <q>known to never be updated again.</q></p>
+
+<p>While many metrics are bound to the entire lifetime of an application and thus never need to be destroyed eagerly,
+some metrics have well defined unique life-cycles, and it may be beneficial to release any resources held by them
+more eagerly than awaiting the applications termination. In such cases, a library or application should invoke
+a metric&rsquo;s appropriate <code>destroy()</code> method, which in turn results in the corresponding handler that it is backed by
+to be passed to <code>destroyCounter(handler:)</code>, <code>destroyRecorder(handler:)</code> or <code>destroyTimer(handler:)</code> where the factory
+can decide to free any corresponding resources.</p>
+
+<p>While some libraries may not need to implement this destroying as they may be stateless or similar,
+libraries using the metrics API should always assume a library WILL make use of this signal, and shall not
+neglect calling these methods when appropriate.</p>
 
           </div>
         </section>
@@ -316,6 +331,147 @@ To use the SwiftMetrics API, please refer to the documentation of <code><a href=
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11CoreMetrics0B7FactoryP14destroyCounteryyAA0E7Handler_pF"></a>
+                    <a name="//apple_ref/swift/Method/destroyCounter(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics0B7FactoryP14destroyCounteryyAA0E7Handler_pF">destroyCounter(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Invoked when the corresponding <code><a href="../Classes/Counter.html">Counter</a></code>&lsquo;s <code>destroy()</code> function is invoked.
+Upon receiving this signal the factory may eagerly release any resources related to this counter.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">destroyCounter</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/CounterHandler.html">CounterHandler</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The handler to be destroyed.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11CoreMetrics0B7FactoryP15destroyRecorderyyAA0E7Handler_pF"></a>
+                    <a name="//apple_ref/swift/Method/destroyRecorder(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics0B7FactoryP15destroyRecorderyyAA0E7Handler_pF">destroyRecorder(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Invoked when the corresponding <code><a href="../Classes/Recorder.html">Recorder</a></code>&lsquo;s <code>destroy()</code> function is invoked.
+Upon receiving this signal the factory may eagerly release any resources related to this recorder.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">destroyRecorder</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/RecorderHandler.html">RecorderHandler</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The handler to be destroyed.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11CoreMetrics0B7FactoryP12destroyTimeryyAA0E7Handler_pF"></a>
+                    <a name="//apple_ref/swift/Method/destroyTimer(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics0B7FactoryP12destroyTimeryyAA0E7Handler_pF">destroyTimer(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Invoked when the corresponding <code><a href="../Classes/Timer.html">Timer</a></code>&lsquo;s <code>destroy()</code> function is invoked.
+Upon receiving this signal the factory may eagerly release any resources related to this timer.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">destroyTimer</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/TimerHandler.html">TimerHandler</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The handler to be destroyed.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </div>
@@ -324,7 +480,7 @@ To use the SwiftMetrics API, please refer to the documentation of <code><a href=
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external">SwiftMetrics team</a>. All rights reserved. (Last updated: 2019-04-10)</p>
+      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external">SwiftMetrics team</a>. All rights reserved. (Last updated: 2019-04-22)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

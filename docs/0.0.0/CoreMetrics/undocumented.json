@@ -2,63 +2,63 @@
   "warnings": [
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 42,
+      "line": 43,
       "symbol": "Counter.label",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 43,
+      "line": 44,
       "symbol": "Counter.dimensions",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 123,
+      "line": 132,
       "symbol": "Recorder.label",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 124,
+      "line": 133,
       "symbol": "Recorder.dimensions",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 125,
+      "line": 134,
       "symbol": "Recorder.aggregate",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 213,
+      "line": 229,
       "symbol": "Timer.label",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 214,
+      "line": 230,
       "symbol": "Timer.dimensions",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 375,
+      "line": 452,
       "symbol": "MultiplexMetricsHandler.init(factories:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 435,
+      "line": 532,
       "symbol": "NOOPMetricsHandler.instance",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
