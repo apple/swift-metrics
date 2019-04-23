@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>TimerHandler Protocol Reference</title>
+    <title>Gauge Class Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Protocol/TimerHandler" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Class/Gauge" class="dashAnchor"></a>
 
-    <a title="TimerHandler Protocol Reference"></a>
+    <a title="Gauge Class Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -44,7 +44,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">CoreMetrics Reference</a>
       <img class="carat" src="../img/carat.png" />
-      TimerHandler Protocol Reference
+      Gauge Class Reference
     </p>
 
     <div class="content-wrapper">
@@ -104,25 +104,16 @@
 
         <section class="section">
           <div class="section-content">
-            <h1>TimerHandler</h1>
+            <h1>Gauge</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">TimerHandler</span> <span class="p">:</span> <span class="kt">AnyObject</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Gauge</span> <span class="p">:</span> <span class="kt"><a href="../Classes/Recorder.html">Recorder</a></span></code></pre>
 
                 </div>
               </div>
-            <p>A <code>TimerHandler</code> represents a backend implementation of a <code><a href="../Classes/Timer.html">Timer</a></code>.</p>
-
-<p>This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-To use the SwiftMetrics API, please refer to the documentation of <code><a href="../Classes/Timer.html">Timer</a></code>.</p>
-<h1 id='implementation-requirements' class='heading'>Implementation requirements</h1>
-
-<p>To implement your own <code>TimerHandler</code> you should respect a few requirements that are necessary so applications work
-as expected regardless of the selected <code>TimerHandler</code> implementation.</p>
-
-<ul>
-<li>The <code>TimerHandler</code> must be a <code>class</code>.</li>
-</ul>
+            <p>A Gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
+Gauges are typically used for measured values like temperatures or current memory usage, but also <q>counts</q> that can go up and down, like the number of active threads.
+Gauges are modeled as <code><a href="../Classes/Recorder.html">Recorder</a></code> with a sample size of 1 and that does not perform any aggregation.</p>
 
           </div>
         </section>
@@ -134,9 +125,9 @@ as expected regardless of the selected <code>TimerHandler</code> implementation.
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics12TimerHandlerP17recordNanosecondsyys5Int64VF"></a>
-                    <a name="//apple_ref/swift/Method/recordNanoseconds(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics12TimerHandlerP17recordNanosecondsyys5Int64VF">recordNanoseconds(_:)</a>
+                    <a name="/s:11CoreMetrics5GaugeC5label10dimensionsACSS_SaySS_SStGtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(label:dimensions:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics5GaugeC5label10dimensionsACSS_SaySS_SStGtcfc">init(label:dimensions:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -144,14 +135,14 @@ as expected regardless of the selected <code>TimerHandler</code> implementation.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Record a duration in nanoseconds.</p>
+                        <p>Create a new Gauge.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">recordNanoseconds</span><span class="p">(</span><span class="n">_</span> <span class="nv">duration</span><span class="p">:</span> <span class="kt">Int64</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">dimensions</span><span class="p">:</span> <span class="p">[(</span><span class="kt">String</span><span class="p">,</span> <span class="kt">String</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[])</span></code></pre>
 
                         </div>
                       </div>
@@ -162,17 +153,32 @@ as expected regardless of the selected <code>TimerHandler</code> implementation.
                             <tr>
                               <td>
                                 <code>
-                                <em>value</em>
+                                <em>label</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>Duration to record.</p>
+                                  <p>The label for the Gauge.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dimensions</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The dimensions for the Gauge.</p>
                                 </div>
                               </td>
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/apple/swift-metrics/tree/1.0.0-convergence.1/Sources/CoreMetrics/Metrics.swift#L198-L200">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -185,7 +191,7 @@ as expected regardless of the selected <code>TimerHandler</code> implementation.
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external">SwiftMetrics team</a>. All rights reserved. (Last updated: 2019-04-22)</p>
+      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external">SwiftMetrics team</a>. All rights reserved. (Last updated: 2019-04-23)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

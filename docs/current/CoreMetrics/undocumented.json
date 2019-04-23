@@ -16,49 +16,49 @@
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 132,
+      "line": 131,
       "symbol": "Recorder.label",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 133,
+      "line": 132,
       "symbol": "Recorder.dimensions",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 134,
+      "line": 133,
       "symbol": "Recorder.aggregate",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 229,
+      "line": 228,
       "symbol": "Timer.label",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 230,
+      "line": 229,
       "symbol": "Timer.dimensions",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 452,
+      "line": 451,
       "symbol": "MultiplexMetricsHandler.init(factories:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/code/Sources/CoreMetrics/Metrics.swift",
-      "line": 532,
+      "line": 529,
       "symbol": "NOOPMetricsHandler.instance",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"

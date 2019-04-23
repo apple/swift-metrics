@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Gauge Class Reference</title>
+    <title>MetricsSystem Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Class/Gauge" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Enum/MetricsSystem" class="dashAnchor"></a>
 
-    <a title="Gauge Class Reference"></a>
+    <a title="MetricsSystem Enumeration Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -44,7 +44,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">CoreMetrics Reference</a>
       <img class="carat" src="../img/carat.png" />
-      Gauge Class Reference
+      MetricsSystem Enumeration Reference
     </p>
 
     <div class="content-wrapper">
@@ -104,16 +104,16 @@
 
         <section class="section">
           <div class="section-content">
-            <h1>Gauge</h1>
+            <h1>MetricsSystem</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Gauge</span> <span class="p">:</span> <span class="kt"><a href="../Classes/Recorder.html">Recorder</a></span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">MetricsSystem</span></code></pre>
 
                 </div>
               </div>
-            <p>A Gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
-Gauges are typically used for measured values like temperatures or current memory usage, but also <q>counts</q> that can go up and down, like the number of active threads.
-Gauges are modeled as <code><a href="../Classes/Recorder.html">Recorder</a></code> with a sample size of 1 and that does not perform any aggregation.</p>
+            <p>The <code>MetricsSystem</code> is a global facility where the default metrics backend implementation (<code><a href="../Protocols/MetricsFactory.html">MetricsFactory</a></code>) can be
+configured. <code>MetricsSystem</code> is set up just once in a given program to set up the desired metrics backend
+implementation.</p>
 
           </div>
         </section>
@@ -125,9 +125,9 @@ Gauges are modeled as <code><a href="../Classes/Recorder.html">Recorder</a></cod
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics5GaugeC5label10dimensionsACSS_SaySS_SStGtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(label:dimensions:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics5GaugeC5label10dimensionsACSS_SaySS_SStGtcfc">init(label:dimensions:)</a>
+                    <a name="/s:11CoreMetrics0B6SystemO9bootstrapyyAA0B7Factory_pFZ"></a>
+                    <a name="//apple_ref/swift/Method/bootstrap(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics0B6SystemO9bootstrapyyAA0B7Factory_pFZ">bootstrap(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -135,14 +135,16 @@ Gauges are modeled as <code><a href="../Classes/Recorder.html">Recorder</a></cod
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Create a new Gauge.</p>
+                        <p><code>bootstrap</code> is a one-time configuration function which globally selects the desired metrics backend
+implementation. <code>bootstrap</code> can be called at maximum once in any given program, calling it more than once will
+lead to undefined behaviour, most likely a crash.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">dimensions</span><span class="p">:</span> <span class="p">[(</span><span class="kt">String</span><span class="p">,</span> <span class="kt">String</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[])</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">bootstrap</span><span class="p">(</span><span class="n">_</span> <span class="nv">factory</span><span class="p">:</span> <span class="kt"><a href="../Protocols/MetricsFactory.html">MetricsFactory</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -153,29 +155,50 @@ Gauges are modeled as <code><a href="../Classes/Recorder.html">Recorder</a></cod
                             <tr>
                               <td>
                                 <code>
-                                <em>label</em>
+                                <em>factory</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>The label for the Gauge.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>dimensions</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The dimensions for the Gauge.</p>
+                                  <p>A factory that given an identifier produces instances of metrics handlers such as <code><a href="../Protocols/CounterHandler.html">CounterHandler</a></code>, <code><a href="../Protocols/RecorderHandler.html">RecorderHandler</a></code> and <code><a href="../Protocols/TimerHandler.html">TimerHandler</a></code>.</p>
                                 </div>
                               </td>
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/apple/swift-metrics/tree/1.0.0-convergence.1/Sources/CoreMetrics/Metrics.swift#L427-L433">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11CoreMetrics0B6SystemO7factoryAA0B7Factory_pvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/factory" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics0B6SystemO7factoryAA0B7Factory_pvpZ">factory</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a reference to the configured factory.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">factory</span><span class="p">:</span> <span class="kt"><a href="../Protocols/MetricsFactory.html">MetricsFactory</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/apple/swift-metrics/tree/1.0.0-convergence.1/Sources/CoreMetrics/Metrics.swift#L443-L445">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -188,7 +211,7 @@ Gauges are modeled as <code><a href="../Classes/Recorder.html">Recorder</a></cod
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external">SwiftMetrics team</a>. All rights reserved. (Last updated: 2019-04-22)</p>
+      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external">SwiftMetrics team</a>. All rights reserved. (Last updated: 2019-04-23)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

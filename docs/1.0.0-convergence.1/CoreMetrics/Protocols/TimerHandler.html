@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>MetricsSystem Enumeration Reference</title>
+    <title>TimerHandler Protocol Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Enum/MetricsSystem" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Protocol/TimerHandler" class="dashAnchor"></a>
 
-    <a title="MetricsSystem Enumeration Reference"></a>
+    <a title="TimerHandler Protocol Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -44,7 +44,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">CoreMetrics Reference</a>
       <img class="carat" src="../img/carat.png" />
-      MetricsSystem Enumeration Reference
+      TimerHandler Protocol Reference
     </p>
 
     <div class="content-wrapper">
@@ -104,16 +104,25 @@
 
         <section class="section">
           <div class="section-content">
-            <h1>MetricsSystem</h1>
+            <h1>TimerHandler</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">MetricsSystem</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">TimerHandler</span> <span class="p">:</span> <span class="kt">AnyObject</span></code></pre>
 
                 </div>
               </div>
-            <p>The <code>MetricsSystem</code> is a global facility where the default metrics backend implementation (<code><a href="../Protocols/MetricsFactory.html">MetricsFactory</a></code>) can be
-configured. <code>MetricsSystem</code> is set up just once in a given program to set up the desired metrics backend
-implementation.</p>
+            <p>A <code>TimerHandler</code> represents a backend implementation of a <code><a href="../Classes/Timer.html">Timer</a></code>.</p>
+
+<p>This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
+To use the SwiftMetrics API, please refer to the documentation of <code><a href="../Classes/Timer.html">Timer</a></code>.</p>
+<h1 id='implementation-requirements' class='heading'>Implementation requirements</h1>
+
+<p>To implement your own <code>TimerHandler</code> you should respect a few requirements that are necessary so applications work
+as expected regardless of the selected <code>TimerHandler</code> implementation.</p>
+
+<ul>
+<li>The <code>TimerHandler</code> must be a <code>class</code>.</li>
+</ul>
 
           </div>
         </section>
@@ -125,9 +134,9 @@ implementation.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics0B6SystemO9bootstrapyyAA0B7Factory_pFZ"></a>
-                    <a name="//apple_ref/swift/Method/bootstrap(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics0B6SystemO9bootstrapyyAA0B7Factory_pFZ">bootstrap(_:)</a>
+                    <a name="/s:11CoreMetrics12TimerHandlerP17recordNanosecondsyys5Int64VF"></a>
+                    <a name="//apple_ref/swift/Method/recordNanoseconds(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics12TimerHandlerP17recordNanosecondsyys5Int64VF">recordNanoseconds(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -135,16 +144,14 @@ implementation.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p><code>bootstrap</code> is a one-time configuration function which globally selects the desired metrics backend
-implementation. <code>bootstrap</code> can be called at maximum once in any given program, calling it more than once will
-lead to undefined behaviour, most likely a crash.</p>
+                        <p>Record a duration in nanoseconds.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">bootstrap</span><span class="p">(</span><span class="n">_</span> <span class="nv">factory</span><span class="p">:</span> <span class="kt"><a href="../Protocols/MetricsFactory.html">MetricsFactory</a></span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">recordNanoseconds</span><span class="p">(</span><span class="n">_</span> <span class="nv">duration</span><span class="p">:</span> <span class="kt">Int64</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -155,44 +162,20 @@ lead to undefined behaviour, most likely a crash.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>factory</em>
+                                <em>value</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>A factory that given an identifier produces instances of metrics handlers such as <code><a href="../Protocols/CounterHandler.html">CounterHandler</a></code>, <code><a href="../Protocols/RecorderHandler.html">RecorderHandler</a></code> and <code><a href="../Protocols/TimerHandler.html">TimerHandler</a></code>.</p>
+                                  <p>Duration to record.</p>
                                 </div>
                               </td>
                             </tr>
                           </tbody>
                         </table>
                       </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11CoreMetrics0B6SystemO7factoryAA0B7Factory_pvpZ"></a>
-                    <a name="//apple_ref/swift/Variable/factory" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics0B6SystemO7factoryAA0B7Factory_pvpZ">factory</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Returns a reference to the configured factory.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">factory</span><span class="p">:</span> <span class="kt"><a href="../Protocols/MetricsFactory.html">MetricsFactory</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/apple/swift-metrics/tree/1.0.0-convergence.1/Sources/CoreMetrics/Metrics.swift#L219">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -205,7 +188,7 @@ lead to undefined behaviour, most likely a crash.</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external">SwiftMetrics team</a>. All rights reserved. (Last updated: 2019-04-22)</p>
+      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external">SwiftMetrics team</a>. All rights reserved. (Last updated: 2019-04-23)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
