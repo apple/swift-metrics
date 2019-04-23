@@ -60,6 +60,7 @@ jazzy_args=(--clean
             --readme "$module_switcher"
             --author_url https://github.com/apple/swift-metrics
             --github_url https://github.com/apple/swift-metrics
+            --github-file-prefix https://github.com/apple/swift-metrics/tree/$version
             --theme fullwidth
             --xcodebuild-arguments -scheme,swift-metrics-Package)
 cat > "$module_switcher" <<"EOF"
