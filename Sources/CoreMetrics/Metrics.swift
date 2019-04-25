@@ -36,21 +36,21 @@ public protocol CounterHandler: AnyObject {
 
 /// A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero.
 /// For example, you can use a counter to represent the number of requests served, tasks completed, or errors.
-/// This is the user facing Counter API. Its behavior depends on the `CounterHandler` implementation
+/// This is the user facing Counter API. Its behavior depends on the `CounterHandler` implementation.
 public class Counter {
     @usableFromInline
     var handler: CounterHandler
     public let label: String
     public let dimensions: [(String, String)]
 
-    /// Create a new Counter.
+    /// Create a new `Counter`.
     ///
-    /// This initializer provides an escape hatch for situations one must use a custom factory instead of the gloabl one
-    /// we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason.
+    /// This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    /// We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - parameters:
-    ///     - label: The label for the Counter.
-    ///     - dimensions: The dimensions for the Counter.
+    ///     - label: The label for the `Counter`.
+    ///     - dimensions: The dimensions for the `Counter`.
     ///     - handler: The custom backend.
     public init(label: String, dimensions: [(String, String)], handler: CounterHandler) {
         self.label = label
@@ -81,18 +81,18 @@ public class Counter {
 }
 
 public extension Counter {
-    /// Create a new Counter.
+    /// Create a new `Counter`.
     ///
     /// - parameters:
-    ///     - label: The label for the Counter.
-    ///     - dimensions: The dimensions for the Counter.
+    ///     - label: The label for the `Counter`.
+    ///     - dimensions: The dimensions for the `Counter`.
     convenience init(label: String, dimensions: [(String, String)] = []) {
         let handler = MetricsSystem.factory.makeCounter(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
     }
 
     /// Signal the underlying metrics library that this counter will never be updated again.
-    /// In response library MAY decide to eagerly release any resources held by this counter.
+    /// In response the library MAY decide to eagerly release any resources held by this `Counter`.
     @inlinable
     func destroy() {
         MetricsSystem.factory.destroyCounter(self.handler)
@@ -123,8 +123,8 @@ public protocol RecorderHandler: AnyObject {
     func record(_ value: Double)
 }
 
-/// A recorder collects observations within a time window (usually things like response sizes) and *can* provide aggregated information about the data sample, for example count, sum, min, max and various quantiles.
-/// This is the user facing Recorder API. Its behavior depends on the `RecorderHandler` implementation
+/// A recorder collects observations within a time window (usually things like response sizes) and *can* provide aggregated information about the data sample, for example, count, sum, min, max and various quantiles.
+/// This is the user facing Recorder API. Its behavior depends on the `RecorderHandler` implementation.
 public class Recorder {
     @usableFromInline
     var handler: RecorderHandler
@@ -132,14 +132,14 @@ public class Recorder {
     public let dimensions: [(String, String)]
     public let aggregate: Bool
 
-    /// Create a new Recorder.
+    /// Create a new `Recorder`.
     ///
-    /// This initializer provides an escape hatch for situations one must use a custom factory instead of the gloabl one
-    /// we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason.
+    /// This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    /// We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - parameters:
-    ///     - label: The label for the Recorder.
-    ///     - dimensions: The dimensions for the Recorder.
+    ///     - label: The label for the `Recorder`.
+    ///     - dimensions: The dimensions for the `Recorder`.
     ///     - handler: The custom backend.
     public init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
         self.label = label
@@ -168,33 +168,33 @@ public class Recorder {
 }
 
 public extension Recorder {
-    /// Create a new Recorder.
+    /// Create a new `Recorder`.
     ///
     /// - parameters:
-    ///     - label: The label for the Recorder.
-    ///     - dimensions: The dimensions for the Recorder.
+    ///     - label: The label for the `Recorder`.
+    ///     - dimensions: The dimensions for the `Recorder`.
     convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
         let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
     }
 
     /// Signal the underlying metrics library that this recorder will never be updated again.
-    /// In response library MAY decide to eagerly release any resources held by this recorder.
+    /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
     @inlinable
     func destroy() {
         MetricsSystem.factory.destroyRecorder(self.handler)
     }
 }
 
-/// A Gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
+/// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
 /// Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
 public class Gauge: Recorder {
-    /// Create a new Gauge.
+    /// Create a new `Gauge`.
     ///
     /// - parameters:
-    ///     - label: The label for the Gauge.
-    ///     - dimensions: The dimensions for the Gauge.
+    ///     - label: The label for the `Gauge`.
+    ///     - dimensions: The dimensions for the `Gauge`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, aggregate: false)
     }
@@ -219,23 +219,23 @@ public protocol TimerHandler: AnyObject {
     func recordNanoseconds(_ duration: Int64)
 }
 
-/// A timer collects observations within a time window (usually things like request durations) and provides aggregated information about the data sample.
-/// For example min, max and various quantiles. It is similar to a `Recorder` but specialized for values that represent durations.
-/// This is the user facing Timer API. Its behavior depends on the `TimerHandler` implementation
+/// A timer collects observations within a time window (usually things like request durations) and provides aggregated information about the data sample,
+/// for example, min, max and various quantiles. It is similar to a `Recorder` but specialized for values that represent durations.
+/// This is the user facing Timer API. Its behavior depends on the `TimerHandler` implementation.
 public class Timer {
     @usableFromInline
     var handler: TimerHandler
     public let label: String
     public let dimensions: [(String, String)]
 
-    /// Create a new Timer.
+    /// Create a new `Timer`.
     ///
-    /// This initializer provides an escape hatch for situations one must use a custom factory instead of the gloabl one
-    /// we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason.
+    /// This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    /// We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - parameters:
-    ///     - label: The label for the Timer.
-    ///     - dimensions: The dimensions for the Timer.
+    ///     - label: The label for the `Timer`.
+    ///     - dimensions: The dimensions for the `Timer`.
     ///     - handler: The custom backend.
     public init(label: String, dimensions: [(String, String)], handler: TimerHandler) {
         self.label = label
@@ -323,18 +323,18 @@ public class Timer {
 }
 
 public extension Timer {
-    /// Create a new Timer.
+    /// Create a new `Timer`.
     ///
     /// - parameters:
-    ///     - label: The label for the Timer.
-    ///     - dimensions: The dimensions for the Timer.
+    ///     - label: The label for the `Timer`.
+    ///     - dimensions: The dimensions for the `Timer`.
     convenience init(label: String, dimensions: [(String, String)] = []) {
         let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
     }
 
     /// Signal the underlying metrics library that this timer will never be updated again.
-    /// In response library MAY decide to eagerly release any resources held by this timer.
+    /// In response the library MAY decide to eagerly release any resources held by this `Timer`.
     @inlinable
     func destroy() {
         MetricsSystem.factory.destroyTimer(self.handler)
@@ -342,7 +342,7 @@ public extension Timer {
 }
 
 /// The `MetricsFactory` is the bridge between the `MetricsSystem` and the metrics backend implementation.
-/// `MetricsFactory` role is to initialize concrete implementations of the various metric types:
+/// `MetricsFactory`'s role is to initialize concrete implementations of the various metric types:
 /// * `Counter` -> `CounterHandler`
 /// * `Recorder` -> `RecorderHandler`
 /// * `Timer` -> `TimerHandler`
@@ -357,7 +357,7 @@ public extension Timer {
 ///
 /// While many metrics are bound to the entire lifetime of an application and thus never need to be destroyed eagerly,
 /// some metrics have well defined unique life-cycles, and it may be beneficial to release any resources held by them
-/// more eagerly than awaiting the applications termination. In such cases, a library or application should invoke
+/// more eagerly than awaiting the application's termination. In such cases, a library or application should invoke
 /// a metric's appropriate `destroy()` method, which in turn results in the corresponding handler that it is backed by
 /// to be passed to `destroyCounter(handler:)`, `destroyRecorder(handler:)` or `destroyTimer(handler:)` where the factory
 /// can decide to free any corresponding resources.
@@ -369,23 +369,23 @@ public protocol MetricsFactory {
     /// Create a backing `CounterHandler`.
     ///
     /// - parameters:
-    ///     - label: The label for the CounterHandler.
-    ///     - dimensions: The dimensions for the CounterHandler.
+    ///     - label: The label for the `CounterHandler`.
+    ///     - dimensions: The dimensions for the `CounterHandler`.
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
 
     /// Create a backing `RecorderHandler`.
     ///
     /// - parameters:
-    ///     - label: The label for the RecorderHandler.
-    ///     - dimensions: The dimensions for the RecorderHandler.
+    ///     - label: The label for the `RecorderHandler`.
+    ///     - dimensions: The dimensions for the `RecorderHandler`.
     ///     - aggregate: Is data aggregation expected.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
 
     /// Create a backing `TimerHandler`.
     ///
     /// - parameters:
-    ///     - label: The label for the TimerHandler.
-    ///     - dimensions: The dimensions for the TimerHandler.
+    ///     - label: The label for the `TimerHandler`.
+    ///     - dimensions: The dimensions for the `TimerHandler`.
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
 
     /// Invoked when the corresponding `Counter`'s `destroy()` function is invoked.
@@ -418,7 +418,7 @@ public enum MetricsSystem {
     fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
     fileprivate static var initialized = false
 
-    /// `bootstrap` is a one-time configuration function which globally selects the desired metrics backend
+    /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
     /// lead to undefined behaviour, most likely a crash.
     ///
@@ -432,7 +432,7 @@ public enum MetricsSystem {
         }
     }
 
-    // for our testing we want to allow multiple bootstraping
+    // for our testing we want to allow multiple bootstrapping
     internal static func bootstrapInternal(_ factory: MetricsFactory) {
         self.lock.withWriterLock {
             self._factory = factory
@@ -524,7 +524,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     }
 }
 
-/// Ships with the metrics module, used for initial bootstraping.
+/// Ships with the metrics module, used for initial bootstrapping.
 public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderHandler, TimerHandler {
     public static let instance = NOOPMetricsHandler()
 
