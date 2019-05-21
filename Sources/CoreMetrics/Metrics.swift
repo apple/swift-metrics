@@ -37,7 +37,7 @@ public protocol CounterHandler: AnyObject {
 /// A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero.
 /// For example, you can use a counter to represent the number of requests served, tasks completed, or errors.
 ///
-/// This is the user facing Counter API.
+/// This is the user-facing Counter API.
 ///
 /// Its behavior depends on the `CounterHandler` implementation.
 public class Counter {
@@ -48,8 +48,8 @@ public class Counter {
 
     /// Alternative way to create a new `Counter`, while providing an explicit `CounterHandler`.
     ///
-    /// This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    /// We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Counter` instances using the configured metrics backend.
     ///
@@ -130,7 +130,7 @@ public protocol RecorderHandler: AnyObject {
 
 /// A recorder collects observations within a time window (usually things like response sizes) and *can* provide aggregated information about the data sample, for example, count, sum, min, max and various quantiles.
 ///
-/// This is the user facing Recorder API.
+/// This is the user-facing Recorder API.
 ///
 /// Its behavior depends on the `RecorderHandler` implementation.
 public class Recorder {
@@ -142,8 +142,8 @@ public class Recorder {
 
     /// Alternative way to create a new `Recorder`, while providing an explicit `RecorderHandler`.
     ///
-    /// This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    /// We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
     ///
@@ -232,7 +232,7 @@ public protocol TimerHandler: AnyObject {
 /// A timer collects observations within a time window (usually things like request durations) and provides aggregated information about the data sample,
 /// for example, min, max and various quantiles. It is similar to a `Recorder` but specialized for values that represent durations.
 ///
-/// This is the user facing Timer API.
+/// This is the user-facing Timer API.
 ///
 /// Its behavior depends on the `TimerHandler` implementation.
 public class Timer {
@@ -243,8 +243,8 @@ public class Timer {
 
     /// Alternative way to create a new `Timer`, while providing an explicit `TimerHandler`.
     ///
-    /// This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    /// We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
     ///
