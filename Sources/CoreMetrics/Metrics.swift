@@ -273,6 +273,8 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordMicroseconds<DataType: BinaryInteger>(_ duration: DataType) {
+        guard duration <= Int64.max else { return self.recordNanoseconds(Int64.max) }
+
         let result = Int64(duration).multipliedReportingOverflow(by: 1000)
         if result.overflow {
             self.recordNanoseconds(Int64.max)
@@ -296,6 +298,8 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordMilliseconds<DataType: BinaryInteger>(_ duration: DataType) {
+        guard duration <= Int64.max else { return self.recordNanoseconds(Int64.max) }
+
         let result = Int64(duration).multipliedReportingOverflow(by: 1_000_000)
         if result.overflow {
             self.recordNanoseconds(Int64.max)
@@ -319,6 +323,8 @@ public class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordSeconds<DataType: BinaryInteger>(_ duration: DataType) {
+        guard duration <= Int64.max else { return self.recordNanoseconds(Int64.max) }
+
         let result = Int64(duration).multipliedReportingOverflow(by: 1_000_000_000)
         if result.overflow {
             self.recordNanoseconds(Int64.max)
