@@ -267,6 +267,15 @@ public class Timer {
         self.handler.recordNanoseconds(duration)
     }
 
+    /// Record a duration in nanoseconds.
+    ///
+    /// - parameters:
+    ///     - value: Duration to record.
+    @inlinable
+    public func recordNanoseconds<DataType: BinaryInteger>(_ duration: DataType) {
+        self.recordNanoseconds(duration >= Int64.max ? Int64.max : Int64(duration))
+    }
+
     /// Record a duration in microseconds.
     ///
     /// - parameters:

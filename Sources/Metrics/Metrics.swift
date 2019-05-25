@@ -52,7 +52,7 @@ public extension Timer {
     func record(_ duration: DispatchTimeInterval) {
         switch duration {
         case .nanoseconds(let value):
-            self.recordNanoseconds(Int64(value))
+            self.recordNanoseconds(value)
         case .microseconds(let value):
             self.recordMicroseconds(value)
         case .milliseconds(let value):
