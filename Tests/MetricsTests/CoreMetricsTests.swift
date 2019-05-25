@@ -217,6 +217,27 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(testTimer.values[3].1, Int64.max, "expected value to match")
     }
 
+    func testTimerHandlesUnsignedOverflow() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let timer = Timer(label: "test-timer")
+        let testTimer = timer.handler as! TestTimer
+        // micro
+        timer.recordMicroseconds(UInt64.max)
+        XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[0].1, Int64.max, "expected value to match")
+        // milli
+        timer.recordMilliseconds(UInt64.max)
+        XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[1].1, Int64.max, "expected value to match")
+        // seconds
+        timer.recordSeconds(UInt64.max)
+        XCTAssertEqual(testTimer.values.count, 3, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values[2].1, Int64.max, "expected value to match")
+    }
+
     func testGauge() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
