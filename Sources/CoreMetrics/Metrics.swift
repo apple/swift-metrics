@@ -136,6 +136,10 @@ public class Recorder {
 
     /// Record a value.
     ///
+    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
+    /// Metrics implementations may choose to provide additional "add" or other operations meant to modify an existing value,
+    /// however the only operation required by this API is the ability to set a specific value.
+    ///
     /// - parameters:
     ///     - value: Value to record.
     @inlinable
@@ -145,6 +149,10 @@ public class Recorder {
 
     /// Record a value.
     ///
+    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
+    /// Metrics implementations may choose to provide additional "add" or other operations meant to modify an existing value,
+    /// however the only operation required by this API is the ability to set a specific value.
+    /// 
     /// - parameters:
     ///     - value: Value to record.
     @inlinable
