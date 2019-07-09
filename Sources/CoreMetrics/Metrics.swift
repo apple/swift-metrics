@@ -12,26 +12,25 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// A `CounterHandler` represents a backend implementation of a `Counter`.
-///
-/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-/// To use the SwiftMetrics API, please refer to the documentation of `Counter`.
-///
-/// # Implementation requirements
-///
-/// To implement your own `CounterHandler` you should respect a few requirements that are necessary so applications work
-/// as expected regardless of the selected `CounterHandler` implementation.
-///
-/// - The `CounterHandler` must be a `class`.
-public protocol CounterHandler: AnyObject {
-    /// Increment the counter.
+// MARK: User API
+
+extension Counter {
+    /// Create a new `Counter`.
     ///
     /// - parameters:
-    ///     - by: Amount to increment by.
-    func increment(by: Int64)
+    ///     - label: The label for the `Counter`.
+    ///     - dimensions: The dimensions for the `Counter`.
+    public convenience init(label: String, dimensions: [(String, String)] = []) {
+        let handler = MetricsSystem.factory.makeCounter(label: label, dimensions: dimensions)
+        self.init(label: label, dimensions: dimensions, handler: handler)
+    }
 
-    /// Reset the counter back to zero.
-    func reset()
+    /// Signal the underlying metrics library that this counter will never be updated again.
+    /// In response the library MAY decide to eagerly release any resources held by this `Counter`.
+    @inlinable
+    public func destroy() {
+        MetricsSystem.factory.destroyCounter(self.handler)
+    }
 }
 
 /// A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero.
@@ -85,47 +84,24 @@ public class Counter {
     }
 }
 
-public extension Counter {
-    /// Create a new `Counter`.
+
+public extension Recorder {
+    /// Create a new `Recorder`.
     ///
     /// - parameters:
-    ///     - label: The label for the `Counter`.
-    ///     - dimensions: The dimensions for the `Counter`.
-    convenience init(label: String, dimensions: [(String, String)] = []) {
-        let handler = MetricsSystem.factory.makeCounter(label: label, dimensions: dimensions)
-        self.init(label: label, dimensions: dimensions, handler: handler)
+    ///     - label: The label for the `Recorder`.
+    ///     - dimensions: The dimensions for the `Recorder`.
+    convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
+        let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+        self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
     }
 
-    /// Signal the underlying metrics library that this counter will never be updated again.
-    /// In response the library MAY decide to eagerly release any resources held by this `Counter`.
+    /// Signal the underlying metrics library that this recorder will never be updated again.
+    /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
     @inlinable
     func destroy() {
-        MetricsSystem.factory.destroyCounter(self.handler)
+        MetricsSystem.factory.destroyRecorder(self.handler)
     }
-}
-
-/// A `RecorderHandler` represents a backend implementation of a `Recorder`.
-///
-/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-/// To use the SwiftMetrics API, please refer to the documentation of `Recorder`.
-///
-/// # Implementation requirements
-///
-/// To implement your own `RecorderHandler` you should respect a few requirements that are necessary so applications work
-/// as expected regardless of the selected `RecorderHandler` implementation.
-///
-/// - The `RecorderHandler` must be a `class`.
-public protocol RecorderHandler: AnyObject {
-    /// Record a value.
-    ///
-    /// - parameters:
-    ///     - value: Value to record.
-    func record(_ value: Int64)
-    /// Record a value.
-    ///
-    /// - parameters:
-    ///     - value: Value to record.
-    func record(_ value: Double)
 }
 
 /// A recorder collects observations within a time window (usually things like response sizes) and *can* provide aggregated information about the data sample, for example, count, sum, min, max and various quantiles.
@@ -177,24 +153,6 @@ public class Recorder {
     }
 }
 
-public extension Recorder {
-    /// Create a new `Recorder`.
-    ///
-    /// - parameters:
-    ///     - label: The label for the `Recorder`.
-    ///     - dimensions: The dimensions for the `Recorder`.
-    convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
-        let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
-        self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
-    }
-
-    /// Signal the underlying metrics library that this recorder will never be updated again.
-    /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
-    @inlinable
-    func destroy() {
-        MetricsSystem.factory.destroyRecorder(self.handler)
-    }
-}
 
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
@@ -210,23 +168,24 @@ public class Gauge: Recorder {
     }
 }
 
-/// A `TimerHandler` represents a backend implementation of a `Timer`.
-///
-/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-/// To use the SwiftMetrics API, please refer to the documentation of `Timer`.
-///
-/// # Implementation requirements
-///
-/// To implement your own `TimerHandler` you should respect a few requirements that are necessary so applications work
-/// as expected regardless of the selected `TimerHandler` implementation.
-///
-/// - The `TimerHandler` must be a `class`.
-public protocol TimerHandler: AnyObject {
-    /// Record a duration in nanoseconds.
+
+public extension Timer {
+    /// Create a new `Timer`.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
-    func recordNanoseconds(_ duration: Int64)
+    ///     - label: The label for the `Timer`.
+    ///     - dimensions: The dimensions for the `Timer`.
+    convenience init(label: String, dimensions: [(String, String)] = []) {
+        let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
+        self.init(label: label, dimensions: dimensions, handler: handler)
+    }
+
+    /// Signal the underlying metrics library that this timer will never be updated again.
+    /// In response the library MAY decide to eagerly release any resources held by this `Timer`.
+    @inlinable
+    func destroy() {
+        MetricsSystem.factory.destroyTimer(self.handler)
+    }
 }
 
 /// A timer collects observations within a time window (usually things like request durations) and provides aggregated information about the data sample,
@@ -352,24 +311,42 @@ public class Timer {
     }
 }
 
-public extension Timer {
-    /// Create a new `Timer`.
+/// The `MetricsSystem` is a global facility where the default metrics backend implementation (`MetricsFactory`) can be
+/// configured. `MetricsSystem` is set up just once in a given program to set up the desired metrics backend
+/// implementation.
+public enum MetricsSystem {
+    fileprivate static let lock = ReadWriteLock()
+    fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
+    fileprivate static var initialized = false
+
+    /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
+    /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
+    /// lead to undefined behaviour, most likely a crash.
     ///
     /// - parameters:
-    ///     - label: The label for the `Timer`.
-    ///     - dimensions: The dimensions for the `Timer`.
-    convenience init(label: String, dimensions: [(String, String)] = []) {
-        let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
-        self.init(label: label, dimensions: dimensions, handler: handler)
+    ///     - factory: A factory that given an identifier produces instances of metrics handlers such as `CounterHandler`, `RecorderHandler` and `TimerHandler`.
+    public static func bootstrap(_ factory: MetricsFactory) {
+        self.lock.withWriterLock {
+            precondition(!self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self.factory)")
+            self._factory = factory
+            self.initialized = true
+        }
     }
 
-    /// Signal the underlying metrics library that this timer will never be updated again.
-    /// In response the library MAY decide to eagerly release any resources held by this `Timer`.
-    @inlinable
-    func destroy() {
-        MetricsSystem.factory.destroyTimer(self.handler)
+    // for our testing we want to allow multiple bootstrapping
+    internal static func bootstrapInternal(_ factory: MetricsFactory) {
+        self.lock.withWriterLock {
+            self._factory = factory
+        }
+    }
+
+    /// Returns a reference to the configured factory.
+    public static var factory: MetricsFactory {
+        return self.lock.withReaderLock { self._factory }
     }
 }
+
+// MARK: Library SPI, intended to be implemented by backend libraries
 
 /// The `MetricsFactory` is the bridge between the `MetricsSystem` and the metrics backend implementation.
 /// `MetricsFactory`'s role is to initialize concrete implementations of the various metric types:
@@ -440,40 +417,72 @@ public protocol MetricsFactory {
     func destroyTimer(_ handler: TimerHandler)
 }
 
-/// The `MetricsSystem` is a global facility where the default metrics backend implementation (`MetricsFactory`) can be
-/// configured. `MetricsSystem` is set up just once in a given program to set up the desired metrics backend
-/// implementation.
-public enum MetricsSystem {
-    fileprivate static let lock = ReadWriteLock()
-    fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
-    fileprivate static var initialized = false
-
-    /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
-    /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
-    /// lead to undefined behaviour, most likely a crash.
+/// A `CounterHandler` represents a backend implementation of a `Counter`.
+///
+/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
+/// To use the SwiftMetrics API, please refer to the documentation of `Counter`.
+///
+/// # Implementation requirements
+///
+/// To implement your own `CounterHandler` you should respect a few requirements that are necessary so applications work
+/// as expected regardless of the selected `CounterHandler` implementation.
+///
+/// - The `CounterHandler` must be a `class`.
+public protocol CounterHandler: AnyObject {
+    /// Increment the counter.
     ///
     /// - parameters:
-    ///     - factory: A factory that given an identifier produces instances of metrics handlers such as `CounterHandler`, `RecorderHandler` and `TimerHandler`.
-    public static func bootstrap(_ factory: MetricsFactory) {
-        self.lock.withWriterLock {
-            precondition(!self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self.factory)")
-            self._factory = factory
-            self.initialized = true
-        }
-    }
+    ///     - by: Amount to increment by.
+    func increment(by: Int64)
 
-    // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: MetricsFactory) {
-        self.lock.withWriterLock {
-            self._factory = factory
-        }
-    }
-
-    /// Returns a reference to the configured factory.
-    public static var factory: MetricsFactory {
-        return self.lock.withReaderLock { self._factory }
-    }
+    /// Reset the counter back to zero.
+    func reset()
 }
+
+/// A `RecorderHandler` represents a backend implementation of a `Recorder`.
+///
+/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
+/// To use the SwiftMetrics API, please refer to the documentation of `Recorder`.
+///
+/// # Implementation requirements
+///
+/// To implement your own `RecorderHandler` you should respect a few requirements that are necessary so applications work
+/// as expected regardless of the selected `RecorderHandler` implementation.
+///
+/// - The `RecorderHandler` must be a `class`.
+public protocol RecorderHandler: AnyObject {
+    /// Record a value.
+    ///
+    /// - parameters:
+    ///     - value: Value to record.
+    func record(_ value: Int64)
+    /// Record a value.
+    ///
+    /// - parameters:
+    ///     - value: Value to record.
+    func record(_ value: Double)
+}
+
+/// A `TimerHandler` represents a backend implementation of a `Timer`.
+///
+/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
+/// To use the SwiftMetrics API, please refer to the documentation of `Timer`.
+///
+/// # Implementation requirements
+///
+/// To implement your own `TimerHandler` you should respect a few requirements that are necessary so applications work
+/// as expected regardless of the selected `TimerHandler` implementation.
+///
+/// - The `TimerHandler` must be a `class`.
+public protocol TimerHandler: AnyObject {
+    /// Record a duration in nanoseconds.
+    ///
+    /// - parameters:
+    ///     - value: Duration to record.
+    func recordNanoseconds(_ duration: Int64)
+}
+
+// MARK: Predefined Metrics Handlers
 
 /// A pseudo-metrics handler that can be used to send messages to multiple other metrics handlers.
 public final class MultiplexMetricsHandler: MetricsFactory {
