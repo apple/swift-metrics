@@ -55,7 +55,7 @@ This instructs the `MetricsSystem` to install `SelectedMetricsImplementation` (a
 
 As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementing a metrics backend" section below explaining how to do so. List of existing SwiftMetrics API compatible libraries:
 
-- 🔥 [SwiftPrometheus](https://github.com/MrLotU/SwiftPrometheus), support for [Prometheus](https://prometheus.io)
+- [SwiftPrometheus](https://github.com/MrLotU/SwiftPrometheus), support for [Prometheus](https://prometheus.io)
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
 
 ## Detailed design
@@ -109,7 +109,7 @@ timer.recordMilliseconds(100)
 
 Note: Unless you need to implement a custom metrics backend, everything in this section is likely not relevant, so please feel free to skip.
 
-As seen above, each contstructor for `Counter`, `Timer`, `Recorder` and `Gauge` provides a metric object. This uncertainty obscures the selected metrics backend calling these constructors by design. _Each application_ can select and configure its desired backend. The application sets up the metrics backend it wishes to use. Configuring the metrics backend is straightforward:
+As seen above, each constructor for `Counter`, `Timer`, `Recorder` and `Gauge` provides a metric object. This uncertainty obscures the selected metrics backend calling these constructors by design. _Each application_ can select and configure its desired backend. The application sets up the metrics backend it wishes to use. Configuring the metrics backend is straightforward:
 
 ```swift
 let metricsImplementation = MyFavoriteMetricsImplementation()
