@@ -84,7 +84,6 @@ public class Counter {
     }
 }
 
-
 public extension Recorder {
     /// Create a new `Recorder`.
     ///
@@ -153,7 +152,6 @@ public class Recorder {
     }
 }
 
-
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
 /// Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
@@ -167,7 +165,6 @@ public class Gauge: Recorder {
         self.init(label: label, dimensions: dimensions, aggregate: false)
     }
 }
-
 
 public extension Timer {
     /// Create a new `Timer`.
@@ -572,9 +569,11 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderH
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return self
     }
+
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         return self
     }
+
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return self
     }
