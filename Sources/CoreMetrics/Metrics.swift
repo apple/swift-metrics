@@ -135,6 +135,9 @@ public class Recorder {
 
     /// Record a value.
     ///
+    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
+    /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
+    ///
     /// - parameters:
     ///     - value: Value to record.
     @inlinable
@@ -143,6 +146,9 @@ public class Recorder {
     }
 
     /// Record a value.
+    ///
+    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
+    /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
     ///
     /// - parameters:
     ///     - value: Value to record.
