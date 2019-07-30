@@ -6,8 +6,7 @@ services:
     image: swift-metrics:18.04-4.2
     build:
       args:
-        ubuntu_version: "18.04"
-        swift_version: "4.2"
+        image_version: "4.2"
 
   test:
     image: swift-metrics:18.04-4.2
