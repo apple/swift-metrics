@@ -21,11 +21,12 @@ public extension Timer {
     ///
     /// - parameters:
     ///     - label: The label for the Timer.
+    ///     - storageUnit: The unit to store the time in.
     ///     - dimensions: The dimensions for the Timer.
     ///     - body: Closure to run & record.
     @inlinable
-    static func measure<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
-        let timer = Timer(label: label, dimensions: dimensions)
+    static func measure<T>(label: String, storageUnit: TimeUnit, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
+        let timer = Timer(label: label, storageUnit: storageUnit, dimensions: dimensions)
         let start = Date()
         defer {
             timer.record(Date().timeIntervalSince(start))

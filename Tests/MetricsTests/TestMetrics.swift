@@ -35,8 +35,12 @@ internal final class TestMetrics: MetricsFactory {
         return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
     }
 
-    public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-        return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
+    public func makeTimer(label: String, storageUnit: TimeUnit, dimensions: [(String, String)]) -> TimerHandler {
+        self.lock.withLock {
+            let timer = TestTimer(label: label, storageUnit: storageUnit, dimensions: dimensions)
+            self.timers[label] = timer
+            return timer
+        }
     }
 
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
@@ -135,17 +139,33 @@ internal class TestRecorder: RecorderHandler, Equatable {
 internal class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
+    let storageUnit: TimeUnit
     let dimensions: [(String, String)]
 
     let lock = NSLock()
     var values = [(Date, Int64)]()
 
-    init(label: String, dimensions: [(String, String)]) {
+    init(label: String, storageUnit: TimeUnit, dimensions: [(String, String)]) {
         self.id = NSUUID().uuidString
         self.label = label
+        self.storageUnit = storageUnit
         self.dimensions = dimensions
     }
 
+    func retrieveValue(atIndex i: Int) -> Int64 {
+        self.lock.withLock {
+            let value = values[i].1
+            switch self.storageUnit {
+            case .days: return (value / 1_000_000_000) * 60 * 60 * 24
+            case .hours: return (value / 1_000_000_000) * 60 * 60
+            case .minutes: return (value / 1_000_000_000) * 60
+            case .seconds: return value / 1_000_000_000
+            case .milliSeconds: return value / 1_000_000
+            case .nanoSeconds: return value
+            }
+        }
+    }
+    
     func recordNanoseconds(_ duration: Int64) {
         self.lock.withLock {
             values.append((Date(), duration))

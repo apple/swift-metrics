@@ -5,3 +5,4 @@
 .xcode
 .SourceKitten
 *.orig
+.swiftpm

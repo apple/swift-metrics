@@ -24,7 +24,7 @@ class MetricsExtensionsTests: XCTestCase {
         // run the test
         let name = "timer-\(NSUUID().uuidString)"
         let delay = 0.05
-        Timer.measure(label: name) {
+        Timer.measure(label: name, storageUnit: .nanoSeconds) {
             Thread.sleep(forTimeInterval: delay)
         }
         let timer = metrics.timers[name] as! TestTimer
@@ -37,7 +37,7 @@ class MetricsExtensionsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let timer = Timer(label: "test-timer")
+        let timer = Timer(label: "test-timer", storageUnit: .nanoSeconds)
         let testTimer = timer.handler as! TestTimer
         let timeInterval = TimeInterval(Double.random(in: 1 ... 500))
         timer.record(timeInterval)
@@ -50,7 +50,7 @@ class MetricsExtensionsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let timer = Timer(label: "test-timer")
+        let timer = Timer(label: "test-timer", storageUnit: .nanoSeconds)
         let testTimer = timer.handler as! TestTimer
         // nano
         let nano = DispatchTimeInterval.nanoseconds(Int.random(in: 1 ... 500))
