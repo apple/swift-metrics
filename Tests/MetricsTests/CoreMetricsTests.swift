@@ -124,7 +124,7 @@ class MetricsTests: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
         let group = DispatchGroup()
         let name = "timer-\(NSUUID().uuidString)"
-        let timer = Timer(label: name, storageUnit: .nanoSeconds)
+        let timer = Timer(label: name)
         let testTimer = timer.handler as! TestTimer
         let total = Int.random(in: 500 ... 1000)
         for _ in 0 ... total {
@@ -145,7 +145,7 @@ class MetricsTests: XCTestCase {
         // run the test
         let name = "timer-\(NSUUID().uuidString)"
         let value = Int64.random(in: Int64.min ... Int64.max)
-        Timer(label: name, storageUnit: .nanoSeconds).recordNanoseconds(value)
+        Timer(label: name).recordNanoseconds(value)
         let timer = metrics.timers[name] as! TestTimer
         XCTAssertEqual(timer.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(timer.values[0].1, value, "expected value to match")
@@ -156,7 +156,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let timer = Timer(label: "test-timer", storageUnit: .nanoSeconds)
+        let timer = Timer(label: "test-timer")
         let testTimer = timer.handler as! TestTimer
         // nano
         let nano = Int64.random(in: 0 ... 5)
@@ -185,7 +185,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let timer = Timer(label: "test-timer", storageUnit: .nanoSeconds)
+        let timer = Timer(label: "test-timer")
         let testTimer = timer.handler as! TestTimer
         // nano (integer)
         timer.recordNanoseconds(Int64.max)
@@ -222,7 +222,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let timer = Timer(label: "test-timer", storageUnit: .nanoSeconds)
+        let timer = Timer(label: "test-timer")
         let testTimer = timer.handler as! TestTimer
         // nano
         timer.recordNanoseconds(UInt64.max)
@@ -370,7 +370,7 @@ class MetricsTests: XCTestCase {
         let name = "timer-\(NSUUID().uuidString)"
         let value = Int64.random(in: 0 ... 1000)
 
-        let timer = Timer(label: name, storageUnit: .nanoSeconds)
+        let timer = Timer(label: name)
         timer.recordNanoseconds(value)
 
         let testTimer = timer.handler as! TestTimer
@@ -382,7 +382,7 @@ class MetricsTests: XCTestCase {
         timer.destroy()
         XCTAssertEqual(metrics.timers.count, 0, "timer should have been released")
 
-        let timerAgain = Timer(label: name, storageUnit: .nanoSeconds)
+        let timerAgain = Timer(label: name)
         timerAgain.recordNanoseconds(value)
         let testTimerAgain = timerAgain.handler as! TestTimer
         XCTAssertEqual(testTimerAgain.values.count, 1, "expected number of entries to match")
@@ -390,31 +390,5 @@ class MetricsTests: XCTestCase {
 
         let identityAgain = ObjectIdentifier(timerAgain)
         XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
-    }
-    
-    func testTimerUnits() throws {
-        let metrics = TestMetrics()
-        MetricsSystem.bootstrapInternal(metrics)
-        
-        let name = "timer-\(NSUUID().uuidString)"
-        let value = Int64.random(in: 0 ... 1000)
-        
-        let timer = Timer(label: name, storageUnit: .nanoSeconds)
-        timer.recordNanoseconds(value)
-        
-        let testTimer = timer.handler as! TestTimer
-        XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values.first!.1, value, "expected value to match")
-        XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
-        
-        let secondsName = "timer-seconds-\(NSUUID().uuidString)"
-        let secondsValue = Int64.random(in: 0 ... 1000)
-        let secondsTimer = Timer(label: secondsName, storageUnit: .seconds)
-        secondsTimer.recordSeconds(secondsValue)
-        
-        let testSecondsTimer = secondsTimer.handler as! TestTimer
-        XCTAssertEqual(testSecondsTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testSecondsTimer.retrieveValue(atIndex: 0), secondsValue, "expected value to match")
-        XCTAssertEqual(metrics.timers.count, 2, "timer should have been stored")
     }
 }

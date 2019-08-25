@@ -24,7 +24,7 @@ class MetricsExtensionsTests: XCTestCase {
         // run the test
         let name = "timer-\(NSUUID().uuidString)"
         let delay = 0.05
-        Timer.measure(label: name, storageUnit: .nanoSeconds) {
+        Timer.measure(label: name) {
             Thread.sleep(forTimeInterval: delay)
         }
         let timer = metrics.timers[name] as! TestTimer
@@ -37,7 +37,7 @@ class MetricsExtensionsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let timer = Timer(label: "test-timer", storageUnit: .nanoSeconds)
+        let timer = Timer(label: "test-timer")
         let testTimer = timer.handler as! TestTimer
         let timeInterval = TimeInterval(Double.random(in: 1 ... 500))
         timer.record(timeInterval)
@@ -50,7 +50,7 @@ class MetricsExtensionsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let timer = Timer(label: "test-timer", storageUnit: .nanoSeconds)
+        let timer = Timer(label: "test-timer")
         let testTimer = timer.handler as! TestTimer
         // nano
         let nano = DispatchTimeInterval.nanoseconds(Int.random(in: 1 ... 500))
@@ -76,6 +76,32 @@ class MetricsExtensionsTests: XCTestCase {
         timer.record(DispatchTimeInterval.never)
         XCTAssertEqual(testTimer.values.count, 5, "expected number of entries to match")
         XCTAssertEqual(testTimer.values[4].1, 0, "expected value to match")
+    }
+    
+    func testTimerUnits() throws {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        
+        let name = "timer-\(NSUUID().uuidString)"
+        let value = Int64.random(in: 0 ... 1000)
+        
+        let timer = Timer(label: name)
+        timer.recordNanoseconds(value)
+        
+        let testTimer = timer.handler as! TestTimer
+        XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
+        
+        let secondsName = "timer-seconds-\(NSUUID().uuidString)"
+        let secondsValue = Int64.random(in: 0 ... 1000)
+        let secondsTimer = Timer(label: secondsName, prefferedDisplayUnit: .seconds)
+        secondsTimer.recordSeconds(secondsValue)
+        
+        let testSecondsTimer = secondsTimer.handler as! TestTimer
+        XCTAssertEqual(testSecondsTimer.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testSecondsTimer.retrieveValue(atIndex: 0), secondsValue, "expected value to match")
+        XCTAssertEqual(metrics.timers.count, 2, "timer should have been stored")
     }
 }
 

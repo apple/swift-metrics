@@ -35,9 +35,9 @@ internal final class TestMetrics: MetricsFactory {
         return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
     }
 
-    public func makeTimer(label: String, storageUnit: TimeUnit, dimensions: [(String, String)]) -> TimerHandler {
+    public func makeTimer(label: String, prefferedDisplayUnit displayUnit: TimeUnit = .nanoSeconds, dimensions: [(String, String)]) -> TimerHandler {
         self.lock.withLock {
-            let timer = TestTimer(label: label, storageUnit: storageUnit, dimensions: dimensions)
+            let timer = TestTimer(label: label, prefferedDisplayUnit: displayUnit, dimensions: dimensions)
             self.timers[label] = timer
             return timer
         }
@@ -139,23 +139,23 @@ internal class TestRecorder: RecorderHandler, Equatable {
 internal class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
-    let storageUnit: TimeUnit
+    let displayUnit: TimeUnit
     let dimensions: [(String, String)]
 
     let lock = NSLock()
     var values = [(Date, Int64)]()
 
-    init(label: String, storageUnit: TimeUnit, dimensions: [(String, String)]) {
+    init(label: String, prefferedDisplayUnit displayUnit: TimeUnit, dimensions: [(String, String)]) {
         self.id = NSUUID().uuidString
         self.label = label
-        self.storageUnit = storageUnit
+        self.displayUnit = displayUnit
         self.dimensions = dimensions
     }
 
     func retrieveValue(atIndex i: Int) -> Int64 {
         self.lock.withLock {
             let value = values[i].1
-            switch self.storageUnit {
+            switch self.displayUnit {
             case .days: return (value / 1_000_000_000) * 60 * 60 * 24
             case .hours: return (value / 1_000_000_000) * 60 * 60
             case .minutes: return (value / 1_000_000_000) * 60
