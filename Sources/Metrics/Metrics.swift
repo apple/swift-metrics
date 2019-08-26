@@ -25,8 +25,8 @@ public extension Timer {
     ///     - dimensions: The dimensions for the Timer.
     ///     - body: Closure to run & record.
     @inlinable
-    static func measure<T>(label: String, prefferedDisplayUnit displayUnit: TimeUnit = .nanoSeconds, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
-        let timer = Timer(label: label, prefferedDisplayUnit: displayUnit, dimensions: dimensions)
+    static func measure<T>(label: String, preferredDisplayUnit displayUnit: TimeUnit = .nanoseconds, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
+        let timer = Timer(label: label, preferredDisplayUnit: displayUnit, dimensions: dimensions)
         let start = Date()
         defer {
             timer.record(Date().timeIntervalSince(start))

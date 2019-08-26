@@ -95,12 +95,12 @@ class MetricsExtensionsTests: XCTestCase {
         
         let secondsName = "timer-seconds-\(NSUUID().uuidString)"
         let secondsValue = Int64.random(in: 0 ... 1000)
-        let secondsTimer = Timer(label: secondsName, prefferedDisplayUnit: .seconds)
+        let secondsTimer = Timer(label: secondsName, preferredDisplayUnit: .seconds)
         secondsTimer.recordSeconds(secondsValue)
         
         let testSecondsTimer = secondsTimer.handler as! TestTimer
         XCTAssertEqual(testSecondsTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testSecondsTimer.retrieveValue(atIndex: 0), secondsValue, "expected value to match")
+        XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 2, "timer should have been stored")
     }
 }

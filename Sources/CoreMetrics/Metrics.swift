@@ -173,7 +173,7 @@ public class Gauge: Recorder {
 }
 
 public enum TimeUnit {
-    case nanoSeconds, milliSeconds, seconds, minutes, hours, days
+    case nanoseconds, milliseconds, seconds, minutes, hours, days
 }
 
 public extension Timer {
@@ -183,8 +183,8 @@ public extension Timer {
     ///     - label: The label for the `Timer`.
     ///     - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     ///     - dimensions: The dimensions for the `Timer`.
-    convenience init(label: String, prefferedDisplayUnit displayUnit: TimeUnit = .nanoSeconds, dimensions: [(String, String)] = []) {
-        let handler = MetricsSystem.factory.makeTimer(label: label, prefferedDisplayUnit: displayUnit, dimensions: dimensions)
+    convenience init(label: String, preferredDisplayUnit displayUnit: TimeUnit = .nanoseconds, dimensions: [(String, String)] = []) {
+        let handler = MetricsSystem.factory.makeTimer(label: label, preferredDisplayUnit: displayUnit, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
     }
 
@@ -402,7 +402,7 @@ public protocol MetricsFactory {
     ///     - label: The label for the `TimerHandler`.
     ///     - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     ///     - dimensions: The dimensions for the `TimerHandler`.
-    func makeTimer(label: String, prefferedDisplayUnit displayUnit: TimeUnit, dimensions: [(String, String)]) -> TimerHandler
+    func makeTimer(label: String, preferredDisplayUnit displayUnit: TimeUnit, dimensions: [(String, String)]) -> TimerHandler
 
     /// Invoked when the corresponding `Counter`'s `destroy()` function is invoked.
     /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
@@ -508,8 +508,8 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         return MuxRecorder(factories: self.factories, label: label, dimensions: dimensions, aggregate: aggregate)
     }
 
-    public func makeTimer(label: String, prefferedDisplayUnit displayUnit: TimeUnit = .nanoSeconds, dimensions: [(String, String)]) -> TimerHandler {
-        return MuxTimer(factories: self.factories, label: label, prefferedDisplayUnit: displayUnit, dimensions: dimensions)
+    public func makeTimer(label: String, preferredDisplayUnit displayUnit: TimeUnit = .nanoseconds, dimensions: [(String, String)]) -> TimerHandler {
+        return MuxTimer(factories: self.factories, label: label, preferredDisplayUnit: displayUnit, dimensions: dimensions)
     }
 
     public func destroyCounter(_ handler: CounterHandler) {
@@ -562,8 +562,8 @@ public final class MultiplexMetricsHandler: MetricsFactory {
 
     private class MuxTimer: TimerHandler {
         let timers: [TimerHandler]
-        public init(factories: [MetricsFactory], label: String, prefferedDisplayUnit displayUnit: TimeUnit = .nanoSeconds, dimensions: [(String, String)]) {
-            self.timers = factories.map { $0.makeTimer(label: label, prefferedDisplayUnit: displayUnit, dimensions: dimensions) }
+        public init(factories: [MetricsFactory], label: String, preferredDisplayUnit displayUnit: TimeUnit = .nanoseconds, dimensions: [(String, String)]) {
+            self.timers = factories.map { $0.makeTimer(label: label, preferredDisplayUnit: displayUnit, dimensions: dimensions) }
         }
 
         func recordNanoseconds(_ duration: Int64) {
@@ -586,7 +586,7 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderH
         return self
     }
 
-    public func makeTimer(label: String, prefferedDisplayUnit displayUnit: TimeUnit = .nanoSeconds, dimensions: [(String, String)]) -> TimerHandler {
+    public func makeTimer(label: String, preferredDisplayUnit displayUnit: TimeUnit = .nanoseconds, dimensions: [(String, String)]) -> TimerHandler {
         return self
     }
 
