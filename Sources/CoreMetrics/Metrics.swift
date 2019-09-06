@@ -187,6 +187,12 @@ public extension Timer {
         self.init(label: label, dimensions: dimensions, handler: handler)
     }
     
+    /// Create a new `Timer`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Timer`.
+    ///     - dimensions: The dimensions for the `Timer`.
+    ///     - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     convenience init(label: String, dimensions: [(String, String)] = [], preferredDisplayUnit displayUnit: TimeUnit) {
         let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
         handler.preferDisplayUnit(displayUnit)
@@ -494,6 +500,10 @@ public protocol TimerHandler: AnyObject {
     ///     - value: Duration to record.
     func recordNanoseconds(_ duration: Int64)
     
+    /// Set the preferred display unit for this TimerHandler.
+    ///
+    /// - parameters:
+    ///     - unit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     func preferDisplayUnit(_ unit: TimeUnit)
 }
 
