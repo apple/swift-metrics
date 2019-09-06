@@ -35,12 +35,11 @@ internal final class TestMetrics: MetricsFactory {
         return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
     }
 
-    public func makeTimer(label: String, preferredDisplayUnit displayUnit: TimeUnit = .nanoseconds, dimensions: [(String, String)]) -> TimerHandler {
-        self.lock.withLock {
-            let timer = TestTimer(label: label, preferredDisplayUnit: displayUnit, dimensions: dimensions)
-            self.timers[label] = timer
-            return timer
+    public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+        let maker = { (label: String, dimensions: [(String, String)]) -> TimerHandler in
+            TestTimer(label: label, dimensions: dimensions)
         }
+        return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: maker)
     }
 
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
@@ -139,23 +138,32 @@ internal class TestRecorder: RecorderHandler, Equatable {
 internal class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
-    let displayUnit: TimeUnit
+    var displayUnit: TimeUnit?
     let dimensions: [(String, String)]
 
     let lock = NSLock()
     var values = [(Date, Int64)]()
 
-    init(label: String, preferredDisplayUnit displayUnit: TimeUnit, dimensions: [(String, String)]) {
+    init(label: String, dimensions: [(String, String)]) {
         self.id = NSUUID().uuidString
         self.label = label
-        self.displayUnit = displayUnit
+        self.displayUnit = nil
         self.dimensions = dimensions
+    }
+    
+    func preferDisplayUnit(_ unit: TimeUnit) {
+        self.lock.withLock {
+            self.displayUnit = unit
+        }
     }
 
     func retriveValueInPreferredUnit(atIndex i: Int) -> Int64 {
         self.lock.withLock {
             let value = values[i].1
-            switch self.displayUnit {
+            guard let displayUnit = self.displayUnit else {
+                return value
+            }
+            switch displayUnit {
             case .days: return (value / 1_000_000_000) * 60 * 60 * 24
             case .hours: return (value / 1_000_000_000) * 60 * 60
             case .minutes: return (value / 1_000_000_000) * 60

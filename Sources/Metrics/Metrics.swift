@@ -21,12 +21,11 @@ public extension Timer {
     ///
     /// - parameters:
     ///     - label: The label for the Timer.
-    ///     - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     ///     - dimensions: The dimensions for the Timer.
     ///     - body: Closure to run & record.
     @inlinable
-    static func measure<T>(label: String, preferredDisplayUnit displayUnit: TimeUnit = .nanoseconds, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
-        let timer = Timer(label: label, preferredDisplayUnit: displayUnit, dimensions: dimensions)
+    static func measure<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
+        let timer = Timer(label: label, dimensions: dimensions)
         let start = Date()
         defer {
             timer.record(Date().timeIntervalSince(start))
