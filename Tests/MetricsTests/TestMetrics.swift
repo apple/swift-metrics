@@ -36,10 +36,7 @@ internal final class TestMetrics: MetricsFactory {
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-        let maker = { (label: String, dimensions: [(String, String)]) -> TimerHandler in
-            TestTimer(label: label, dimensions: dimensions)
-        }
-        return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: maker)
+        return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
     }
 
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
