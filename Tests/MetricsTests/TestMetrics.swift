@@ -155,7 +155,7 @@ internal class TestTimer: TimerHandler, Equatable {
     }
 
     func retriveValueInPreferredUnit(atIndex i: Int) -> Int64 {
-        self.lock.withLock {
+        return self.lock.withLock {
             let value = values[i].1
             guard let displayUnit = self.displayUnit else {
                 return value
