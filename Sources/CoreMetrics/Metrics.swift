@@ -186,7 +186,7 @@ public extension Timer {
         let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
     }
-    
+
     /// Create a new `Timer`.
     ///
     /// - parameters:
@@ -499,7 +499,7 @@ public protocol TimerHandler: AnyObject {
     /// - parameters:
     ///     - value: Duration to record.
     func recordNanoseconds(_ duration: Int64)
-    
+
     /// Set the preferred display unit for this TimerHandler.
     ///
     /// - parameters:
@@ -508,7 +508,7 @@ public protocol TimerHandler: AnyObject {
 }
 
 extension TimerHandler {
-    public func preferDisplayUnit(_ unit: TimeUnit) {
+    public func preferDisplayUnit(_: TimeUnit) {
         // NOOP
     }
 }

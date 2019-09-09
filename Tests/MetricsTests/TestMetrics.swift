@@ -147,7 +147,7 @@ internal class TestTimer: TimerHandler, Equatable {
         self.displayUnit = nil
         self.dimensions = dimensions
     }
-    
+
     func preferDisplayUnit(_ unit: TimeUnit) {
         self.lock.withLock {
             self.displayUnit = unit
@@ -170,7 +170,7 @@ internal class TestTimer: TimerHandler, Equatable {
             }
         }
     }
-    
+
     func recordNanoseconds(_ duration: Int64) {
         self.lock.withLock {
             values.append((Date(), duration))
