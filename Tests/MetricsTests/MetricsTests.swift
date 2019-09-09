@@ -77,6 +77,32 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(testTimer.values.count, 5, "expected number of entries to match")
         XCTAssertEqual(testTimer.values[4].1, 0, "expected value to match")
     }
+
+    func testTimerUnits() throws {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let name = "timer-\(NSUUID().uuidString)"
+        let value = Int64.random(in: 0 ... 1000)
+
+        let timer = Timer(label: name)
+        timer.recordNanoseconds(value)
+
+        let testTimer = timer.handler as! TestTimer
+        XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
+
+        let secondsName = "timer-seconds-\(NSUUID().uuidString)"
+        let secondsValue = Int64.random(in: 0 ... 1000)
+        let secondsTimer = Timer(label: secondsName, preferredDisplayUnit: .seconds)
+        secondsTimer.recordSeconds(secondsValue)
+
+        let testSecondsTimer = secondsTimer.handler as! TestTimer
+        XCTAssertEqual(testSecondsTimer.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue, "expected value to match")
+        XCTAssertEqual(metrics.timers.count, 2, "timer should have been stored")
+    }
 }
 
 // https://bugs.swift.org/browse/SR-6310

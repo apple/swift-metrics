@@ -135,6 +135,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
 internal class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
+    var displayUnit: TimeUnit?
     let dimensions: [(String, String)]
 
     let lock = NSLock()
@@ -143,7 +144,31 @@ internal class TestTimer: TimerHandler, Equatable {
     init(label: String, dimensions: [(String, String)]) {
         self.id = NSUUID().uuidString
         self.label = label
+        self.displayUnit = nil
         self.dimensions = dimensions
+    }
+
+    func preferDisplayUnit(_ unit: TimeUnit) {
+        self.lock.withLock {
+            self.displayUnit = unit
+        }
+    }
+
+    func retriveValueInPreferredUnit(atIndex i: Int) -> Int64 {
+        return self.lock.withLock {
+            let value = values[i].1
+            guard let displayUnit = self.displayUnit else {
+                return value
+            }
+            switch displayUnit {
+            case .days: return (value / 1_000_000_000) * 60 * 60 * 24
+            case .hours: return (value / 1_000_000_000) * 60 * 60
+            case .minutes: return (value / 1_000_000_000) * 60
+            case .seconds: return value / 1_000_000_000
+            case .milliseconds: return value / 1_000_000
+            case .nanoseconds: return value
+            }
+        }
     }
 
     func recordNanoseconds(_ duration: Int64) {
