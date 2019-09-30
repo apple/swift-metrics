@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>MultiplexMetricsHandler Class Reference</title>
+    <title>TimeUnit Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Class/MultiplexMetricsHandler" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Enum/TimeUnit" class="dashAnchor"></a>
 
-    <a title="MultiplexMetricsHandler Class Reference"></a>
+    <a title="TimeUnit Enumeration Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -44,7 +44,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">CoreMetrics Reference</a>
       <img class="carat" src="../img/carat.png" />
-      MultiplexMetricsHandler Class Reference
+      TimeUnit Enumeration Reference
     </p>
 
     <div class="content-wrapper">
@@ -107,14 +107,14 @@
 
         <section class="section">
           <div class="section-content">
-            <h1>MultiplexMetricsHandler</h1>
+            <h1>TimeUnit</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">MultiplexMetricsHandler</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/MetricsFactory.html">MetricsFactory</a></span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">TimeUnit</span></code></pre>
 
                 </div>
               </div>
-            <p>A pseudo-metrics handler that can be used to send messages to multiple other metrics handlers.</p>
+            <p>Undocumented</p>
 
           </div>
         </section>
@@ -126,9 +126,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics09MultiplexB7HandlerC9factoriesACSayAA0B7Factory_pG_tcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(factories:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics09MultiplexB7HandlerC9factoriesACSayAA0B7Factory_pG_tcfc">init(factories:)</a>
+                    <a name="/s:11CoreMetrics8TimeUnitO11nanosecondsyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/nanoseconds" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO11nanosecondsyA2CmF">nanoseconds</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -143,12 +143,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">factories</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Protocols/MetricsFactory.html">MetricsFactory</a></span><span class="p">])</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">nanoseconds</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L521-L523">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -156,9 +156,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics0B7FactoryP11makeCounter5label10dimensionsAA0E7Handler_pSS_SaySS_SStGtF"></a>
-                    <a name="//apple_ref/swift/Method/makeCounter(label:dimensions:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics0B7FactoryP11makeCounter5label10dimensionsAA0E7Handler_pSS_SaySS_SStGtF">makeCounter(label:dimensions:)</a>
+                    <a name="/s:11CoreMetrics8TimeUnitO12millisecondsyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/milliseconds" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO12millisecondsyA2CmF">milliseconds</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -166,18 +166,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">makeCounter</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">dimensions</span><span class="p">:</span> <span class="p">[(</span><span class="kt">String</span><span class="p">,</span> <span class="kt">String</span><span class="p">)])</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/CounterHandler.html">CounterHandler</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">milliseconds</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L525-L527">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -185,9 +186,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics0B7FactoryP12makeRecorder5label10dimensions9aggregateAA0E7Handler_pSS_SaySS_SStGSbtF"></a>
-                    <a name="//apple_ref/swift/Method/makeRecorder(label:dimensions:aggregate:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics0B7FactoryP12makeRecorder5label10dimensions9aggregateAA0E7Handler_pSS_SaySS_SStGSbtF">makeRecorder(label:dimensions:aggregate:)</a>
+                    <a name="/s:11CoreMetrics8TimeUnitO7secondsyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/seconds" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO7secondsyA2CmF">seconds</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -195,18 +196,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">makeRecorder</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">dimensions</span><span class="p">:</span> <span class="p">[(</span><span class="kt">String</span><span class="p">,</span> <span class="kt">String</span><span class="p">)],</span> <span class="nv">aggregate</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/RecorderHandler.html">RecorderHandler</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">seconds</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L529-L531">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -214,9 +216,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics0B7FactoryP9makeTimer5label10dimensionsAA0E7Handler_pSS_SaySS_SStGtF"></a>
-                    <a name="//apple_ref/swift/Method/makeTimer(label:dimensions:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics0B7FactoryP9makeTimer5label10dimensionsAA0E7Handler_pSS_SaySS_SStGtF">makeTimer(label:dimensions:)</a>
+                    <a name="/s:11CoreMetrics8TimeUnitO7minutesyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/minutes" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO7minutesyA2CmF">minutes</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -224,18 +226,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">makeTimer</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">dimensions</span><span class="p">:</span> <span class="p">[(</span><span class="kt">String</span><span class="p">,</span> <span class="kt">String</span><span class="p">)])</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/TimerHandler.html">TimerHandler</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">minutes</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L533-L535">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -243,9 +246,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics0B7FactoryP14destroyCounteryyAA0E7Handler_pF"></a>
-                    <a name="//apple_ref/swift/Method/destroyCounter(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics0B7FactoryP14destroyCounteryyAA0E7Handler_pF">destroyCounter(_:)</a>
+                    <a name="/s:11CoreMetrics8TimeUnitO5hoursyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/hours" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO5hoursyA2CmF">hours</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -253,18 +256,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">destroyCounter</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/CounterHandler.html">CounterHandler</a></span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">hours</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L537-L541">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -272,9 +276,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics0B7FactoryP15destroyRecorderyyAA0E7Handler_pF"></a>
-                    <a name="//apple_ref/swift/Method/destroyRecorder(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics0B7FactoryP15destroyRecorderyyAA0E7Handler_pF">destroyRecorder(_:)</a>
+                    <a name="/s:11CoreMetrics8TimeUnitO4daysyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/days" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO4daysyA2CmF">days</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -282,47 +286,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">destroyRecorder</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/RecorderHandler.html">RecorderHandler</a></span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">days</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L543-L547">Show on GitHub</a>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11CoreMetrics0B7FactoryP12destroyTimeryyAA0E7Handler_pF"></a>
-                    <a name="//apple_ref/swift/Method/destroyTimer(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics0B7FactoryP12destroyTimeryyAA0E7Handler_pF">destroyTimer(_:)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">destroyTimer</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/TimerHandler.html">TimerHandler</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L549-L553">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/1.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
