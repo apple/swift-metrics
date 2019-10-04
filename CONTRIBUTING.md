@@ -60,6 +60,18 @@ We require that your commit messages match our template. The easiest way to do t
 
     git config commit.template dev/git.commit.template
 
+### Code Formatting
+
+We use [SwiftFormat](https://www.github.com/nicklockwood/SwiftFormat) to enforce code style, and have setup a `.swiftformat` file at the top-level of the repository for repo-specific configuration. Please install and run that tool before submitting your PR.
+
+#### Commit Hook
+
+To make sure your code is properly formatted, consider adding a pre-commit hook:
+
+```sh
+cp ./scripts/pre-commit.sh ./.git/hooks
+```
+
 ### Make sure Tests work on Linux
 
 SwiftMetrics uses XCTest to run tests on both macOS and Linux. While the macOS version of XCTest is able to use the Objective-C runtime to discover tests at execution time, the Linux version is not.
