@@ -64,12 +64,12 @@ We require that your commit messages match our template. The easiest way to do t
 
 We use [SwiftFormat](https://www.github.com/nicklockwood/SwiftFormat) to enforce code style, and have setup a `.swiftformat` file at the top-level of the repository for repo-specific configuration. Please install and run that tool before submitting your PR.
 
-#### Commit Hook
+### Commit Hook
 
-To make sure your code is properly formatted, consider adding a pre-commit hook:
+To make sure your code is properly formatted, consider adding a pre-commit hook to verify your changes pass the initial vetting:
 
 ```sh
-cp ./scripts/pre-commit.sh ./.git/hooks
+cp ./scripts/sanity.sh ./.git/hooks
 ```
 
 ### Make sure Tests work on Linux

@@ -62,11 +62,14 @@ fi
 printf "=> Checking license headers\n"
 tmp=$(mktemp /tmp/.swift-metrics-sanity_XXXXXX)
 
-for language in swift-or-c bash dtrace; do
-  printf "   * $language... "
+for language in swift-or-c shell dtrace; do
+  printf "   * %s... " "${language}"
   declare -a matching_files
   declare -a exceptions
-  expections=( )
+
+  # We're setting a "dummy" value here so the variable properly expands, but does not cause any exceptions by default
+  exceptions=( -name __FAKE_SANITY_PLACEHOLDER__ )
+
   matching_files=( -name '*' )
   case "$language" in
       swift-or-c)
@@ -88,7 +91,7 @@ for language in swift-or-c bash dtrace; do
 //===----------------------------------------------------------------------===//
 EOF
         ;;
-      bash)
+      shell)
         matching_files=( -name '*.sh' )
         cat > "$tmp" <<"EOF"
 #!/bin/bash
@@ -127,22 +130,22 @@ EOF
 EOF
       ;;
     *)
-      echo >&2 "ERROR: unknown language '$language'"
+      echo >&2 "ERROR: unknown language '${language}'"
       ;;
   esac
 
-  expected_lines=$(cat "$tmp" | wc -l)
-  expected_sha=$(cat "$tmp" | shasum)
+  expected_lines=$(wc -l < "${tmp}" )
+  expected_sha=$(shasum < "${tmp}" )
 
   (
     cd "$here/.."
     find . \
       \( \! -path './.build/*' -a \
       \( "${matching_files[@]}" \) -a \
-      \( \! \( "${exceptions[@]}" \) \) \) | while read line; do
-      if [[ "$(cat "$line" | replace_acceptable_years | head -n $expected_lines | shasum)" != "$expected_sha" ]]; then
-        printf "\033[0;31mmissing headers in file '$line'!\033[0m\n"
-        diff -u <(cat "$line" | replace_acceptable_years | head -n $expected_lines) "$tmp"
+      \( \! \( "${exceptions[@]}" \) \) \) | while read -r line; do
+      if [[ "$( replace_acceptable_years < "${line}" | head -n "${expected_lines}" | shasum)" != "$expected_sha" ]]; then
+        printf "\033[0;31mmissing headers in file '%s'!\033[0m\n" "${line}"
+        diff -u <( replace_acceptable_years < "${line}" | head -n "${expected_lines}" ) "$tmp"
         exit 1
       fi
     done
