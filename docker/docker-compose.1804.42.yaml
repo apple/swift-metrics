@@ -10,3 +10,6 @@ services:
 
   test:
     image: swift-metrics:18.04-4.2
+
+  shell:
+    image: swift-metrics:18.04-4.2
