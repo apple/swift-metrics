@@ -55,8 +55,9 @@ This instructs the `MetricsSystem` to install `SelectedMetricsImplementation` (a
 
 As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementing a metrics backend" section below explaining how to do so. List of existing SwiftMetrics API compatible libraries:
 
-- [SwiftPrometheus](https://github.com/MrLotU/SwiftPrometheus), support for [Prometheus](https://prometheus.io)
+- [amzn/smoke-http](https://github.com/amzn/smoke-http) - HTTP client and utilities
 - [StatsD Client](https://github.com/apple/swift-statsd-client), support for StatsD
+- [SwiftPrometheus](https://github.com/MrLotU/SwiftPrometheus), support for [Prometheus](https://prometheus.io)
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
 
 ## Detailed design
