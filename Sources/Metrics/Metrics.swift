@@ -26,9 +26,10 @@ public extension Timer {
     @inlinable
     static func measure<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
         let timer = Timer(label: label, dimensions: dimensions)
-        let start = Date()
+        let start = DispatchTime.now().uptimeNanoseconds
         defer {
-            timer.record(Date().timeIntervalSince(start))
+            let delta = DispatchTime.now().uptimeNanoseconds - start
+            timer.recordNanoseconds(delta)
         }
         return try body()
     }
