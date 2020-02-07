@@ -43,12 +43,12 @@ internal final class Lock {
     /// Create a new lock.
     public init() {
         let err = pthread_mutex_init(self.mutex, nil)
-        precondition(err == 0)
+        precondition(err == 0, "pthread_mutex_init failed with error \(err)")
     }
 
     deinit {
         let err = pthread_mutex_destroy(self.mutex)
-        precondition(err == 0)
+        precondition(err == 0, "pthread_mutex_destroy failed with error \(err)")
         self.mutex.deallocate()
     }
 
@@ -58,7 +58,7 @@ internal final class Lock {
     /// `unlock`, to simplify lock handling.
     public func lock() {
         let err = pthread_mutex_lock(self.mutex)
-        precondition(err == 0)
+        precondition(err == 0, "pthread_mutex_lock failed with error \(err)")
     }
 
     /// Release the lock.
@@ -67,7 +67,7 @@ internal final class Lock {
     /// `lock`, to simplify lock handling.
     public func unlock() {
         let err = pthread_mutex_unlock(self.mutex)
-        precondition(err == 0)
+        precondition(err == 0, "pthread_mutex_unlock failed with error \(err)")
     }
 }
 
@@ -107,12 +107,12 @@ internal final class ReadWriteLock {
     /// Create a new lock.
     public init() {
         let err = pthread_rwlock_init(self.rwlock, nil)
-        precondition(err == 0)
+        precondition(err == 0, "pthread_rwlock_init failed with error \(err)")
     }
 
     deinit {
         let err = pthread_rwlock_destroy(self.rwlock)
-        precondition(err == 0)
+        precondition(err == 0, "pthread_rwlock_destroy failed with error \(err)")
         self.rwlock.deallocate()
     }
 
@@ -122,7 +122,7 @@ internal final class ReadWriteLock {
     /// `unlock`, to simplify lock handling.
     public func lockRead() {
         let err = pthread_rwlock_rdlock(self.rwlock)
-        precondition(err == 0)
+        precondition(err == 0, "pthread_rwlock_rdlock failed with error \(err)")
     }
 
     /// Acquire a writer lock.
@@ -131,7 +131,7 @@ internal final class ReadWriteLock {
     /// `unlock`, to simplify lock handling.
     public func lockWrite() {
         let err = pthread_rwlock_wrlock(self.rwlock)
-        precondition(err == 0)
+        precondition(err == 0, "pthread_rwlock_wrlock failed with error \(err)")
     }
 
     /// Release the lock.
@@ -140,7 +140,7 @@ internal final class ReadWriteLock {
     /// `lock`, to simplify lock handling.
     public func unlock() {
         let err = pthread_rwlock_unlock(self.rwlock)
-        precondition(err == 0)
+        precondition(err == 0, "pthread_rwlock_unlock failed with error \(err)")
     }
 }
 
