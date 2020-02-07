@@ -346,7 +346,7 @@ public enum MetricsSystem {
     ///     - factory: A factory that given an identifier produces instances of metrics handlers such as `CounterHandler`, `RecorderHandler` and `TimerHandler`.
     public static func bootstrap(_ factory: MetricsFactory) {
         self.lock.withWriterLock {
-            precondition(!self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self.factory)")
+            precondition(!self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self._factory)")
             self._factory = factory
             self.initialized = true
         }
