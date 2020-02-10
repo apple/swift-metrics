@@ -124,7 +124,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
             // this may loose precision but good enough as an example
             values.append((Date(), Double(value)))
         }
-        print("recoding \(value) in \(self.label)")
+        print("recording \(value) in \(self.label)")
     }
 
     public static func == (lhs: TestRecorder, rhs: TestRecorder) -> Bool {
@@ -175,7 +175,7 @@ internal class TestTimer: TimerHandler, Equatable {
         self.lock.withLock {
             values.append((Date(), duration))
         }
-        print("recoding \(duration) \(self.label)")
+        print("recording \(duration) \(self.label)")
     }
 
     public static func == (lhs: TestTimer, rhs: TestTimer) -> Bool {
