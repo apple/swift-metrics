@@ -40,7 +40,7 @@ public enum SystemMetricsProvider {
     }
     
     fileprivate static func updateSystemMetrics() {
-        _ = Foundation.Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { (timer) in
+//        _ = Foundation.Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { (timer) in
             print("Inside timer")
 //            let shouldReturn = self.lock.withReaderLock { () -> Bool in
 //                if !self.shouldRunSystemMetrics {
@@ -104,6 +104,6 @@ public enum SystemMetricsProvider {
 //            #else
 //            print("Not sure what to do here just yet.")
 //            #endif
-        }
+//        }
     }
 }
