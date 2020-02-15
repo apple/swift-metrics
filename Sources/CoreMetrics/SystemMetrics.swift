@@ -41,15 +41,16 @@ public enum SystemMetricsProvider {
     
     fileprivate static func updateSystemMetrics() {
         _ = Foundation.Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { (timer) in
-            let shouldReturn = self.lock.withReaderLock { () -> Bool in
-                if !self.shouldRunSystemMetrics {
-                    print("invalidating timer")
-                    timer.invalidate()
-                    return true
-                }
-                return false
-            }
-            if shouldReturn { return }
+            print("Inside timer")
+//            let shouldReturn = self.lock.withReaderLock { () -> Bool in
+//                if !self.shouldRunSystemMetrics {
+//                    print("invalidating timer")
+//                    timer.invalidate()
+//                    return true
+//                }
+//                return false
+//            }
+//            if shouldReturn { return }
             print("Starting process grabbing")
             let prefix = "process_"
             let pid = ProcessInfo.processInfo.processIdentifier
