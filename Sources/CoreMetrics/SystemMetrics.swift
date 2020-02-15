@@ -66,6 +66,7 @@ public enum SystemMetricsProvider {
                         .split(separator: " ")
                         .map(String.init)
                     else { throw SystemMetricsError.FileNotFound }
+                print("Stats \(stats)")
                 if let vmem = Int32(stats[20]) {
                     print("vmem \(vmem)")
                     Gauge(label: prefix + "virtual_memory_bytes").record(vmem)
