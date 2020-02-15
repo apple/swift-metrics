@@ -24,6 +24,7 @@ public enum SystemMetricsProvider {
             self.shouldRunSystemMetrics = true
         }
         DispatchQueue.global(qos: .background).async {
+            print("Starting loop")
             updateSystemMetrics()
         }
     }
@@ -42,17 +43,20 @@ public enum SystemMetricsProvider {
         _ = Foundation.Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { (timer) in
             let shouldReturn = self.lock.withReaderLock { () -> Bool in
                 if !self.shouldRunSystemMetrics {
+                    print("invalidating timer")
                     timer.invalidate()
                     return true
                 }
                 return false
             }
             if shouldReturn { return }
+            print("Starting process grabbing")
             let prefix = "process_"
             let pid = ProcessInfo.processInfo.processIdentifier
             let ticks = Int32(_SC_CLK_TCK)
 //            #if os(Linux)
             do {
+                print("Do one")
                 guard let stats =
                     try String(contentsOfFile: "/proc/\(pid)/stat", encoding: .utf8)
                         .split(separator: ")")
@@ -80,6 +84,7 @@ public enum SystemMetricsProvider {
                 }
             } catch { print(error) }
             do {
+                print("Do two")
                 guard
                     let line = try String(contentsOfFile: "/proc/\(pid)/limits", encoding: .utf8)
                         .split(separator: "\n")
@@ -90,6 +95,7 @@ public enum SystemMetricsProvider {
                 Gauge(label: prefix + "max_fds").record(maxFds)
             } catch { print(error) }
             do {
+                print("Do three")
                 let fm = FileManager.default
                 let items = try fm.contentsOfDirectory(atPath: "/proc/\(pid)/fd")
                 Gauge(label: prefix + "open_fds").record(items.count)
