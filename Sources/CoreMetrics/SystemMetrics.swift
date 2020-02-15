@@ -78,7 +78,7 @@ public enum SystemMetricsProvider {
                     print("cpu \(utime + stime)")
                     Gauge(label: prefix + "cpu_seconds_total").record(utime + stime)
                 }
-            } catch { }
+            } catch { print(error) }
             do {
                 guard
                     let line = try String(contentsOfFile: "/proc/\(pid)/limits", encoding: .utf8)
@@ -88,12 +88,12 @@ public enum SystemMetricsProvider {
                     let maxFds = Int32(line.split(separator: " ").map(String.init)[3])
                 else { throw SystemMetricsError.FileNotFound }
                 Gauge(label: prefix + "max_fds").record(maxFds)
-            } catch { }
+            } catch { print(error) }
             do {
                 let fm = FileManager.default
                 let items = try fm.contentsOfDirectory(atPath: "/proc/\(pid)/fd")
                 Gauge(label: prefix + "open_fds").record(items.count)
-            } catch { }
+            } catch { print(error) }
 //            #else
 //            print("Not sure what to do here just yet.")
 //            #endif
