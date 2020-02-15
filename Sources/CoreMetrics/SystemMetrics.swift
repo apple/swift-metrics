@@ -17,6 +17,7 @@ import Foundation
 @available(macOS 10.12, *)
 public enum SystemMetricsProvider {
     fileprivate static let lock = ReadWriteLock()
+    fileprivate static let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsProvider")
     fileprivate static var shouldRunSystemMetrics: Bool = false
 
     public static func bootstrapSystemMetrics() {
@@ -40,24 +41,20 @@ public enum SystemMetricsProvider {
     }
     
     fileprivate static func updateSystemMetrics() {
-//        _ = Foundation.Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { (timer) in
-            print("Inside timer")
-//            let shouldReturn = self.lock.withReaderLock { () -> Bool in
-//                if !self.shouldRunSystemMetrics {
-//                    print("invalidating timer")
-//                    timer.invalidate()
-//                    return true
-//                }
-//                return false
-//            }
-//            if shouldReturn { return }
-            print("Starting process grabbing")
+        self.queue.asyncAfter(deadline: .now() + .seconds(2)) {
+            print("Calculating process metrics")
+            let shouldReturn = self.lock.withReaderLock { () -> Bool in
+                if !self.shouldRunSystemMetrics {
+                    return true
+                }
+                return false
+            }
+            if shouldReturn { return }
             let prefix = "process_"
             let pid = ProcessInfo.processInfo.processIdentifier
             let ticks = Int32(_SC_CLK_TCK)
 //            #if os(Linux)
             do {
-                print("Do one")
                 guard let statString =
                     try String(contentsOfFile: "/proc/\(pid)/stat", encoding: .utf8)
                         .split(separator: ")")
@@ -66,27 +63,21 @@ public enum SystemMetricsProvider {
                 let stats = String(statString)
                         .split(separator: " ")
                         .map(String.init)
-                print("Stats \(stats)")
                 if let vmem = Int32(stats[20]) {
-                    print("vmem \(vmem)")
                     Gauge(label: prefix + "virtual_memory_bytes").record(vmem)
                 }
                 if let rss = Int32(stats[21]) {
-                    print("rss \(rss)")
                     Gauge(label: prefix + "resident_memory_bytes").record(rss * Int32(_SC_PAGESIZE))
                 }
                 if let startTimeTicks = Int32(stats[19]) {
-                    print("startTime \(startTimeTicks / ticks)")
                     Gauge(label: prefix + "start_time_seconds").record(startTimeTicks / ticks)
                 }
                 if let utimeTicks = Int32(stats[11]), let stimeTicks = Int32(stats[12]) {
                     let utime = utimeTicks / ticks, stime = stimeTicks / ticks
-                    print("cpu \(utime + stime)")
                     Gauge(label: prefix + "cpu_seconds_total").record(utime + stime)
                 }
             } catch { print(error) }
             do {
-                print("Do two")
                 guard
                     let line = try String(contentsOfFile: "/proc/\(pid)/limits", encoding: .utf8)
                         .split(separator: "\n")
@@ -97,14 +88,13 @@ public enum SystemMetricsProvider {
                 Gauge(label: prefix + "max_fds").record(maxFds)
             } catch { print(error) }
             do {
-                print("Do three")
-                let fm = FileManager.default
-                let items = try fm.contentsOfDirectory(atPath: "/proc/\(pid)/fd")
+                let fm = FileManager.default,
+                    items = try fm.contentsOfDirectory(atPath: "/proc/\(pid)/fd")
                 Gauge(label: prefix + "open_fds").record(items.count)
             } catch { print(error) }
 //            #else
 //            print("Not sure what to do here just yet.")
 //            #endif
-//        }
+        }
     }
 }
