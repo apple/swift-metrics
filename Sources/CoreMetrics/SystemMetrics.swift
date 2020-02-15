@@ -58,14 +58,14 @@ public enum SystemMetricsProvider {
 //            #if os(Linux)
             do {
                 print("Do one")
-                guard let stats =
+                guard let statString =
                     try String(contentsOfFile: "/proc/\(pid)/stat", encoding: .utf8)
                         .split(separator: ")")
-                        .last?
-                        .map(String.init)
+                        .last
+                    else { throw SystemMetricsError.FileNotFound }
+                let stats = String(statString)
                         .split(separator: " ")
                         .map(String.init)
-                    else { throw SystemMetricsError.FileNotFound }
                 print("Stats \(stats)")
                 if let vmem = Int32(stats[20]) {
                     print("vmem \(vmem)")
