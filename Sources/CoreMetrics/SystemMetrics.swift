@@ -14,7 +14,6 @@
 
 import Foundation
 
-@available(macOS 10.12, *)
 public enum SystemMetricsProvider {
     fileprivate static let lock = ReadWriteLock()
     fileprivate static let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsProvider")
@@ -25,7 +24,6 @@ public enum SystemMetricsProvider {
             self.shouldRunSystemMetrics = true
         }
         DispatchQueue.global(qos: .background).async {
-            print("Starting loop")
             updateSystemMetrics()
         }
     }
@@ -42,7 +40,6 @@ public enum SystemMetricsProvider {
     
     fileprivate static func updateSystemMetrics() {
         self.queue.asyncAfter(deadline: .now() + .seconds(2)) {
-            print("Calculating process metrics")
             let shouldReturn = self.lock.withReaderLock { () -> Bool in
                 if !self.shouldRunSystemMetrics {
                     return true
@@ -53,7 +50,7 @@ public enum SystemMetricsProvider {
             let prefix = "process_"
             let pid = ProcessInfo.processInfo.processIdentifier
             let ticks = Int32(_SC_CLK_TCK)
-//            #if os(Linux)
+            #if os(Linux)
             do {
                 guard let statString =
                     try String(contentsOfFile: "/proc/\(pid)/stat", encoding: .utf8)
@@ -92,9 +89,9 @@ public enum SystemMetricsProvider {
                     items = try fm.contentsOfDirectory(atPath: "/proc/\(pid)/fd")
                 Gauge(label: prefix + "open_fds").record(items.count)
             } catch { print(error) }
-//            #else
-//            print("Not sure what to do here just yet.")
-//            #endif
+            #else
+            #warning("System Metrics are not implemented on MacOS yet.")
+            #endif
             self.updateSystemMetrics()
         }
     }
