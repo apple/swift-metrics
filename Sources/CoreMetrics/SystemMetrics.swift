@@ -95,6 +95,7 @@ public enum SystemMetricsProvider {
 //            #else
 //            print("Not sure what to do here just yet.")
 //            #endif
+            self.updateSystemMetrics()
         }
     }
 }
