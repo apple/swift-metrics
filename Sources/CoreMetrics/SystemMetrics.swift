@@ -50,7 +50,7 @@ public enum SystemMetricsProvider {
             if shouldReturn { return }
             let prefix = "process_"
             let pid = ProcessInfo.processInfo.processIdentifier
-            let ticks = _SC_CLK_TCK
+            let ticks = Int32(_SC_CLK_TCK)
 //            #if os(Linux)
             do {
                 guard let stats =
@@ -67,7 +67,7 @@ public enum SystemMetricsProvider {
                 }
                 if let rss = Int32(stats[21]) {
                     print("rss \(rss)")
-                    Gauge(label: prefix + "resident_memory_bytes").record(rss * _SC_PAGESIZE)
+                    Gauge(label: prefix + "resident_memory_bytes").record(rss * Int32(_SC_PAGESIZE))
                 }
                 if let startTimeTicks = Int32(stats[19]) {
                     print("startTime \(startTimeTicks / ticks)")
