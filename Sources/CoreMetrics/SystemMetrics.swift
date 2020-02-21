@@ -12,15 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Combine
+import Foundation
 
 @available(OSX 10.15, *)
 public enum SystemMetricsProvider {
     fileprivate static let lock = ReadWriteLock()
     fileprivate static let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsProvider", qos: .background)
     fileprivate static var timeInterval: DispatchTimeInterval = .seconds(2)
-    fileprivate static var cancellable: Cancellable? = nil
+    fileprivate static var cancellable: Cancellable?
     fileprivate static var systemMetricsType: SystemMetrics.Type = UnsuportedMetricsProvider.self
 
     public static func bootstrapSystemMetrics(pollInterval interval: DispatchTimeInterval = .seconds(2), systemMetricsType: SystemMetrics.Type? = nil) {
@@ -36,13 +36,13 @@ public enum SystemMetricsProvider {
                 #endif
             }
         }
-        updateSystemMetrics()
+        self.updateSystemMetrics()
     }
-    
+
     public static func cancelSystemMetrics() {
         self.cancellable?.cancel()
     }
-    
+
     fileprivate static func updateSystemMetrics() {
         let interval = self.lock.withReaderLock { self.timeInterval }
         let c = self.queue.schedule(after: .init(.now()), interval: .init(interval)) {
@@ -64,7 +64,7 @@ public enum SystemMetricsProvider {
 
 public protocol SystemMetrics {
     init(pid: String)
-    
+
     var virtualMemory: Int32? { get }
     var residentMemory: Int32? { get }
     var startTimeSeconds: Int32? { get }
@@ -85,18 +85,18 @@ private struct LinuxSystemMetricsProvider: SystemMetrics {
     private enum SystemMetricsError: Error {
         case FileNotFound
     }
-    
+
     init(pid: String) {
         let ticks = Int32(_SC_CLK_TCK)
         do {
             guard let statString =
                 try String(contentsOfFile: "/proc/\(pid)/stat", encoding: .utf8)
-                    .split(separator: ")")
-                    .last
-                else { throw SystemMetricsError.FileNotFound }
+                .split(separator: ")")
+                .last
+            else { throw SystemMetricsError.FileNotFound }
             let stats = String(statString)
-                    .split(separator: " ")
-                    .map(String.init)
+                .split(separator: " ")
+                .map(String.init)
             self.virtualMemory = Int32(stats[safe: 20])
             if let rss = Int32(stats[safe: 21]) {
                 self.residentMemory = rss * Int32(_SC_PAGESIZE)
@@ -123,9 +123,9 @@ private struct LinuxSystemMetricsProvider: SystemMetrics {
         do {
             guard
                 let line = try String(contentsOfFile: "/proc/\(pid)/limits", encoding: .utf8)
-                    .split(separator: "\n")
-                    .first(where: { $0.starts(with: "Max open file") })
-                    .map(String.init) else { throw SystemMetricsError.FileNotFound }
+                .split(separator: "\n")
+                .first(where: { $0.starts(with: "Max open file") })
+                .map(String.init) else { throw SystemMetricsError.FileNotFound }
             self.maxFds = Int32(line.split(separator: " ").map(String.init)[safe: 3])
         } catch {
             self.maxFds = nil
@@ -139,6 +139,7 @@ private struct LinuxSystemMetricsProvider: SystemMetrics {
         }
     }
 }
+
 #else
 private struct UnsuportedMetricsProvider: SystemMetrics {
     let virtualMemory: Int32?
@@ -160,7 +161,7 @@ private struct UnsuportedMetricsProvider: SystemMetrics {
 }
 #endif
 
-fileprivate extension Array where Element == String {
+private extension Array where Element == String {
     subscript(safe index: Int) -> String {
         guard index >= 0, index < endIndex else {
             return ""
