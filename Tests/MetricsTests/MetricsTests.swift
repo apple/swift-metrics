@@ -107,10 +107,10 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue * 1000, "expected value to match")
 
         testSecondsTimer.preferDisplayUnit(.microseconds)
-        XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue * 1000_000, "expected value to match")
+        XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue * 1_000_000, "expected value to match")
 
         testSecondsTimer.preferDisplayUnit(.nanoseconds)
-        XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue * 1000_000_000, "expected value to match")
+        XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue * 1_000_000_000, "expected value to match")
     }
 }
 
