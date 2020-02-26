@@ -166,6 +166,7 @@ internal class TestTimer: TimerHandler, Equatable {
             case .minutes: return (value / 1_000_000_000) * 60
             case .seconds: return value / 1_000_000_000
             case .milliseconds: return value / 1_000_000
+            case .microseconds: return value / 1_000
             case .nanoseconds: return value
             }
         }

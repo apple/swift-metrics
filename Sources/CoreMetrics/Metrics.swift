@@ -173,7 +173,7 @@ public class Gauge: Recorder {
 }
 
 public enum TimeUnit {
-    case nanoseconds, milliseconds, seconds, minutes, hours, days
+    case nanoseconds, microseconds, milliseconds, seconds, minutes, hours, days
 }
 
 public extension Timer {

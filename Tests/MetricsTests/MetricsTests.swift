@@ -102,6 +102,15 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(testSecondsTimer.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 2, "timer should have been stored")
+
+        testSecondsTimer.preferDisplayUnit(.milliseconds)
+        XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue * 1000, "expected value to match")
+
+        testSecondsTimer.preferDisplayUnit(.microseconds)
+        XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue * 1000_000, "expected value to match")
+
+        testSecondsTimer.preferDisplayUnit(.nanoseconds)
+        XCTAssertEqual(testSecondsTimer.retriveValueInPreferredUnit(atIndex: 0), secondsValue * 1000_000_000, "expected value to match")
     }
 }
 
