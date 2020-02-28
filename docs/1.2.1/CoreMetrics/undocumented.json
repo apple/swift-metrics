@@ -1,0 +1,117 @@
+{
+  "warnings": [
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 45,
+      "symbol": "Counter.label",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 46,
+      "symbol": "Counter.dimensions",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 114,
+      "symbol": "Recorder.label",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 115,
+      "symbol": "Recorder.dimensions",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 116,
+      "symbol": "Recorder.aggregate",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 175,
+      "symbol": "TimeUnit",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 176,
+      "symbol": "TimeUnit.days",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 176,
+      "symbol": "TimeUnit.hours",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 176,
+      "symbol": "TimeUnit.milliseconds",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 176,
+      "symbol": "TimeUnit.minutes",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 176,
+      "symbol": "TimeUnit.nanoseconds",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 176,
+      "symbol": "TimeUnit.seconds",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 219,
+      "symbol": "Timer.label",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 220,
+      "symbol": "Timer.dimensions",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 521,
+      "symbol": "MultiplexMetricsHandler.init(factories:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/code/Sources/CoreMetrics/Metrics.swift",
+      "line": 599,
+      "symbol": "NOOPMetricsHandler.instance",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/code"
+}
