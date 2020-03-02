@@ -172,8 +172,30 @@ public class Gauge: Recorder {
     }
 }
 
-public enum TimeUnit {
-    case nanoseconds, microseconds, milliseconds, seconds, minutes, hours, days
+public struct TimeUnit: Equatable {
+    private enum Code: Equatable {
+        case nanoseconds
+        case microseconds
+        case milliseconds
+        case seconds
+        case minutes
+        case hours
+        case days
+    }
+
+    private var code: Code
+
+    private init(code: Code) {
+        self.code = code
+    }
+
+    public static let nanoseconds = TimeUnit(code: .nanoseconds)
+    public static let microseconds = TimeUnit(code: .microseconds)
+    public static let milliseconds = TimeUnit(code: .milliseconds)
+    public static let seconds = TimeUnit(code: .seconds)
+    public static let minutes = TimeUnit(code: .minutes)
+    public static let hours = TimeUnit(code: .hours)
+    public static let days = TimeUnit(code: .days)
 }
 
 public extension Timer {

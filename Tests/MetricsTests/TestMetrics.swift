@@ -168,6 +168,7 @@ internal class TestTimer: TimerHandler, Equatable {
             case .milliseconds: return value / 1_000_000
             case .microseconds: return value / 1000
             case .nanoseconds: return value
+            default: preconditionFailure("unknown display unit: \(displayUnit)")
             }
         }
     }
