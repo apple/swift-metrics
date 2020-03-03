@@ -184,9 +184,9 @@ public struct TimeUnit: Equatable {
     }
 
     private let code: Code
-    let scaleFromNanoseconds: UInt
+    let scaleFromNanoseconds: UInt64
 
-    private init(code: Code, scaleFromNanoseconds: UInt) {
+    private init(code: Code, scaleFromNanoseconds: UInt64) {
         assert(scaleFromNanoseconds > 0, "invalid scale from nanoseconds")
 
         self.code = code
