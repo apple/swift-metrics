@@ -183,19 +183,23 @@ public struct TimeUnit: Equatable {
         case days
     }
 
-    private var code: Code
+    private let code: Code
+    let scaleFromNanoseconds: UInt
 
-    private init(code: Code) {
+    private init(code: Code, scaleFromNanoseconds: UInt) {
+        assert(scaleFromNanoseconds > 0, "invalid scale from nanoseconds")
+
         self.code = code
+        self.scaleFromNanoseconds = scaleFromNanoseconds
     }
 
-    public static let nanoseconds = TimeUnit(code: .nanoseconds)
-    public static let microseconds = TimeUnit(code: .microseconds)
-    public static let milliseconds = TimeUnit(code: .milliseconds)
-    public static let seconds = TimeUnit(code: .seconds)
-    public static let minutes = TimeUnit(code: .minutes)
-    public static let hours = TimeUnit(code: .hours)
-    public static let days = TimeUnit(code: .days)
+    public static let nanoseconds = TimeUnit(code: .nanoseconds, scaleFromNanoseconds: 1)
+    public static let microseconds = TimeUnit(code: .microseconds, scaleFromNanoseconds: 1000)
+    public static let milliseconds = TimeUnit(code: .milliseconds, scaleFromNanoseconds: 1000 * 1000)
+    public static let seconds = TimeUnit(code: .seconds, scaleFromNanoseconds: 1000 * 1000 * 1000)
+    public static let minutes = TimeUnit(code: .minutes, scaleFromNanoseconds: 60 * 1000 * 1000 * 1000)
+    public static let hours = TimeUnit(code: .hours, scaleFromNanoseconds: 60 * 60 * 1000 * 1000 * 1000)
+    public static let days = TimeUnit(code: .days, scaleFromNanoseconds: 60 * 60 * 24 * 1000 * 1000 * 1000)
 }
 
 public extension Timer {

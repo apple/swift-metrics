@@ -154,22 +154,13 @@ internal class TestTimer: TimerHandler, Equatable {
         }
     }
 
-    func retriveValueInPreferredUnit(atIndex i: Int) -> Int64 {
+    func retriveValueInPreferredUnit(atIndex i: Int) -> Double {
         return self.lock.withLock {
             let value = values[i].1
             guard let displayUnit = self.displayUnit else {
-                return value
+                return Double(value)
             }
-            switch displayUnit {
-            case .days: return (value / 1_000_000_000) * 60 * 60 * 24
-            case .hours: return (value / 1_000_000_000) * 60 * 60
-            case .minutes: return (value / 1_000_000_000) * 60
-            case .seconds: return value / 1_000_000_000
-            case .milliseconds: return value / 1_000_000
-            case .microseconds: return value / 1000
-            case .nanoseconds: return value
-            default: preconditionFailure("unknown display unit: \(displayUnit)")
-            }
+            return Double(value) / Double(displayUnit.scaleFromNanoseconds)
         }
     }
 
