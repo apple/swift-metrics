@@ -195,11 +195,11 @@ public struct TimeUnit: Equatable {
 
     public static let nanoseconds = TimeUnit(code: .nanoseconds, scaleFromNanoseconds: 1)
     public static let microseconds = TimeUnit(code: .microseconds, scaleFromNanoseconds: 1000)
-    public static let milliseconds = TimeUnit(code: .milliseconds, scaleFromNanoseconds: 1000 * 1000)
-    public static let seconds = TimeUnit(code: .seconds, scaleFromNanoseconds: 1000 * 1000 * 1000)
-    public static let minutes = TimeUnit(code: .minutes, scaleFromNanoseconds: 60 * 1000 * 1000 * 1000)
-    public static let hours = TimeUnit(code: .hours, scaleFromNanoseconds: 60 * 60 * 1000 * 1000 * 1000)
-    public static let days = TimeUnit(code: .days, scaleFromNanoseconds: 60 * 60 * 24 * 1000 * 1000 * 1000)
+    public static let milliseconds = TimeUnit(code: .milliseconds, scaleFromNanoseconds: 1000 * TimeUnit.microseconds.scaleFromNanoseconds)
+    public static let seconds = TimeUnit(code: .seconds, scaleFromNanoseconds: 1000 * TimeUnit.milliseconds.scaleFromNanoseconds)
+    public static let minutes = TimeUnit(code: .minutes, scaleFromNanoseconds: 60 * TimeUnit.seconds.scaleFromNanoseconds)
+    public static let hours = TimeUnit(code: .hours, scaleFromNanoseconds: 60 * TimeUnit.minutes.scaleFromNanoseconds)
+    public static let days = TimeUnit(code: .days, scaleFromNanoseconds: 24 * TimeUnit.hours.scaleFromNanoseconds)
 }
 
 public extension Timer {
