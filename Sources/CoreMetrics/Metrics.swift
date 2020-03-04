@@ -172,8 +172,34 @@ public class Gauge: Recorder {
     }
 }
 
-public enum TimeUnit {
-    case nanoseconds, milliseconds, seconds, minutes, hours, days
+public struct TimeUnit: Equatable {
+    private enum Code: Equatable {
+        case nanoseconds
+        case microseconds
+        case milliseconds
+        case seconds
+        case minutes
+        case hours
+        case days
+    }
+
+    private let code: Code
+    public let scaleFromNanoseconds: UInt64
+
+    private init(code: Code, scaleFromNanoseconds: UInt64) {
+        assert(scaleFromNanoseconds > 0, "invalid scale from nanoseconds")
+
+        self.code = code
+        self.scaleFromNanoseconds = scaleFromNanoseconds
+    }
+
+    public static let nanoseconds = TimeUnit(code: .nanoseconds, scaleFromNanoseconds: 1)
+    public static let microseconds = TimeUnit(code: .microseconds, scaleFromNanoseconds: 1000)
+    public static let milliseconds = TimeUnit(code: .milliseconds, scaleFromNanoseconds: 1000 * TimeUnit.microseconds.scaleFromNanoseconds)
+    public static let seconds = TimeUnit(code: .seconds, scaleFromNanoseconds: 1000 * TimeUnit.milliseconds.scaleFromNanoseconds)
+    public static let minutes = TimeUnit(code: .minutes, scaleFromNanoseconds: 60 * TimeUnit.seconds.scaleFromNanoseconds)
+    public static let hours = TimeUnit(code: .hours, scaleFromNanoseconds: 60 * TimeUnit.minutes.scaleFromNanoseconds)
+    public static let days = TimeUnit(code: .days, scaleFromNanoseconds: 24 * TimeUnit.hours.scaleFromNanoseconds)
 }
 
 public extension Timer {

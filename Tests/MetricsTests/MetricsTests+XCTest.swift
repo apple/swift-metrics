@@ -29,6 +29,7 @@ extension MetricsExtensionsTests {
             ("testTimerWithTimeInterval", testTimerWithTimeInterval),
             ("testTimerWithDispatchTime", testTimerWithDispatchTime),
             ("testTimerUnits", testTimerUnits),
+            ("testPreferDisplayUnit", testPreferDisplayUnit),
         ]
     }
 }
