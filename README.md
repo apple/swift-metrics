@@ -15,9 +15,8 @@ If you have a server-side Swift application, or maybe a cross-platform (e.g. Lin
 To add a dependency on the metrics API package, you need to declare it in your `Package.swift`:
 
 ```swift
-// As of May 5, 2019, SwiftMetrics' major stable release is 1.0.0
-// To depend on this release, you can use
-.package(url: "https://github.com/apple/swift-metrics.git", from: "1.0.0"),
+// swift-metrics 1.x and 2.x are almost API compatible, so most clients should use
+.package(url: "https://github.com/apple/swift-metrics.git", "1.0.0" ..< "3.0.0"),
 ```
 
 and to your application/library target, add "Metrics" to your dependencies:
