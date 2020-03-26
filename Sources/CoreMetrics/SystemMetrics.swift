@@ -14,18 +14,12 @@
 
 import Foundation
 
-#if os(Windows)
-public typealias ProcessId = DWORD
-#else
-public typealias ProcessId = pid_t
-#endif
-
 internal class SystemMetricsHandler {
     fileprivate let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsHandler", qos: .background)
     fileprivate let timeInterval: DispatchTimeInterval
     fileprivate let systemMetricsType: SystemMetrics.Type
     fileprivate let labels: SystemMetricsLabels
-    fileprivate let processId: ProcessId
+    fileprivate let processId: Int
     fileprivate var task: DispatchWorkItem?
 
     init(pollInterval interval: DispatchTimeInterval = .seconds(2), systemMetricsType: SystemMetrics.Type? = nil, labels: SystemMetricsLabels) {
@@ -40,12 +34,12 @@ internal class SystemMetricsHandler {
             #endif
         }
         self.labels = labels
-        self.processId = ProcessInfo.processInfo.processIdentifier
+        self.processId = Int(ProcessInfo.processInfo.processIdentifier)
 
         self.task = DispatchWorkItem(qos: .background, block: {
             let metrics = self.systemMetricsType.init(pid: self.processId)
-            if let vmem = metrics.virtualMemory { Gauge(label: self.labels.label(for: \.virtualMemory)).record(vmem) }
-            if let rss = metrics.residentMemory { Gauge(label: self.labels.label(for: \.residentMemory)).record(rss) }
+            if let vmem = metrics.virtualMemoryBytes { Gauge(label: self.labels.label(for: \.virtualMemoryBytes)).record(vmem) }
+            if let rss = metrics.residentMemoryBytes { Gauge(label: self.labels.label(for: \.residentMemoryBytes)).record(rss) }
             if let start = metrics.startTimeSeconds { Gauge(label: self.labels.label(for: \.startTimeSeconds)).record(start) }
             if let cpuSeconds = metrics.cpuSeconds { Gauge(label: self.labels.label(for: \.cpuSecondsTotal)).record(cpuSeconds) }
             if let maxFds = metrics.maxFds { Gauge(label: self.labels.label(for: \.maxFds)).record(maxFds) }
@@ -71,17 +65,17 @@ internal class SystemMetricsHandler {
 
 public struct SystemMetricsLabels {
     let prefix: String
-    let virtualMemory: String
-    let residentMemory: String
+    let virtualMemoryBytes: String
+    let residentMemoryBytes: String
     let startTimeSeconds: String
     let cpuSecondsTotal: String
     let maxFds: String
     let openFds: String
 
-    public init(prefix: String, virtualMemory: String, residentMemory: String, startTimeSeconds: String, cpuSecondsTotal: String, maxFds: String, openFds: String) {
+    public init(prefix: String, virtualMemoryBytes: String, residentMemoryBytes: String, startTimeSeconds: String, cpuSecondsTotal: String, maxFds: String, openFds: String) {
         self.prefix = prefix
-        self.virtualMemory = virtualMemory
-        self.residentMemory = residentMemory
+        self.virtualMemoryBytes = virtualMemoryBytes
+        self.residentMemoryBytes = residentMemoryBytes
         self.startTimeSeconds = startTimeSeconds
         self.cpuSecondsTotal = cpuSecondsTotal
         self.maxFds = maxFds
@@ -94,32 +88,32 @@ public struct SystemMetricsLabels {
 }
 
 public protocol SystemMetrics {
-    init(pid: ProcessId)
+    init(pid: Int)
 
-    var virtualMemory: Int32? { get }
-    var residentMemory: Int32? { get }
-    var startTimeSeconds: Int32? { get }
-    var cpuSeconds: Int32? { get }
-    var maxFds: Int32? { get }
-    var openFds: Int32? { get }
+    var virtualMemoryBytes: Int? { get }
+    var residentMemoryBytes: Int? { get }
+    var startTimeSeconds: Int? { get }
+    var cpuSeconds: Int? { get }
+    var maxFds: Int? { get }
+    var openFds: Int? { get }
 }
 
 #if os(Linux)
 private struct LinuxSystemMetrics: SystemMetrics {
-    let virtualMemory: Int32?
-    let residentMemory: Int32?
-    let startTimeSeconds: Int32?
-    let cpuSeconds: Int32?
-    let maxFds: Int32?
-    let openFds: Int32?
+    let virtualMemoryBytes: Int?
+    let residentMemoryBytes: Int?
+    let startTimeSeconds: Int?
+    let cpuSeconds: Int?
+    let maxFds: Int?
+    let openFds: Int?
 
     private enum SystemMetricsError: Error {
         case FileNotFound
     }
 
-    init(pid: ProcessId) {
+    init(pid: Int) {
         let pid = "\(pid)"
-        let ticks = Int32(_SC_CLK_TCK)
+        let ticks = Int(_SC_CLK_TCK)
         do {
             guard let statString =
                 try String(contentsOfFile: "/proc/\(pid)/stat", encoding: .utf8)
@@ -129,26 +123,26 @@ private struct LinuxSystemMetrics: SystemMetrics {
             let stats = String(statString)
                 .split(separator: " ")
                 .map(String.init)
-            self.virtualMemory = Int32(stats[safe: 20])
-            if let rss = Int32(stats[safe: 21]) {
-                self.residentMemory = rss * Int32(_SC_PAGESIZE)
+            self.virtualMemoryBytes = Int(stats[safe: 20])
+            if let rss = Int(stats[safe: 21]) {
+                self.residentMemoryBytes = rss * Int(_SC_PAGESIZE)
             } else {
-                self.residentMemory = nil
+                self.residentMemoryBytes = nil
             }
-            if let startTimeTicks = Int32(stats[safe: 19]) {
+            if let startTimeTicks = Int(stats[safe: 19]) {
                 self.startTimeSeconds = startTimeTicks / ticks
             } else {
                 self.startTimeSeconds = nil
             }
-            if let utimeTicks = Int32(stats[safe: 11]), let stimeTicks = Int32(stats[safe: 12]) {
+            if let utimeTicks = Int(stats[safe: 11]), let stimeTicks = Int(stats[safe: 12]) {
                 let utime = utimeTicks / ticks, stime = stimeTicks / ticks
                 self.cpuSeconds = utime + stime
             } else {
                 self.cpuSeconds = nil
             }
         } catch {
-            self.virtualMemory = nil
-            self.residentMemory = nil
+            self.virtualMemoryBytes = nil
+            self.residentMemoryBytes = nil
             self.startTimeSeconds = nil
             self.cpuSeconds = nil
         }
@@ -158,14 +152,14 @@ private struct LinuxSystemMetrics: SystemMetrics {
                 .split(separator: "\n")
                 .first(where: { $0.starts(with: "Max open file") })
                 .map(String.init) else { throw SystemMetricsError.FileNotFound }
-            self.maxFds = Int32(line.split(separator: " ").map(String.init)[safe: 3])
+            self.maxFds = Int(line.split(separator: " ").map(String.init)[safe: 3])
         } catch {
             self.maxFds = nil
         }
         do {
             let fm = FileManager.default,
                 items = try fm.contentsOfDirectory(atPath: "/proc/\(pid)/fd")
-            self.openFds = Int32(items.count)
+            self.openFds = items.count
         } catch {
             self.openFds = nil
         }
@@ -176,16 +170,16 @@ private struct LinuxSystemMetrics: SystemMetrics {
 #endif
 
 private struct NOOPSystemMetrics: SystemMetrics {
-    let virtualMemory: Int32?
-    let residentMemory: Int32?
-    let startTimeSeconds: Int32?
-    let cpuSeconds: Int32?
-    let maxFds: Int32?
-    let openFds: Int32?
+    let virtualMemoryBytes: Int?
+    let residentMemoryBytes: Int?
+    let startTimeSeconds: Int?
+    let cpuSeconds: Int?
+    let maxFds: Int?
+    let openFds: Int?
 
-    init(pid: ProcessId) {
-        self.virtualMemory = nil
-        self.residentMemory = nil
+    init(pid: Int) {
+        self.virtualMemoryBytes = nil
+        self.residentMemoryBytes = nil
         self.startTimeSeconds = nil
         self.cpuSeconds = nil
         self.maxFds = nil
