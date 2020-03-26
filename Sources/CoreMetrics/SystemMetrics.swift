@@ -113,7 +113,7 @@ private struct LinuxSystemMetrics: SystemMetrics {
 
     init(pid: Int) {
         let pid = "\(pid)"
-        let ticks = Int(_SC_CLK_TCK)
+        let ticks = _SC_CLK_TCK
         do {
             guard let statString =
                 try String(contentsOfFile: "/proc/\(pid)/stat", encoding: .utf8)
@@ -125,7 +125,7 @@ private struct LinuxSystemMetrics: SystemMetrics {
                 .map(String.init)
             self.virtualMemoryBytes = Int(stats[safe: 20])
             if let rss = Int(stats[safe: 21]) {
-                self.residentMemoryBytes = rss * Int(_SC_PAGESIZE)
+                self.residentMemoryBytes = rss * _SC_PAGESIZE
             } else {
                 self.residentMemoryBytes = nil
             }
