@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import enum Dispatch.DispatchTimeInterval
+
 // MARK: User API
 
 extension Counter {
@@ -337,6 +339,8 @@ public enum MetricsSystem {
     fileprivate static let lock = ReadWriteLock()
     fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
     fileprivate static var initialized = false
+    fileprivate static var systemMetricsHandler: SystemMetricsHandler? = nil
+    fileprivate static var systemMetricsInitialized = false
 
     /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
@@ -349,6 +353,33 @@ public enum MetricsSystem {
             precondition(!self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self._factory)")
             self._factory = factory
             self.initialized = true
+        }
+    }
+    
+    /// `bootstrapSystemMetrics` is an one-time configuration function which globally enables system level metrics.
+    /// `bootstrapSystemMetrics` can be only called once, unless cancelled usung `cancelSystemMetrics`, calling it more
+    /// than once without cancelling will lead to undefined behaviour, most likely a crash.
+    ///
+    /// - parameters:
+    ///     - pollInterval: The interval at which system metrics should be updated.
+    ///     - systemMetricsType: The type of system metrics to use. If none is provided this defaults to
+    ///                          `LinuxSystemMetrics` on Linux platforms and `NOOPSystemMetrics` on all other platforms.
+    ///     - labels: The labels to use for generated system metrics.
+    public static func bootstrapSystemMetrics(pollInterval interval: DispatchTimeInterval = .seconds(2), systemMetricsType: SystemMetrics.Type? = nil, labels: SystemMetricsLabels) {
+        self.lock.withWriterLockVoid {
+            precondition(!self.systemMetricsInitialized, "metrics system can only be initialized once per process. currently used factory: \(self._factory)")
+            self.systemMetricsHandler = SystemMetricsHandler(pollInterval: interval, systemMetricsType: systemMetricsType, labels: labels)
+            self.systemMetricsInitialized = true
+        }
+    }
+    
+    /// Cancels the collection of system metrics. Calling this unlocks `bootstrapSystemMetrics` so it can be
+    /// called again.
+    public static func cancelSystemMetrics() {
+        self.lock.withWriterLockVoid {
+            self.systemMetricsHandler?.cancelSystemMetrics()
+            self.systemMetricsHandler = nil
+            self.systemMetricsInitialized = false
         }
     }
 

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift Metrics API open source project
 //
-// Copyright (c) 2018-2019 Apple Inc. and the Swift Metrics API project authors
+// Copyright (c) 2018-2020 Apple Inc. and the Swift Metrics API project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,58 +12,89 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Combine
 import Foundation
 
-@available(OSX 10.15, *)
-public enum SystemMetricsProvider {
-    fileprivate static let lock = ReadWriteLock()
-    fileprivate static let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsProvider", qos: .background)
-    fileprivate static var timeInterval: DispatchTimeInterval = .seconds(2)
-    fileprivate static var cancellable: Cancellable?
-    fileprivate static var systemMetricsType: SystemMetrics.Type = UnsuportedMetricsProvider.self
+#if os(Windows)
+public typealias ProcessId = DWORD
+#else
+public typealias ProcessId = pid_t
+#endif
 
-    public static func bootstrapSystemMetrics(pollInterval interval: DispatchTimeInterval = .seconds(2), systemMetricsType: SystemMetrics.Type? = nil) {
-        self.lock.withWriterLockVoid {
-            self.timeInterval = interval
-            if let type = systemMetricsType {
-                self.systemMetricsType = type
-            } else {
-                #if os(Linux)
-                self.systemMetricsType = LinuxSystemMetricsProvider.self
-                #else
-                self.systemMetricsType = UnsuportedMetricsProvider.self
-                #endif
-            }
+internal class SystemMetricsHandler {
+    fileprivate let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsHandler", qos: .background)
+    fileprivate let timeInterval: DispatchTimeInterval
+    fileprivate let systemMetricsType: SystemMetrics.Type
+    fileprivate let labels: SystemMetricsLabels
+    fileprivate let processId: ProcessId
+    fileprivate var task: DispatchWorkItem?
+    
+    init(pollInterval interval: DispatchTimeInterval = .seconds(2), systemMetricsType: SystemMetrics.Type? = nil, labels: SystemMetricsLabels) {
+        self.timeInterval = interval
+        if let systemMetricsType = systemMetricsType {
+            self.systemMetricsType = systemMetricsType
+        } else {
+            #if os(Linux)
+            self.systemMetricsType = LinuxSystemMetrics.self
+            #else
+            self.systemMetricsType = NOOPSystemMetrics.self
+            #endif
         }
+        self.labels = labels
+        self.processId = ProcessInfo.processInfo.processIdentifier
+        
+        self.task = DispatchWorkItem(qos: .background, block: {
+            let metrics = self.systemMetricsType.init(pid: self.processId)
+            if let vmem = metrics.virtualMemory { Gauge(label: self.labels.label(for: \.virtualMemory)).record(vmem) }
+            if let rss = metrics.residentMemory { Gauge(label: self.labels.label(for: \.residentMemory)).record(rss) }
+            if let start = metrics.startTimeSeconds { Gauge(label: self.labels.label(for: \.startTimeSeconds)).record(start) }
+            if let cpuSeconds = metrics.cpuSeconds { Gauge(label: self.labels.label(for: \.cpuSecondsTotal)).record(cpuSeconds) }
+            if let maxFds = metrics.maxFds { Gauge(label: self.labels.label(for: \.maxFds)).record(maxFds) }
+            if let openFds = metrics.openFds { Gauge(label: self.labels.label(for: \.openFds)).record(openFds) }
+        })
+        
         self.updateSystemMetrics()
     }
 
-    public static func cancelSystemMetrics() {
-        self.cancellable?.cancel()
+    internal func cancelSystemMetrics() {
+        self.task?.cancel()
+        self.task = nil
     }
 
-    fileprivate static func updateSystemMetrics() {
-        let interval = self.lock.withReaderLock { self.timeInterval }
-        let c = self.queue.schedule(after: .init(.now()), interval: .init(interval)) {
-            let prefix = "process_"
-            let pid = ProcessInfo.processInfo.processIdentifier
-            let metrics = self.systemMetricsType.init(pid: "\(pid)")
-            if let vmem = metrics.virtualMemory { Gauge(label: prefix + "virtual_memory_bytes").record(vmem) }
-            if let rss = metrics.residentMemory { Gauge(label: prefix + "resident_memory_bytes").record(rss) }
-            if let start = metrics.startTimeSeconds { Gauge(label: prefix + "start_time_seconds").record(start) }
-            if let cpuSeconds = metrics.cpuSeconds { Gauge(label: prefix + "cpu_seconds_total").record(cpuSeconds) }
-            if let maxFds = metrics.maxFds { Gauge(label: prefix + "max_fds").record(maxFds) }
-            if let openFds = metrics.openFds { Gauge(label: prefix + "open_fds").record(openFds) }
-        }
-        self.lock.withWriterLockVoid {
-            self.cancellable = c
+    internal func updateSystemMetrics() {
+        self.queue.asyncAfter(deadline: .now() + self.timeInterval) {
+            guard let task = self.task else { return }
+            task.perform()
+            self.updateSystemMetrics()
         }
     }
 }
 
+public struct SystemMetricsLabels {
+    let prefix: String
+    let virtualMemory: String
+    let residentMemory: String
+    let startTimeSeconds: String
+    let cpuSecondsTotal: String
+    let maxFds: String
+    let openFds: String
+    
+    public init(prefix: String, virtualMemory: String, residentMemory: String, startTimeSeconds: String, cpuSecondsTotal: String, maxFds: String, openFds: String) {
+        self.prefix = prefix
+        self.virtualMemory = virtualMemory
+        self.residentMemory = residentMemory
+        self.startTimeSeconds = startTimeSeconds
+        self.cpuSecondsTotal = cpuSecondsTotal
+        self.maxFds = maxFds
+        self.openFds = openFds
+    }
+    
+    func label(for keyPath: KeyPath<SystemMetricsLabels, String>) -> String {
+        return prefix + self[keyPath: keyPath]
+    }
+}
+
 public protocol SystemMetrics {
-    init(pid: String)
+    init(pid: ProcessId)
 
     var virtualMemory: Int32? { get }
     var residentMemory: Int32? { get }
@@ -74,7 +105,7 @@ public protocol SystemMetrics {
 }
 
 #if os(Linux)
-private struct LinuxSystemMetricsProvider: SystemMetrics {
+private struct LinuxSystemMetrics: SystemMetrics {
     let virtualMemory: Int32?
     let residentMemory: Int32?
     let startTimeSeconds: Int32?
@@ -86,7 +117,8 @@ private struct LinuxSystemMetricsProvider: SystemMetrics {
         case FileNotFound
     }
 
-    init(pid: String) {
+    init(pid: ProcessId) {
+        let pid = "\(pid)"
         let ticks = Int32(_SC_CLK_TCK)
         do {
             guard let statString =
@@ -139,9 +171,11 @@ private struct LinuxSystemMetricsProvider: SystemMetrics {
         }
     }
 }
-
 #else
-private struct UnsuportedMetricsProvider: SystemMetrics {
+#warning("System Metrics are not implemented on non-Linux platforms yet.")
+#endif
+
+private struct NOOPSystemMetrics: SystemMetrics {
     let virtualMemory: Int32?
     let residentMemory: Int32?
     let startTimeSeconds: Int32?
@@ -149,8 +183,7 @@ private struct UnsuportedMetricsProvider: SystemMetrics {
     let maxFds: Int32?
     let openFds: Int32?
 
-    init(pid: String) {
-        #warning("System Metrics are not implemented on non-Linux platforms yet.")
+    init(pid: ProcessId) {
         self.virtualMemory = nil
         self.residentMemory = nil
         self.startTimeSeconds = nil
@@ -159,7 +192,6 @@ private struct UnsuportedMetricsProvider: SystemMetrics {
         self.openFds = nil
     }
 }
-#endif
 
 private extension Array where Element == String {
     subscript(safe index: Int) -> String {
