@@ -27,7 +27,7 @@ internal class SystemMetricsHandler {
     fileprivate let labels: SystemMetricsLabels
     fileprivate let processId: ProcessId
     fileprivate var task: DispatchWorkItem?
-    
+
     init(pollInterval interval: DispatchTimeInterval = .seconds(2), systemMetricsType: SystemMetrics.Type? = nil, labels: SystemMetricsLabels) {
         self.timeInterval = interval
         if let systemMetricsType = systemMetricsType {
@@ -41,7 +41,7 @@ internal class SystemMetricsHandler {
         }
         self.labels = labels
         self.processId = ProcessInfo.processInfo.processIdentifier
-        
+
         self.task = DispatchWorkItem(qos: .background, block: {
             let metrics = self.systemMetricsType.init(pid: self.processId)
             if let vmem = metrics.virtualMemory { Gauge(label: self.labels.label(for: \.virtualMemory)).record(vmem) }
@@ -51,7 +51,7 @@ internal class SystemMetricsHandler {
             if let maxFds = metrics.maxFds { Gauge(label: self.labels.label(for: \.maxFds)).record(maxFds) }
             if let openFds = metrics.openFds { Gauge(label: self.labels.label(for: \.openFds)).record(openFds) }
         })
-        
+
         self.updateSystemMetrics()
     }
 
@@ -77,7 +77,7 @@ public struct SystemMetricsLabels {
     let cpuSecondsTotal: String
     let maxFds: String
     let openFds: String
-    
+
     public init(prefix: String, virtualMemory: String, residentMemory: String, startTimeSeconds: String, cpuSecondsTotal: String, maxFds: String, openFds: String) {
         self.prefix = prefix
         self.virtualMemory = virtualMemory
@@ -87,9 +87,9 @@ public struct SystemMetricsLabels {
         self.maxFds = maxFds
         self.openFds = openFds
     }
-    
+
     func label(for keyPath: KeyPath<SystemMetricsLabels, String>) -> String {
-        return prefix + self[keyPath: keyPath]
+        return self.prefix + self[keyPath: keyPath]
     }
 }
 

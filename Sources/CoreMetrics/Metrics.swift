@@ -365,7 +365,7 @@ public enum MetricsSystem {
     fileprivate static let lock = ReadWriteLock()
     fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
     fileprivate static var initialized = false
-    fileprivate static var systemMetricsHandler: SystemMetricsHandler? = nil
+    fileprivate static var systemMetricsHandler: SystemMetricsHandler?
     fileprivate static var systemMetricsInitialized = false
 
     /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
@@ -381,7 +381,7 @@ public enum MetricsSystem {
             self.initialized = true
         }
     }
-    
+
     /// `bootstrapSystemMetrics` is an one-time configuration function which globally enables system level metrics.
     /// `bootstrapSystemMetrics` can be only called once, unless cancelled usung `cancelSystemMetrics`, calling it more
     /// than once without cancelling will lead to undefined behaviour, most likely a crash.
@@ -398,7 +398,7 @@ public enum MetricsSystem {
             self.systemMetricsInitialized = true
         }
     }
-    
+
     /// Cancels the collection of system metrics. Calling this unlocks `bootstrapSystemMetrics` so it can be
     /// called again.
     public static func cancelSystemMetrics() {
