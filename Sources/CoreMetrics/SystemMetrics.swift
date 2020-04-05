@@ -12,7 +12,33 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+import Dispatch
+
+#if os(Linux)
+import Glibc
+#endif
+
+/// Options used to bootstrap `SystemMetricsHandler`
+///
+/// Libraries are advised to extend `SystemMetricsOptions` with a static instance for ease of use.
+public struct SystemMetricsOptions {
+    let interval: DispatchTimeInterval
+    let metricsType: SystemMetrics.Type?
+    let labels: SystemMetricsLabels
+    
+    /// Create new instance of `SystemMetricsOptions`
+    ///
+    /// - parameters:
+    ///     - pollInterval: The interval at which system metrics should be updated.
+    ///     - systemMetricsType: The type of system metrics to use. If none is provided this defaults to
+    ///                          `LinuxSystemMetrics` on Linux platforms and `NOOPSystemMetrics` on all other platforms.
+    ///     - labels: The labels to use for generated system metrics.
+    public init(pollInterval interval: DispatchTimeInterval = .seconds(2), metricsType: SystemMetrics.Type? = nil, labels: SystemMetricsLabels) {
+        self.interval = interval
+        self.metricsType = metricsType
+        self.labels = labels
+    }
+}
 
 internal class SystemMetricsHandler {
     fileprivate let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsHandler", qos: .background)
@@ -22,9 +48,9 @@ internal class SystemMetricsHandler {
     fileprivate let processId: Int
     fileprivate var task: DispatchWorkItem?
 
-    init(pollInterval interval: DispatchTimeInterval = .seconds(2), systemMetricsType: SystemMetrics.Type? = nil, labels: SystemMetricsLabels) {
-        self.timeInterval = interval
-        if let systemMetricsType = systemMetricsType {
+    init(options: SystemMetricsOptions) {
+        self.timeInterval = options.interval
+        if let systemMetricsType = options.metricsType {
             self.systemMetricsType = systemMetricsType
         } else {
             #if os(Linux)
@@ -33,8 +59,12 @@ internal class SystemMetricsHandler {
             self.systemMetricsType = NOOPSystemMetrics.self
             #endif
         }
-        self.labels = labels
-        self.processId = Int(ProcessInfo.processInfo.processIdentifier)
+        self.labels = options.labels
+        #if os(Windows)
+        self.processId = 0
+        #else
+        self.processId = Int(getpid())
+        #endif
 
         self.task = DispatchWorkItem(qos: .background, block: {
             let metrics = self.systemMetricsType.init(pid: self.processId)
@@ -99,7 +129,7 @@ public protocol SystemMetrics {
 }
 
 #if os(Linux)
-private struct LinuxSystemMetrics: SystemMetrics {
+internal struct LinuxSystemMetrics: SystemMetrics {
     let virtualMemoryBytes: Int?
     let residentMemoryBytes: Int?
     let startTimeSeconds: Int?
@@ -108,18 +138,25 @@ private struct LinuxSystemMetrics: SystemMetrics {
     let openFds: Int?
 
     private enum SystemMetricsError: Error {
-        case FileNotFound
+        case MetricReadError
     }
-
+    
     init(pid: Int) {
         let pid = "\(pid)"
         let ticks = _SC_CLK_TCK
+        
         do {
-            guard let statString =
-                try String(contentsOfFile: "/proc/\(pid)/stat", encoding: .utf8)
+            guard
+                let fp = fopen("/proc/\(pid)/stat", "r")
+            else { throw SystemMetricsError.MetricReadError }
+            var buf = [CChar](repeating: CChar(0), count: 1024)
+            while fgets(&buf, 1024, fp) != nil { }
+            guard fclose(fp) == 0 else { throw SystemMetricsError.MetricReadError }
+            guard
+                let statString = String(cString: buf)
                 .split(separator: ")")
                 .last
-            else { throw SystemMetricsError.FileNotFound }
+            else { throw SystemMetricsError.MetricReadError }
             let stats = String(statString)
                 .split(separator: " ")
                 .map(String.init)
@@ -147,19 +184,19 @@ private struct LinuxSystemMetrics: SystemMetrics {
             self.cpuSeconds = nil
         }
         do {
-            guard
-                let line = try String(contentsOfFile: "/proc/\(pid)/limits", encoding: .utf8)
-                .split(separator: "\n")
-                .first(where: { $0.starts(with: "Max open file") })
-                .map(String.init) else { throw SystemMetricsError.FileNotFound }
-            self.maxFds = Int(line.split(separator: " ").map(String.init)[safe: 3])
+            var _rlim = rlimit()
+            
+            guard getrlimit(__rlimit_resource_t(RLIMIT_NOFILE.rawValue), &_rlim) == 0 else { throw SystemMetricsError.MetricReadError }
+            self.maxFds = Int(_rlim.rlim_max)
         } catch {
             self.maxFds = nil
         }
         do {
-            let fm = FileManager.default,
-                items = try fm.contentsOfDirectory(atPath: "/proc/\(pid)/fd")
-            self.openFds = items.count
+            guard let dir = opendir("/proc/\(pid)/fd") else { throw SystemMetricsError.MetricReadError }
+            var count = 0
+            while readdir(dir) != nil { count += 1 }
+            guard closedir(dir) == 0 else { throw SystemMetricsError.MetricReadError }
+            self.openFds = count
         } catch {
             self.openFds = nil
         }
@@ -169,7 +206,7 @@ private struct LinuxSystemMetrics: SystemMetrics {
 #warning("System Metrics are not implemented on non-Linux platforms yet.")
 #endif
 
-private struct NOOPSystemMetrics: SystemMetrics {
+internal struct NOOPSystemMetrics: SystemMetrics {
     let virtualMemoryBytes: Int?
     let residentMemoryBytes: Int?
     let startTimeSeconds: Int?
