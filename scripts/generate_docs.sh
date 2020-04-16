@@ -86,7 +86,7 @@ done
 
 for module in "${modules[@]}"; do
   echo "processing $module"
-  args=("${jazzy_args[@]}" --output "$jazzy_dir/docs/$version/$module" --docset-path "$jazzy_dir/docset/$version/$module"
+  args=("${jazzy_args[@]}" --output "$jazzy_dir/docs/$version/$module"
         --module "$module" --module-version $version
         --root-url "https://apple.github.io/swift-metrics/docs/$version/$module/")
   if [[ -f "$root_path/.build/sourcekitten/$module.json" ]]; then
@@ -104,7 +104,6 @@ if [[ $PUSH == true ]]; then
   rm -rf "docs/$version"
   rm -rf "docs/current"
   cp -r "$jazzy_dir/docs/$version" docs/
-  cp -r "$jazzy_dir/docset/$version" docset/
   cp -r "docs/$version" docs/current
   git add --all docs
   echo '<html><head><meta http-equiv="refresh" content="0; url=docs/current/CoreMetrics/index.html" /></head></html>' > index.html
