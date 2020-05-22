@@ -191,7 +191,7 @@ public enum SystemMetrics {
         var openFileDescriptors: Int
     }
 
-//    #if os(Linux)
+    #if os(Linux)
     internal struct LinuxProvider: SystemMetricsProvider {
         
         fileprivate class CFile {
@@ -300,9 +300,9 @@ public enum SystemMetrics {
             return .init(virtualMemoryBytes: virtualMemoryBytes, residentMemoryBytes: residentMemoryBytes, startTimeSeconds: startTimeSeconds, cpuSeconds: cpuSeconds, maxFileDescriptors: maxFileDescriptors, openFileDescriptors: openFileDescriptors)
         }
     }
-//    #else
-//    #warning("System Metrics are not implemented on non-Linux platforms yet.")
-//    #endif
+    #else
+    #warning("System Metrics are not implemented on non-Linux platforms yet.")
+    #endif
     
     internal struct NOOPProvider: SystemMetricsProvider {
         static func readSystemMetrics() -> SystemMetrics.Data? {
