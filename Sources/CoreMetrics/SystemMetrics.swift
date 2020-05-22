@@ -18,209 +18,241 @@ import Dispatch
 import Glibc
 #endif
 
-/// Options used to bootstrap `SystemMetricsHandler`
-///
-/// Libraries are advised to extend `SystemMetricsOptions` with a static instance for ease of use.
-public struct SystemMetricsOptions {
-    let interval: DispatchTimeInterval
-    let metricsType: SystemMetrics.Type?
-    let labels: SystemMetricsLabels
-    
-    /// Create new instance of `SystemMetricsOptions`
+extension MetricsSystem {
+    /// `bootstrapSystemMetrics` is an one-time configuration function which globally enables system level metrics.
+    /// `bootstrapSystemMetrics` can be only called once, unless cancelled usung `cancelSystemMetrics`, calling it more
+    /// than once without cancelling will lead to undefined behaviour, most likely a crash.
+    /// There is no need to call `bootstrapSystemMetrics` if `SystemMetricsOptions` were provided to `bootstrap`.
     ///
     /// - parameters:
-    ///     - pollInterval: The interval at which system metrics should be updated.
-    ///     - systemMetricsType: The type of system metrics to use. If none is provided this defaults to
-    ///                          `LinuxSystemMetrics` on Linux platforms and `NOOPSystemMetrics` on all other platforms.
-    ///     - labels: The labels to use for generated system metrics.
-    public init(pollInterval interval: DispatchTimeInterval = .seconds(2), metricsType: SystemMetrics.Type? = nil, labels: SystemMetricsLabels) {
-        self.interval = interval
-        self.metricsType = metricsType
-        self.labels = labels
-    }
-}
-
-internal class SystemMetricsHandler {
-    fileprivate let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsHandler", qos: .background)
-    fileprivate let timeInterval: DispatchTimeInterval
-    fileprivate let systemMetricsType: SystemMetrics.Type
-    fileprivate let labels: SystemMetricsLabels
-    fileprivate let processId: Int
-    fileprivate var task: DispatchWorkItem?
-
-    init(options: SystemMetricsOptions) {
-        self.timeInterval = options.interval
-        if let systemMetricsType = options.metricsType {
-            self.systemMetricsType = systemMetricsType
-        } else {
-            #if os(Linux)
-            self.systemMetricsType = LinuxSystemMetrics.self
-            #else
-            self.systemMetricsType = NOOPSystemMetrics.self
-            #endif
-        }
-        self.labels = options.labels
-        #if os(Windows)
-        self.processId = 0
-        #else
-        self.processId = Int(getpid())
-        #endif
-
-        self.task = DispatchWorkItem(qos: .background, block: {
-            let metrics = self.systemMetricsType.init(pid: self.processId)
-            if let vmem = metrics.virtualMemoryBytes { Gauge(label: self.labels.label(for: \.virtualMemoryBytes)).record(vmem) }
-            if let rss = metrics.residentMemoryBytes { Gauge(label: self.labels.label(for: \.residentMemoryBytes)).record(rss) }
-            if let start = metrics.startTimeSeconds { Gauge(label: self.labels.label(for: \.startTimeSeconds)).record(start) }
-            if let cpuSeconds = metrics.cpuSeconds { Gauge(label: self.labels.label(for: \.cpuSecondsTotal)).record(cpuSeconds) }
-            if let maxFds = metrics.maxFds { Gauge(label: self.labels.label(for: \.maxFds)).record(maxFds) }
-            if let openFds = metrics.openFds { Gauge(label: self.labels.label(for: \.openFds)).record(openFds) }
-        })
-
-        self.updateSystemMetrics()
-    }
-
-    internal func cancelSystemMetrics() {
-        self.task?.cancel()
-        self.task = nil
-    }
-
-    internal func updateSystemMetrics() {
-        self.queue.asyncAfter(deadline: .now() + self.timeInterval) {
-            guard let task = self.task else { return }
-            task.perform()
-            self.updateSystemMetrics()
-        }
-    }
-}
-
-public struct SystemMetricsLabels {
-    let prefix: String
-    let virtualMemoryBytes: String
-    let residentMemoryBytes: String
-    let startTimeSeconds: String
-    let cpuSecondsTotal: String
-    let maxFds: String
-    let openFds: String
-
-    public init(prefix: String, virtualMemoryBytes: String, residentMemoryBytes: String, startTimeSeconds: String, cpuSecondsTotal: String, maxFds: String, openFds: String) {
-        self.prefix = prefix
-        self.virtualMemoryBytes = virtualMemoryBytes
-        self.residentMemoryBytes = residentMemoryBytes
-        self.startTimeSeconds = startTimeSeconds
-        self.cpuSecondsTotal = cpuSecondsTotal
-        self.maxFds = maxFds
-        self.openFds = openFds
-    }
-
-    func label(for keyPath: KeyPath<SystemMetricsLabels, String>) -> String {
-        return self.prefix + self[keyPath: keyPath]
-    }
-}
-
-public protocol SystemMetrics {
-    init(pid: Int)
-
-    var virtualMemoryBytes: Int? { get }
-    var residentMemoryBytes: Int? { get }
-    var startTimeSeconds: Int? { get }
-    var cpuSeconds: Int? { get }
-    var maxFds: Int? { get }
-    var openFds: Int? { get }
-}
-
-#if os(Linux)
-internal struct LinuxSystemMetrics: SystemMetrics {
-    let virtualMemoryBytes: Int?
-    let residentMemoryBytes: Int?
-    let startTimeSeconds: Int?
-    let cpuSeconds: Int?
-    let maxFds: Int?
-    let openFds: Int?
-
-    private enum SystemMetricsError: Error {
-        case MetricReadError
+    ///     - options: Options to configure `SystemMetricsHandler`
+    public static func bootstrapWithSystemMetrics(_ factory: MetricsFactory, options: SystemMetrics.Options) {
+        let factory = SystemMetricsFactory(factory: factory, options: options)
+        self.bootstrap(factory)
+        self.systemMetrics!.poll()
     }
     
-    init(pid: Int) {
-        let pid = "\(pid)"
-        let ticks = _SC_CLK_TCK
+    /// Cancels the collection of system metrics. Calling this unlocks `bootstrapSystemMetrics` so it can be
+    /// called again.
+    public static func cancelSystemMetrics() {
+        self.systemMetrics?.cancelSystemMetrics()
+    }
+    
+    internal class SystemMetricsFactory: MetricsFactory {
+        fileprivate let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsHandler", qos: .background)
+        fileprivate let timeInterval: DispatchTimeInterval
+        fileprivate let systemMetricsType: SystemMetricsProvider.Type
+        fileprivate let labels: SystemMetrics.Labels
+        fileprivate var task: DispatchWorkItem?
+        internal let underlying: MetricsFactory
+
+        init(factory: MetricsFactory, options: SystemMetrics.Options) {
+            self.underlying = factory
+            self.timeInterval = options.interval
+            if let systemMetricsType = options.metricsType {
+                self.systemMetricsType = systemMetricsType
+            } else {
+                #if os(Linux)
+                self.systemMetricsType = SystemMetrics.LinuxProvider.self
+                #else
+                self.systemMetricsType = SystemMetrics.NOOPProvider.self
+                #endif
+            }
+            self.labels = options.labels
+
+            self.task = DispatchWorkItem(qos: .background, block: {
+                guard let metrics = self.systemMetricsType.readSystemMetrics() else { return }
+                Gauge(label: self.labels.label(for: \.virtualMemoryBytes)).record(metrics.virtualMemoryBytes)
+                Gauge(label: self.labels.label(for: \.residentMemoryBytes)).record(metrics.residentMemoryBytes)
+                Gauge(label: self.labels.label(for: \.startTimeSeconds)).record(metrics.startTimeSeconds)
+                Gauge(label: self.labels.label(for: \.cpuSecondsTotal)).record(metrics.cpuSeconds)
+                Gauge(label: self.labels.label(for: \.maxFileDescriptors)).record(metrics.maxFileDescriptors)
+                Gauge(label: self.labels.label(for: \.openFileDescriptors)).record(metrics.openFileDescriptors)
+            })
+        }
+
+        internal func cancelSystemMetrics() {
+            self.task?.cancel()
+            self.task = nil
+        }
+
+        internal func poll() {
+            self.queue.asyncAfter(deadline: .now() + self.timeInterval) {
+                guard let task = self.task else { return }
+                task.perform()
+                self.poll()
+            }
+        }
         
-        do {
+        func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+            self.underlying.makeCounter(label: label, dimensions: dimensions)
+        }
+        
+        func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+            self.underlying.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+        }
+        
+        func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+            self.underlying.makeTimer(label: label, dimensions: dimensions)
+        }
+        
+        func destroyCounter(_ handler: CounterHandler) {
+            self.underlying.destroyCounter(handler)
+        }
+        
+        func destroyRecorder(_ handler: RecorderHandler) {
+            self.underlying.destroyRecorder(handler)
+        }
+        
+        func destroyTimer(_ handler: TimerHandler) {
+            self.underlying.destroyTimer(handler)
+        }
+    }
+}
+
+public protocol SystemMetricsProvider {
+    static func readSystemMetrics() -> SystemMetrics.Data?
+}
+
+public enum SystemMetrics {
+    /// Options used to bootstrap `SystemMetricsHandler`
+    ///
+    /// Libraries are advised to extend `SystemMetricsOptions` with a static instance for ease of use.
+    public struct Options {
+        let interval: DispatchTimeInterval
+        let metricsType: SystemMetricsProvider.Type?
+        let labels: Labels
+        
+        /// Create new instance of `SystemMetricsOptions`
+        ///
+        /// - parameters:
+        ///     - pollInterval: The interval at which system metrics should be updated.
+        ///     - systemMetricsType: The type of system metrics to use. If none is provided this defaults to
+        ///                          `LinuxSystemMetrics` on Linux platforms and `NOOPSystemMetrics` on all other platforms.
+        ///     - labels: The labels to use for generated system metrics.
+        public init(pollInterval interval: DispatchTimeInterval = .seconds(2), metricsType: SystemMetricsProvider.Type? = nil, labels: Labels) {
+            self.interval = interval
+            self.metricsType = metricsType
+            self.labels = labels
+        }
+    }
+
+    /// Labels for the reported System Metrics.
+    ///
+    /// Backend implementations are encouraged to provide a static extension to this type with
+    /// defaults that suit their specific backend needs.
+    public struct Labels {
+        /// Prefix to prefix all other labels with.
+        let prefix: String
+        /// Virtual memory size in bytes
+        let virtualMemoryBytes: String
+        /// Resident memory size in bytes
+        let residentMemoryBytes: String
+        /// Total user and system CPU time spent in seconds
+        let startTimeSeconds: String
+        /// Total user and system CPU time spent in seconds
+        let cpuSecondsTotal: String
+        /// Maximum number of open file descriptors
+        let maxFileDescriptors: String
+        /// Number of open file descriptors
+        let openFileDescriptors: String
+
+        public init(prefix: String, virtualMemoryBytes: String, residentMemoryBytes: String, startTimeSeconds: String, cpuSecondsTotal: String, maxFds: String, openFds: String) {
+            self.prefix = prefix
+            self.virtualMemoryBytes = virtualMemoryBytes
+            self.residentMemoryBytes = residentMemoryBytes
+            self.startTimeSeconds = startTimeSeconds
+            self.cpuSecondsTotal = cpuSecondsTotal
+            self.maxFileDescriptors = maxFds
+            self.openFileDescriptors = openFds
+        }
+
+        func label(for keyPath: KeyPath<Labels, String>) -> String {
+            return self.prefix + self[keyPath: keyPath]
+        }
+    }
+
+    /// System Metric data.
+    ///
+    /// The current list of metrics exposed is taken from the Prometheus Client Library Guidelines
+    /// https://prometheus.io/docs/instrumenting/writing_clientlibs/#standard-and-runtime-collectors
+    public struct Data {
+        /// Virtual memory size in bytes
+        var virtualMemoryBytes: Int
+        /// Resident memory size in bytes
+        var residentMemoryBytes: Int
+        /// Start time of the process since unix epoch in seconds
+        var startTimeSeconds: Int
+        /// Total user and system CPU time spent in seconds
+        var cpuSeconds: Int
+        /// Maximum number of open file descriptors
+        var maxFileDescriptors: Int
+        /// Number of open file descriptors
+        var openFileDescriptors: Int
+    }
+
+    #if os(Linux)
+    internal struct LinuxProvider: SystemMetricsProvider {
+        let virtualMemoryBytes: Int
+        let residentMemoryBytes: Int
+        let startTimeSeconds: Int
+        let cpuSeconds: Int
+        let maxFileDescriptors: Int
+        let openFileDescriptors: Int
+
+        private enum SystemMetricsError: Error {
+            case MetricReadError
+        }
+        
+        static func readSystemMetrics() -> SystemMetrics.Data? {
+            let ticks = _SC_CLK_TCK
+            
             guard
-                let fp = fopen("/proc/\(pid)/stat", "r")
-            else { throw SystemMetricsError.MetricReadError }
+                let fp = fopen("/proc/self/stat", "r")
+            else { return nil }
             var buf = [CChar](repeating: CChar(0), count: 1024)
             while fgets(&buf, 1024, fp) != nil { }
-            guard fclose(fp) == 0 else { throw SystemMetricsError.MetricReadError }
+            guard fclose(fp) == 0 else { return nil }
             guard
                 let statString = String(cString: buf)
                 .split(separator: ")")
                 .last
-            else { throw SystemMetricsError.MetricReadError }
+            else { return nil }
             let stats = String(statString)
                 .split(separator: " ")
                 .map(String.init)
-            self.virtualMemoryBytes = Int(stats[safe: 20])
-            if let rss = Int(stats[safe: 21]) {
-                self.residentMemoryBytes = rss * _SC_PAGESIZE
-            } else {
-                self.residentMemoryBytes = nil
-            }
-            if let startTimeTicks = Int(stats[safe: 19]) {
-                self.startTimeSeconds = startTimeTicks / ticks
-            } else {
-                self.startTimeSeconds = nil
-            }
-            if let utimeTicks = Int(stats[safe: 11]), let stimeTicks = Int(stats[safe: 12]) {
-                let utime = utimeTicks / ticks, stime = stimeTicks / ticks
-                self.cpuSeconds = utime + stime
-            } else {
-                self.cpuSeconds = nil
-            }
-        } catch {
-            self.virtualMemoryBytes = nil
-            self.residentMemoryBytes = nil
-            self.startTimeSeconds = nil
-            self.cpuSeconds = nil
-        }
-        do {
+            guard
+                let virtualMemoryBytes = Int(stats[safe: 20]),
+                let rss = Int(stats[safe: 21]),
+                let startTimeTicks = Int(stats[safe: 19]),
+                let utimeTicks = Int(stats[safe: 11]),
+                let stimeTicks = Int(stats[safe: 12])
+            else { return nil }
+            let residentMemoryBytes = rss * _SC_PAGESIZE
+            let startTimeSeconds = startTimeTicks / ticks
+            let cpuSeconds = (utimeTicks / ticks) + (stimeTicks / ticks)
+
             var _rlim = rlimit()
             
-            guard getrlimit(__rlimit_resource_t(RLIMIT_NOFILE.rawValue), &_rlim) == 0 else { throw SystemMetricsError.MetricReadError }
-            self.maxFds = Int(_rlim.rlim_max)
-        } catch {
-            self.maxFds = nil
-        }
-        do {
-            guard let dir = opendir("/proc/\(pid)/fd") else { throw SystemMetricsError.MetricReadError }
-            var count = 0
-            while readdir(dir) != nil { count += 1 }
-            guard closedir(dir) == 0 else { throw SystemMetricsError.MetricReadError }
-            self.openFds = count
-        } catch {
-            self.openFds = nil
+            guard getrlimit(__rlimit_resource_t(RLIMIT_NOFILE.rawValue), &_rlim) == 0 else { return nil }
+            let maxFileDescriptors = Int(_rlim.rlim_max)
+
+            guard let dir = opendir("/proc/self/fd") else { return nil }
+            var openFileDescriptors = 0
+            while readdir(dir) != nil { openFileDescriptors += 1 }
+            guard closedir(dir) == 0 else { return nil }
+            
+            return .init(virtualMemoryBytes: virtualMemoryBytes, residentMemoryBytes: residentMemoryBytes, startTimeSeconds: startTimeSeconds, cpuSeconds: cpuSeconds, maxFileDescriptors: maxFileDescriptors, openFileDescriptors: openFileDescriptors)
         }
     }
-}
-#else
-#warning("System Metrics are not implemented on non-Linux platforms yet.")
-#endif
-
-internal struct NOOPSystemMetrics: SystemMetrics {
-    let virtualMemoryBytes: Int?
-    let residentMemoryBytes: Int?
-    let startTimeSeconds: Int?
-    let cpuSeconds: Int?
-    let maxFds: Int?
-    let openFds: Int?
-
-    init(pid: Int) {
-        self.virtualMemoryBytes = nil
-        self.residentMemoryBytes = nil
-        self.startTimeSeconds = nil
-        self.cpuSeconds = nil
-        self.maxFds = nil
-        self.openFds = nil
+    #else
+    #warning("System Metrics are not implemented on non-Linux platforms yet.")
+    #endif
+    
+    internal struct NOOPProvider: SystemMetricsProvider {
+        static func readSystemMetrics() -> SystemMetrics.Data? {
+            return nil
+        }
     }
 }
 

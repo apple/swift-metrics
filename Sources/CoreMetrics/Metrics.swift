@@ -365,7 +365,6 @@ public enum MetricsSystem {
     fileprivate static let lock = ReadWriteLock()
     fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
     fileprivate static var initialized = false
-    fileprivate static var systemMetricsHandler: SystemMetricsHandler?
 
     /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
@@ -373,43 +372,11 @@ public enum MetricsSystem {
     ///
     /// - parameters:
     ///     - factory: A factory that given an identifier produces instances of metrics handlers such as `CounterHandler`, `RecorderHandler` and `TimerHandler`.
-    ///     - options: Options to configure `SystemMetricsHandler`. If no options are passed, system metrics will not be started. System metrics can also be (re)started seperately using `bootstrapSystemMetrics`
-    public static func bootstrap(_ factory: MetricsFactory, systemMetricsOptions options: SystemMetricsOptions? = nil) {
+    public static func bootstrap(_ factory: MetricsFactory) {
         self.lock.withWriterLock {
             precondition(!self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self._factory)")
             self._factory = factory
             self.initialized = true
-            if let options = options {
-                self._bootstrapSystemMetrics(options: options)
-            }
-        }
-    }
-
-    /// `bootstrapSystemMetrics` is an one-time configuration function which globally enables system level metrics.
-    /// `bootstrapSystemMetrics` can be only called once, unless cancelled usung `cancelSystemMetrics`, calling it more
-    /// than once without cancelling will lead to undefined behaviour, most likely a crash.
-    /// There is no need to call `bootstrapSystemMetrics` if `SystemMetricsOptions` were provided to `bootstrap`.
-    ///
-    /// - parameters:
-    ///     - options: Options to configure `SystemMetricsHandler`
-    public static func bootstrapSystemMetrics(options: SystemMetricsOptions) {
-        self.lock.withWriterLockVoid {
-            self._bootstrapSystemMetrics(options: options)
-        }
-    }
-    
-    /// WARNING: This function is not thread safe. Only call this from a `lock` context.
-    fileprivate static func _bootstrapSystemMetrics(options: SystemMetricsOptions) {
-        precondition(self.systemMetricsHandler == nil, "metrics system can only be initialized once per process. currently used factory: \(self._factory)")
-        self.systemMetricsHandler = SystemMetricsHandler(options: options)
-    }
-
-    /// Cancels the collection of system metrics. Calling this unlocks `bootstrapSystemMetrics` so it can be
-    /// called again.
-    public static func cancelSystemMetrics() {
-        self.lock.withWriterLockVoid {
-            self.systemMetricsHandler?.cancelSystemMetrics()
-            self.systemMetricsHandler = nil
         }
     }
 
@@ -419,9 +386,16 @@ public enum MetricsSystem {
             self._factory = factory
         }
     }
+    
+    internal static var systemMetrics: SystemMetricsFactory? {
+        return self.lock.withReaderLock { _factory as? SystemMetricsFactory }
+    }
 
     /// Returns a reference to the configured factory.
     public static var factory: MetricsFactory {
+        if let f = self.systemMetrics {
+            return f.underlying
+        }
         return self.lock.withReaderLock { self._factory }
     }
 }
