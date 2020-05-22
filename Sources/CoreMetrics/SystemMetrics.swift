@@ -191,30 +191,80 @@ public enum SystemMetrics {
         var openFileDescriptors: Int
     }
 
-    #if os(Linux)
+//    #if os(Linux)
     internal struct LinuxProvider: SystemMetricsProvider {
-        let virtualMemoryBytes: Int
-        let residentMemoryBytes: Int
-        let startTimeSeconds: Int
-        let cpuSeconds: Int
-        let maxFileDescriptors: Int
-        let openFileDescriptors: Int
-
-        private enum SystemMetricsError: Error {
-            case MetricReadError
-        }
         
+        fileprivate class CFile {
+            let path: String
+            
+            private var file: UnsafeMutablePointer<FILE>? = nil
+            
+            init(_ path: String) {
+                self.path = path
+            }
+            
+            deinit {
+                assert(self.file == nil)
+            }
+            
+            func open() {
+                guard let f = fopen(path, "r") else {
+                    return
+                }
+                self.file = f
+            }
+            
+            func close() {
+                if let f = self.file {
+                    self.file = nil
+                    let success = fclose(f) == 0
+                    assert(success)
+                }
+            }
+            
+            func readLine() -> String? {
+                guard let f = self.file else {
+                    return nil
+                }
+                let buff: [CChar] = Array(unsafeUninitializedCapacity: 1024) { (ptr, size) in
+                    guard fgets(ptr.baseAddress, Int32(ptr.count), f) != nil else {
+                        if feof(f) != 0 {
+                            size = 0
+                            return
+                        } else {
+                            preconditionFailure("Error reading line")
+                        }
+                    }
+                    size = strlen(ptr.baseAddress!)
+                }
+                if buff.isEmpty { return nil }
+                return String(cString: buff)
+            }
+            
+            func readFull() -> String {
+                var s = ""
+                func loop() -> String {
+                    if let l = readLine() {
+                        s += l
+                        return loop()
+                    }
+                    return s
+                }
+                return loop()
+            }
+        }
+
         static func readSystemMetrics() -> SystemMetrics.Data? {
             let ticks = _SC_CLK_TCK
             
+            let file = CFile("/proc/self/stat")
+            file.open()
+            defer {
+                file.close()
+            }
+            
             guard
-                let fp = fopen("/proc/self/stat", "r")
-            else { return nil }
-            var buf = [CChar](repeating: CChar(0), count: 1024)
-            while fgets(&buf, 1024, fp) != nil { }
-            guard fclose(fp) == 0 else { return nil }
-            guard
-                let statString = String(cString: buf)
+                let statString = file.readFull()
                 .split(separator: ")")
                 .last
             else { return nil }
@@ -234,20 +284,25 @@ public enum SystemMetrics {
 
             var _rlim = rlimit()
             
-            guard getrlimit(__rlimit_resource_t(RLIMIT_NOFILE.rawValue), &_rlim) == 0 else { return nil }
+            guard withUnsafeMutablePointer(to: &_rlim, { (ptr) in
+                return getrlimit(__rlimit_resource_t(RLIMIT_NOFILE.rawValue), ptr) == 0
+            }) else { return nil }
+            
             let maxFileDescriptors = Int(_rlim.rlim_max)
 
             guard let dir = opendir("/proc/self/fd") else { return nil }
+            defer {
+                closedir(dir)
+            }
             var openFileDescriptors = 0
             while readdir(dir) != nil { openFileDescriptors += 1 }
-            guard closedir(dir) == 0 else { return nil }
             
             return .init(virtualMemoryBytes: virtualMemoryBytes, residentMemoryBytes: residentMemoryBytes, startTimeSeconds: startTimeSeconds, cpuSeconds: cpuSeconds, maxFileDescriptors: maxFileDescriptors, openFileDescriptors: openFileDescriptors)
         }
     }
-    #else
-    #warning("System Metrics are not implemented on non-Linux platforms yet.")
-    #endif
+//    #else
+//    #warning("System Metrics are not implemented on non-Linux platforms yet.")
+//    #endif
     
     internal struct NOOPProvider: SystemMetricsProvider {
         static func readSystemMetrics() -> SystemMetrics.Data? {
