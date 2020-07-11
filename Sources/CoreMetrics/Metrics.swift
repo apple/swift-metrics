@@ -386,7 +386,7 @@ public enum MetricsSystem {
             self._factory = factory
         }
     }
-    
+
     internal static var systemMetrics: SystemMetricsFactory? {
         return self.lock.withReaderLock { _factory as? SystemMetricsFactory }
     }
