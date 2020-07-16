@@ -43,15 +43,7 @@ extension MetricsSystem {
         init(factory: MetricsFactory, config: SystemMetrics.Configuration) {
             self.underlying = factory
             self.timeInterval = config.interval
-            if let dataProvider = config.dataProvider {
-                self.dataProvider = dataProvider
-            } else {
-                #if os(Linux)
-                self.dataProvider = SystemMetrics.linuxSystemMetrics
-                #else
-                self.dataProvider = SystemMetrics.noopSystemMetrics
-                #endif
-            }
+            self.dataProvider = config.dataProvider
             self.labels = config.labels
 
             self.task = DispatchWorkItem(qos: .background, block: { [weak self] in
@@ -116,7 +108,7 @@ public enum SystemMetrics {
     /// defaults that suit their specific backend needs.
     public struct Configuration {
         let interval: DispatchTimeInterval
-        let dataProvider: SystemMetrics.DataProvider?
+        let dataProvider: SystemMetrics.DataProvider
         let labels: SystemMetrics.Labels
 
         /// Create new instance of `SystemMetricsOptions`
@@ -129,7 +121,15 @@ public enum SystemMetrics {
         ///     - labels: The labels to use for generated system metrics.
         public init(pollInterval interval: DispatchTimeInterval = .seconds(2), dataProvider: SystemMetrics.DataProvider? = nil, labels: Labels) {
             self.interval = interval
-            self.dataProvider = dataProvider
+            if let dataProvider = dataProvider {
+                self.dataProvider = dataProvider
+            } else {
+                #if os(Linux)
+                self.dataProvider = SystemMetrics.linuxSystemMetrics
+                #else
+                self.dataProvider = SystemMetrics.noopSystemMetrics
+                #endif
+            }
             self.labels = labels
         }
     }
