@@ -44,8 +44,8 @@ extension MetricsSystem {
             self.dataProvider = config.dataProvider
             self.labels = config.labels
             self.timer = DispatchSource.makeTimerSource(queue: self.queue)
-            
-            timer.setEventHandler(handler: DispatchWorkItem(block: { [weak self] in
+
+            self.timer.setEventHandler(handler: DispatchWorkItem(block: { [weak self] in
                 guard let self = self, let metrics = self.dataProvider() else { return }
                 Gauge(label: self.labels.label(for: \.virtualMemoryBytes)).record(metrics.virtualMemoryBytes)
                 Gauge(label: self.labels.label(for: \.residentMemoryBytes)).record(metrics.residentMemoryBytes)
@@ -54,12 +54,12 @@ extension MetricsSystem {
                 Gauge(label: self.labels.label(for: \.maxFileDescriptors)).record(metrics.maxFileDescriptors)
                 Gauge(label: self.labels.label(for: \.openFileDescriptors)).record(metrics.openFileDescriptors)
             }))
-            
-            timer.schedule(deadline: .now() + self.timeInterval, repeating: self.timeInterval)
+
+            self.timer.schedule(deadline: .now() + self.timeInterval, repeating: self.timeInterval)
             if #available(OSX 10.12, *) {
                 timer.activate()
             } else {
-                timer.resume()
+                self.timer.resume()
             }
         }
 
@@ -264,7 +264,7 @@ public enum SystemMetrics {
         defer {
             file.close()
         }
-        
+
         enum StatIndices {
             static let virtualMemoryBytes = 20
             static let residentMemoryBytes = 21
