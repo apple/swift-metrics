@@ -27,9 +27,7 @@ extension MetricsSystem {
     ///     - factory: A factory that given an identifier produces instances of metrics handlers such as `CounterHandler`, `RecorderHandler` and `TimerHandler`.
     ///     - config: Used to configure `SystemMetrics`.
     public static func bootstrapWithSystemMetrics(_ factory: MetricsFactory, config: SystemMetrics.Configuration) {
-        let factory = SystemMetricsFactory(factory: factory, config: config)
-        self.bootstrap(factory)
-        factory.poll()
+        self.bootstrap(SystemMetricsFactory(factory: factory, config: config))
     }
 
     internal class SystemMetricsFactory: MetricsFactory {
@@ -37,7 +35,7 @@ extension MetricsSystem {
         fileprivate let timeInterval: DispatchTimeInterval
         fileprivate let dataProvider: SystemMetrics.DataProvider
         fileprivate let labels: SystemMetrics.Labels
-        fileprivate var task: DispatchWorkItem?
+        fileprivate let timer: DispatchSourceTimer
         internal let underlying: MetricsFactory
 
         init(factory: MetricsFactory, config: SystemMetrics.Configuration) {
@@ -45,8 +43,9 @@ extension MetricsSystem {
             self.timeInterval = config.interval
             self.dataProvider = config.dataProvider
             self.labels = config.labels
-
-            self.task = DispatchWorkItem(qos: .background, block: { [weak self] in
+            self.timer = DispatchSource.makeTimerSource(queue: self.queue)
+            
+            timer.setEventHandler(handler: DispatchWorkItem(block: { [weak self] in
                 guard let self = self, let metrics = self.dataProvider() else { return }
                 Gauge(label: self.labels.label(for: \.virtualMemoryBytes)).record(metrics.virtualMemoryBytes)
                 Gauge(label: self.labels.label(for: \.residentMemoryBytes)).record(metrics.residentMemoryBytes)
@@ -54,32 +53,30 @@ extension MetricsSystem {
                 Gauge(label: self.labels.label(for: \.cpuSecondsTotal)).record(metrics.cpuSeconds)
                 Gauge(label: self.labels.label(for: \.maxFileDescriptors)).record(metrics.maxFileDescriptors)
                 Gauge(label: self.labels.label(for: \.openFileDescriptors)).record(metrics.openFileDescriptors)
-            })
-        }
-
-        deinit {
-            self.task?.cancel()
-            self.task = nil
-        }
-
-        internal func poll() {
-            self.queue.asyncAfter(deadline: .now() + self.timeInterval) {
-                guard let task = self.task else { return }
-                task.perform()
-                self.poll()
+            }))
+            
+            timer.schedule(deadline: .now() + self.timeInterval, repeating: self.timeInterval)
+            if #available(OSX 10.12, *) {
+                timer.activate()
+            } else {
+                timer.resume()
             }
         }
 
+        deinit {
+            self.timer.cancel()
+        }
+
         func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
-            self.underlying.makeCounter(label: label, dimensions: dimensions)
+            return self.underlying.makeCounter(label: label, dimensions: dimensions)
         }
 
         func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-            self.underlying.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+            return self.underlying.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
 
         func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-            self.underlying.makeTimer(label: label, dimensions: dimensions)
+            return self.underlying.makeTimer(label: label, dimensions: dimensions)
         }
 
         func destroyCounter(_ handler: CounterHandler) {

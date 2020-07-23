@@ -21,16 +21,18 @@ import Glibc
 class SystemMetricsTest: XCTestCase {
     func testSystemMetricsGeneration() throws {
         #if os(Linux)
-        let metrics = LinuxSystemMetrics(pid: Int(getpid()))
+        let _metrics = SystemMetrics.linuxSystemMetrics()
         #else
-        let metrics = NOOPSystemMetrics(pid: 0)
+        let _metrics = SystemMetrics.noopSystemMetrics()
         throw XCTSkip()
         #endif
+        XCTAssertNotNil(_metrics)
+        let metrics = _metrics!
         XCTAssertNotNil(metrics.virtualMemoryBytes)
         XCTAssertNotNil(metrics.residentMemoryBytes)
         XCTAssertNotNil(metrics.startTimeSeconds)
         XCTAssertNotNil(metrics.cpuSeconds)
-        XCTAssertNotNil(metrics.maxFds)
-        XCTAssertNotNil(metrics.openFds)
+        XCTAssertNotNil(metrics.maxFileDescriptors)
+        XCTAssertNotNil(metrics.openFileDescriptors)
     }
 }
