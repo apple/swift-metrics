@@ -264,6 +264,14 @@ public enum SystemMetrics {
         defer {
             file.close()
         }
+        
+        enum StatIndices {
+            static let virtualMemoryBytes = 20
+            static let residentMemoryBytes = 21
+            static let startTimeTicks = 19
+            static let utimeTicks = 11
+            static let stimeTicks = 12
+        }
 
         guard
             let statString = file.readFull()
@@ -274,11 +282,11 @@ public enum SystemMetrics {
             .split(separator: " ")
             .map(String.init)
         guard
-            let virtualMemoryBytes = Int(stats[safe: 20]),
-            let rss = Int(stats[safe: 21]),
-            let startTimeTicks = Int(stats[safe: 19]),
-            let utimeTicks = Int(stats[safe: 11]),
-            let stimeTicks = Int(stats[safe: 12])
+            let virtualMemoryBytes = Int(stats[safe: StatIndices.virtualMemoryBytes]),
+            let rss = Int(stats[safe: StatIndices.residentMemoryBytes]),
+            let startTimeTicks = Int(stats[safe: StatIndices.startTimeTicks]),
+            let utimeTicks = Int(stats[safe: StatIndices.utimeTicks]),
+            let stimeTicks = Int(stats[safe: StatIndices.stimeTicks])
         else { return nil }
         let residentMemoryBytes = rss * _SC_PAGESIZE
         let startTimeSeconds = startTimeTicks / ticks
