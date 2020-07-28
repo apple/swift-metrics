@@ -334,6 +334,7 @@ public enum SystemMetrics {
             openFileDescriptors: openFileDescriptors
         )
     }
+
     #else
     #warning("System Metrics are not implemented on non-Linux platforms yet.")
     #endif
