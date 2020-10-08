@@ -43,6 +43,7 @@ extension MetricsTests {
             ("testDestroyingGauge", testDestroyingGauge),
             ("testDestroyingCounter", testDestroyingCounter),
             ("testDestroyingTimer", testDestroyingTimer),
+            ("testDescriptions", testDescriptions),
         ]
     }
 }
