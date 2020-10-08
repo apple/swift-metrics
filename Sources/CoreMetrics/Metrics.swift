@@ -166,7 +166,7 @@ public class Recorder {
 
 extension Recorder: CustomStringConvertible {
     public var description: String {
-        return "\(Self.self)(\(self.label), dimensions: \(self.dimensions), aggregate: \(self.aggregate))"
+        return "\(type(of: self))(\(self.label), dimensions: \(self.dimensions), aggregate: \(self.aggregate))"
     }
 }
 
