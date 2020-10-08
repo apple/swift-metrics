@@ -86,7 +86,7 @@ public class Counter {
 
 extension Counter: CustomStringConvertible {
     public var description: String {
-        "Counter(\(self.label), dimensions: \(self.dimensions))"
+        return "Counter(\(self.label), dimensions: \(self.dimensions))"
     }
 }
 
@@ -166,7 +166,7 @@ public class Recorder {
 
 extension Recorder: CustomStringConvertible {
     public var description: String {
-        "\(Self.self)(\(self.label), dimensions: \(self.dimensions), aggregate: \(self.aggregate))"
+        return "\(Self.self)(\(self.label), dimensions: \(self.dimensions), aggregate: \(self.aggregate))"
     }
 }
 
@@ -370,7 +370,7 @@ public class Timer {
 
 extension Timer: CustomStringConvertible {
     public var description: String {
-        "Timer(\(self.label), dimensions: \(self.dimensions))"
+        return "Timer(\(self.label), dimensions: \(self.dimensions))"
     }
 }
 
