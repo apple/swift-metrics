@@ -391,4 +391,21 @@ class MetricsTests: XCTestCase {
         let identityAgain = ObjectIdentifier(timerAgain)
         XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
     }
+
+    func testDescriptions() throws {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let timer = Timer(label: "hello.timer")
+        XCTAssertEqual("\(timer)", "Timer(hello.timer, dimensions: [])")
+
+        let counter = Counter(label: "hello.counter")
+        XCTAssertEqual("\(counter)", "Counter(hello.counter, dimensions: [])")
+
+        let gauge = Gauge(label: "hello.gauge")
+        XCTAssertEqual("\(gauge)", "Gauge(hello.gauge, dimensions: [], aggregate: false)")
+
+        let recorder = Recorder(label: "hello.recorder")
+        XCTAssertEqual("\(recorder)", "Recorder(hello.recorder, dimensions: [], aggregate: true)")
+    }
 }
