@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Dispatch
+
 // MARK: User API
 
 extension Counter {
@@ -365,6 +367,15 @@ public class Timer {
     @inlinable
     public func recordSeconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
         self.recordNanoseconds(Double(duration * 1_000_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000_000) : Int64.max)
+    }
+
+    /// Record the time interval between the passed `since` dispatch time and `end` dispatch time.
+    ///
+    /// - parameters:
+    ///   - since: Start of the interval as `DispatchTime`.
+    ///   - end: End of the interval, defaulting to `.now()`.
+    public func recordInterval(since: DispatchTime, end: DispatchTime = .now()) {
+        self.recordNanoseconds(end.uptimeNanoseconds - since.uptimeNanoseconds)
     }
 }
 
