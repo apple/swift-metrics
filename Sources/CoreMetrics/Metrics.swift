@@ -368,15 +368,6 @@ public class Timer {
     public func recordSeconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
         self.recordNanoseconds(Double(duration * 1_000_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000_000) : Int64.max)
     }
-
-    /// Record the time interval (with nanosecond precision) between the passed `since` dispatch time and `end` dispatch time.
-    ///
-    /// - parameters:
-    ///   - since: Start of the interval as `DispatchTime`.
-    ///   - end: End of the interval, defaulting to `.now()`.
-    public func recordInterval(since: DispatchTime, end: DispatchTime = .now()) {
-        self.recordNanoseconds(end.uptimeNanoseconds - since.uptimeNanoseconds)
-    }
 }
 
 extension Timer: CustomStringConvertible {

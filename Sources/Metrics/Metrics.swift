@@ -33,6 +33,15 @@ public extension Timer {
         }
         return try body()
     }
+
+    /// Record the time interval (with nanosecond precision) between the passed `since` dispatch time and `end` dispatch time.
+    ///
+    /// - parameters:
+    ///   - since: Start of the interval as `DispatchTime`.
+    ///   - end: End of the interval, defaulting to `.now()`.
+    func recordInterval(since: DispatchTime, end: DispatchTime = .now()) {
+        self.recordNanoseconds(end.uptimeNanoseconds - since.uptimeNanoseconds)
+    }
 }
 
 public extension Timer {
