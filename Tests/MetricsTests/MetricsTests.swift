@@ -78,6 +78,23 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(testTimer.values[4].1, 0, "expected value to match")
     }
 
+    func testTimerWithDispatchTimeInterval() {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let name = "timer-\(UUID().uuidString)"
+
+        let timer = Timer(label: name)
+        let start = DispatchTime.now()
+        let end = DispatchTime(uptimeNanoseconds: start.uptimeNanoseconds + 1000 * 1000 * 1000)
+        timer.recordInterval(since: start, end: end)
+
+        let testTimer = timer.handler as! TestTimer
+        XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(UInt64(testTimer.values.first!.1), end.uptimeNanoseconds - start.uptimeNanoseconds, "expected value to match")
+        XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
+    }
+
     func testTimerUnits() throws {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
