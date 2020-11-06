@@ -20,7 +20,7 @@ import Glibc
 #endif
 
 extension MetricsSystem {
-    internal static var systemMetricsProvider: SystemMetricsProvider?
+    fileprivate static var systemMetricsProvider: SystemMetricsProvider?
 
     /// `bootstrapWithSystemMetrics` is an one-time configuration function which globally selects the desired metrics backend
     /// implementation, and enables system level metrics. `bootstrapWithSystemMetrics` can be called at maximum once in any given program,
@@ -28,6 +28,17 @@ extension MetricsSystem {
     ///
     /// - parameters:
     ///     - factory: A factory that given an identifier produces instances of metrics handlers such as `CounterHandler`, `RecorderHandler` and `TimerHandler`.
+    ///     - config: Used to configure `SystemMetrics`.
+    public static func bootstrapWithSystemMetrics(_ factory: MetricsFactory, config: SystemMetrics.Configuration) {
+        self.bootstrap(factory)
+        self.bootstrapSystemMetrics(config)
+    }
+
+    /// `bootstrapSystemMetrics` is an one-time configuration function which globally enables system level metrics.
+    /// `bootstrapSystemMetrics` can be called at maximum once in any given program, calling it more than once will lead to
+    /// undefined behaviour, most likely a crash.
+    ///
+    /// - parameters:
     ///     - config: Used to configure `SystemMetrics`.
     public static func bootstrapSystemMetrics(_ config: SystemMetrics.Configuration) {
         self.lock.withWriterLock {
