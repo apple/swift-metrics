@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import CoreMetrics
+@testable import SystemMetrics
 import XCTest
 #if os(Linux)
 import Glibc

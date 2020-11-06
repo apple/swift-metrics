@@ -362,7 +362,7 @@ public class Timer {
 /// configured. `MetricsSystem` is set up just once in a given program to set up the desired metrics backend
 /// implementation.
 public enum MetricsSystem {
-    fileprivate static let lock = ReadWriteLock()
+    public static let lock = ReadWriteLock()
     fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
     fileprivate static var initialized = false
 
@@ -387,15 +387,8 @@ public enum MetricsSystem {
         }
     }
 
-    internal static var systemMetrics: SystemMetricsFactory? {
-        return self.lock.withReaderLock { _factory as? SystemMetricsFactory }
-    }
-
     /// Returns a reference to the configured factory.
     public static var factory: MetricsFactory {
-        if let f = self.systemMetrics {
-            return f.underlying
-        }
         return self.lock.withReaderLock { self._factory }
     }
 }

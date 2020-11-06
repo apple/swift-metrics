@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import CoreMetrics
 import Dispatch
 
 #if os(Linux)
@@ -19,6 +20,8 @@ import Glibc
 #endif
 
 extension MetricsSystem {
+    internal static var systemMetricsProvider: SystemMetricsProvider?
+
     /// `bootstrapWithSystemMetrics` is an one-time configuration function which globally selects the desired metrics backend
     /// implementation, and enables system level metrics. `bootstrapWithSystemMetrics` can be called at maximum once in any given program,
     /// calling it more than once will lead to undefined behaviour, most likely a crash.
@@ -26,20 +29,21 @@ extension MetricsSystem {
     /// - parameters:
     ///     - factory: A factory that given an identifier produces instances of metrics handlers such as `CounterHandler`, `RecorderHandler` and `TimerHandler`.
     ///     - config: Used to configure `SystemMetrics`.
-    public static func bootstrapWithSystemMetrics(_ factory: MetricsFactory, config: SystemMetrics.Configuration) {
-        self.bootstrap(SystemMetricsFactory(factory: factory, config: config))
+    public static func bootstrapSystemMetrics(_ config: SystemMetrics.Configuration) {
+        self.lock.withWriterLock {
+            precondition(self.systemMetricsProvider == nil, "System metrics already bootstrapped.")
+            self.systemMetricsProvider = SystemMetricsProvider(config: config)
+        }
     }
 
-    internal class SystemMetricsFactory: MetricsFactory {
+    internal class SystemMetricsProvider {
         fileprivate let queue = DispatchQueue(label: "com.apple.CoreMetrics.SystemMetricsHandler", qos: .background)
         fileprivate let timeInterval: DispatchTimeInterval
         fileprivate let dataProvider: SystemMetrics.DataProvider
         fileprivate let labels: SystemMetrics.Labels
         fileprivate let timer: DispatchSourceTimer
-        internal let underlying: MetricsFactory
 
-        init(factory: MetricsFactory, config: SystemMetrics.Configuration) {
-            self.underlying = factory
+        init(config: SystemMetrics.Configuration) {
             self.timeInterval = config.interval
             self.dataProvider = config.dataProvider
             self.labels = config.labels
@@ -56,8 +60,9 @@ extension MetricsSystem {
             }))
 
             self.timer.schedule(deadline: .now() + self.timeInterval, repeating: self.timeInterval)
+
             if #available(OSX 10.12, *) {
-                timer.activate()
+                self.timer.activate()
             } else {
                 self.timer.resume()
             }
@@ -65,30 +70,6 @@ extension MetricsSystem {
 
         deinit {
             self.timer.cancel()
-        }
-
-        func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
-            return self.underlying.makeCounter(label: label, dimensions: dimensions)
-        }
-
-        func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-            return self.underlying.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
-        }
-
-        func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-            return self.underlying.makeTimer(label: label, dimensions: dimensions)
-        }
-
-        func destroyCounter(_ handler: CounterHandler) {
-            self.underlying.destroyCounter(handler)
-        }
-
-        func destroyRecorder(_ handler: RecorderHandler) {
-            self.underlying.destroyRecorder(handler)
-        }
-
-        func destroyTimer(_ handler: TimerHandler) {
-            self.underlying.destroyTimer(handler)
         }
     }
 }

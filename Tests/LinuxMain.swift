@@ -24,6 +24,7 @@ import XCTest
 
 #if os(Linux) || os(FreeBSD)
 @testable import MetricsTests
+@testable import SystemMetricsTests
 
 XCTMain([
     testCase(MetricsExtensionsTests.allTests),
