@@ -86,6 +86,12 @@ public class Counter {
     }
 }
 
+extension Counter: CustomStringConvertible {
+    public var description: String {
+        return "Counter(\(self.label), dimensions: \(self.dimensions))"
+    }
+}
+
 public extension Recorder {
     /// Create a new `Recorder`.
     ///
@@ -157,6 +163,12 @@ public class Recorder {
     @inlinable
     public func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
         self.handler.record(Double(value))
+    }
+}
+
+extension Recorder: CustomStringConvertible {
+    public var description: String {
+        return "\(type(of: self))(\(self.label), dimensions: \(self.dimensions), aggregate: \(self.aggregate))"
     }
 }
 
@@ -355,6 +367,12 @@ public class Timer {
     @inlinable
     public func recordSeconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
         self.recordNanoseconds(Double(duration * 1_000_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000_000) : Int64.max)
+    }
+}
+
+extension Timer: CustomStringConvertible {
+    public var description: String {
+        return "Timer(\(self.label), dimensions: \(self.dimensions))"
     }
 }
 
