@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import enum Dispatch.DispatchTimeInterval
-
 // MARK: User API
 
 extension Counter {
