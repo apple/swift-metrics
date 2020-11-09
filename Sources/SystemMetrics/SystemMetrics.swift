@@ -41,7 +41,7 @@ extension MetricsSystem {
     /// - parameters:
     ///     - config: Used to configure `SystemMetrics`.
     public static func bootstrapSystemMetrics(_ config: SystemMetrics.Configuration) {
-        self.lock.withWriterLock {
+        self.withWriterLock {
             precondition(self.systemMetricsProvider == nil, "System metrics already bootstrapped.")
             self.systemMetricsProvider = SystemMetricsProvider(config: config)
         }

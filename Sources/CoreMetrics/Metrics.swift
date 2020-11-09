@@ -378,9 +378,25 @@ extension Timer: CustomStringConvertible {
 /// configured. `MetricsSystem` is set up just once in a given program to set up the desired metrics backend
 /// implementation.
 public enum MetricsSystem {
-    public static let lock = ReadWriteLock()
+    fileprivate static let lock = ReadWriteLock()
     fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
     fileprivate static var initialized = false
+
+    /// Acquire the writer lock for the duration of the given block.
+    ///
+    /// - Parameter body: The block to execute while holding the lock.
+    /// - Returns: The value returned by the block.
+    public static func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
+        return try self.lock.withWriterLock(body)
+    }
+
+    /// Acquire the reader lock for the duration of the given block.
+    ///
+    /// - Parameter body: The block to execute while holding the lock.
+    /// - Returns: The value returned by the block.
+    public static func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
+        return try self.lock.withReaderLock(body)
+    }
 
     /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will

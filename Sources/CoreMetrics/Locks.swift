@@ -101,7 +101,7 @@ extension Lock {
 /// This object provides a lock on top of a single `pthread_mutex_t`. This kind
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO.
-public final class ReadWriteLock {
+internal final class ReadWriteLock {
     private let rwlock: UnsafeMutablePointer<pthread_rwlock_t> = UnsafeMutablePointer.allocate(capacity: 1)
 
     /// Create a new lock.
@@ -171,7 +171,7 @@ extension ReadWriteLock {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    public func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lockWrite()
         defer {
             self.unlock()
