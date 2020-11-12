@@ -382,6 +382,22 @@ public enum MetricsSystem {
     fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
     fileprivate static var initialized = false
 
+    /// Acquire a writer lock for the duration of the given block.
+    ///
+    /// - Parameter body: The block to execute while holding the lock.
+    /// - Returns: The value returned by the block.
+    public static func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
+        return try self.lock.withWriterLock(body)
+    }
+
+    /// Acquire a reader lock for the duration of the given block.
+    ///
+    /// - Parameter body: The block to execute while holding the lock.
+    /// - Returns: The value returned by the block.
+    public static func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
+        return try self.lock.withReaderLock(body)
+    }
+
     /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
     /// lead to undefined behaviour, most likely a crash.
