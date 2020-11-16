@@ -58,6 +58,12 @@ As the API has just launched, not many implementations exist yet. If you are int
 - [StatsD Client](https://github.com/apple/swift-statsd-client), support for StatsD
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
 
+### Swift Metrics Extras
+
+You may also be interestedin some "extras" modules which are collected in the [swift metrics extras](https://github.com/apple/swift-metrics-extras) repository.
+
+Currently the repository includes: `SystemMetrics` allowing reporting of a node's CPU and memory metrics etc.
+
 ## Detailed design
 
 ### Architecture
