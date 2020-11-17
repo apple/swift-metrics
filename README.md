@@ -60,9 +60,8 @@ As the API has just launched, not many implementations exist yet. If you are int
 
 ### Swift Metrics Extras
 
-You may also be interestedin some "extras" modules which are collected in the [swift metrics extras](https://github.com/apple/swift-metrics-extras) repository.
+You may also be interestedin some "extras" modules which are collected in the [Swift Metrics Extras](https://github.com/apple/swift-metrics-extras) repository.
 
-Currently the repository includes: `SystemMetrics` allowing reporting of a node's CPU and memory metrics etc.
 
 ## Detailed design
 
