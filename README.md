@@ -56,7 +56,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 
 - [SwiftPrometheus](https://github.com/MrLotU/SwiftPrometheus), support for [Prometheus](https://prometheus.io)
 - [StatsD Client](https://github.com/apple/swift-statsd-client), support for StatsD
-- [OpenTelemetry Swift](https://github.com/open-telemetry/opentelemetry-swift), support for OpenTelemetry (incl Datadog, Jaeger, Prometheus and Zipkin)
+- [OpenTelemetry Swift](https://github.com/open-telemetry/opentelemetry-swift), support for [OpenTelemetry](https://opentelemetry.io/) (incl Datadog, Jaeger, Prometheus and Zipkin)
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
 
 ### Swift Metrics Extras
