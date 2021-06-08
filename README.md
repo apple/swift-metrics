@@ -63,10 +63,6 @@ As the API has just launched, not many implementations exist yet. If you are int
 
 You may also be interested in some "extra" modules which are collected in the [Swift Metrics Extras](https://github.com/apple/swift-metrics-extras) repository.
 
-## Security
-
-Please see [SECURITY.md](SECURITY.md) for details on the security process.
-
 ## Detailed design
 
 ### Architecture
@@ -293,5 +289,11 @@ class SimpleMetricsLibrary: MetricsFactory {
     }
 }
 ```
+
+## Security
+
+Please see [SECURITY.md](SECURITY.md) for details on the security process.
+
+## Getting involved
 
 Do not hesitate to get in touch as well, over on https://forums.swift.org/c/server
