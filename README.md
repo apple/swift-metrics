@@ -63,6 +63,9 @@ As the API has just launched, not many implementations exist yet. If you are int
 
 You may also be interested in some "extra" modules which are collected in the [Swift Metrics Extras](https://github.com/apple/swift-metrics-extras) repository.
 
+## Security
+
+Please see [SECURITY.md](SECURITY.md) for SwiftLog's security process.
 
 ## Detailed design
 
