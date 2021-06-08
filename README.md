@@ -65,7 +65,7 @@ You may also be interested in some "extra" modules which are collected in the [S
 
 ## Security
 
-Please see [SECURITY.md](SECURITY.md) for SwiftLog's security process.
+Please see [SECURITY.md](SECURITY.md) for details on the security process.
 
 ## Detailed design
 
