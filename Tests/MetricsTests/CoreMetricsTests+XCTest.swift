@@ -27,6 +27,12 @@ extension MetricsTests {
         return [
             ("testCounters", testCounters),
             ("testCounterBlock", testCounterBlock),
+            ("testDefaultFloatingPointCounter_ignoresNan", testDefaultFloatingPointCounter_ignoresNan),
+            ("testDefaultFloatingPointCounter_ignoresInfinity", testDefaultFloatingPointCounter_ignoresInfinity),
+            ("testDefaultFloatingPointCounter_ignoresNegativeValues", testDefaultFloatingPointCounter_ignoresNegativeValues),
+            ("testDefaultFloatingPointCounter_ignoresZero", testDefaultFloatingPointCounter_ignoresZero),
+            ("testDefaultFloatingPointCounter_ceilsExtremeValues", testDefaultFloatingPointCounter_ceilsExtremeValues),
+            ("testDefaultFloatingPointCounter_accumulatesFloatingPointDecimalValues", testDefaultFloatingPointCounter_accumulatesFloatingPointDecimalValues),
             ("testRecorders", testRecorders),
             ("testRecordersInt", testRecordersInt),
             ("testRecordersFloat", testRecordersFloat),

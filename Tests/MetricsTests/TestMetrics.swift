@@ -24,18 +24,18 @@ internal final class TestMetrics: MetricsFactory {
     var recorders = [String: RecorderHandler]()
     var timers = [String: TimerHandler]()
 
-    public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+    func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
     }
 
-    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
         return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
     }
 
-    public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+    func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
     }
 
@@ -154,7 +154,7 @@ internal class TestTimer: TimerHandler, Equatable {
         }
     }
 
-    func retriveValueInPreferredUnit(atIndex i: Int) -> Double {
+    func retrieveValueInPreferredUnit(atIndex i: Int) -> Double {
         return self.lock.withLock {
             let value = values[i].1
             guard let displayUnit = self.displayUnit else {
@@ -171,7 +171,7 @@ internal class TestTimer: TimerHandler, Equatable {
         print("recording \(duration) \(self.label)")
     }
 
-    public static func == (lhs: TestTimer, rhs: TestTimer) -> Bool {
+    static func == (lhs: TestTimer, rhs: TestTimer) -> Bool {
         return lhs.id == rhs.id
     }
 }
