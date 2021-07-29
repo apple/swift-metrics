@@ -12,6 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+// MARK: Testing API
+
+internal var _enableAssertions = true
+
 // MARK: User API
 
 extension Counter {
@@ -87,6 +91,83 @@ public class Counter {
 extension Counter: CustomStringConvertible {
     public var description: String {
         return "Counter(\(self.label), dimensions: \(self.dimensions))"
+    }
+}
+
+extension FloatingPointCounter {
+    /// Create a new `FloatingPointCounter`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `FloatingPointCounter`.
+    ///     - dimensions: The dimensions for the `FloatingPointCounter`.
+    public convenience init(label: String, dimensions: [(String, String)] = []) {
+        let handler = MetricsSystem.factory.makeFloatingPointCounter(label: label, dimensions: dimensions)
+        self.init(label: label, dimensions: dimensions, handler: handler)
+    }
+
+    /// Signal the underlying metrics library that this FloatingPointCounter will never be updated again.
+    /// In response the library MAY decide to eagerly release any resources held by this `FloatingPointCounter`.
+    @inlinable
+    public func destroy() {
+        MetricsSystem.factory.destroyFloatingPointCounter(self.handler)
+    }
+}
+
+/// A FloatingPointCounter is a cumulative metric that represents a single monotonically increasing FloatingPointCounter whose value can only increase or be reset to zero.
+/// For example, you can use a FloatingPointCounter to represent the number of requests served, tasks completed, or errors.
+/// FloatingPointCounter is not supported by all metrics backends, however a default implementation is provided which accumulates floating point increments and records increments to a standard Counter after crossing integer boundaries.
+///
+/// This is the user-facing FloatingPointCounter API.
+///
+/// Its behavior depends on the `FloatingCounterHandler` implementation.
+public class FloatingPointCounter {
+    @usableFromInline
+    var handler: FloatingPointCounterHandler
+    public let label: String
+    public let dimensions: [(String, String)]
+
+    /// Alternative way to create a new `FloatingPointCounter`, while providing an explicit `FloatingPointCounterHandler`.
+    ///
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    ///
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `FloatingPointCounter` instances using the configured metrics backend.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `FloatingPointCounter`.
+    ///     - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///     - handler: The custom backend.
+    public init(label: String, dimensions: [(String, String)], handler: FloatingPointCounterHandler) {
+        self.label = label
+        self.dimensions = dimensions
+        self.handler = handler
+    }
+
+    /// Increment the FloatingPointCounter.
+    ///
+    /// - parameters:
+    ///     - by: Amount to increment by.
+    @inlinable
+    public func increment<DataType: BinaryFloatingPoint>(by amount: DataType) {
+        self.handler.increment(by: Double(amount))
+    }
+
+    /// Increment the FloatingPointCounter by one.
+    @inlinable
+    public func increment() {
+        self.increment(by: 1.0)
+    }
+
+    /// Reset the FloatingPointCounter back to zero.
+    @inlinable
+    public func reset() {
+        self.handler.reset()
+    }
+}
+
+extension FloatingPointCounter: CustomStringConvertible {
+    public var description: String {
+        return "FloatingPointCounter(\(self.label), dimensions: \(self.dimensions))"
     }
 }
 
@@ -422,6 +503,7 @@ public enum MetricsSystem {
 /// The `MetricsFactory` is the bridge between the `MetricsSystem` and the metrics backend implementation.
 /// `MetricsFactory`'s role is to initialize concrete implementations of the various metric types:
 /// * `Counter` -> `CounterHandler`
+/// * `FloatingPointCounter` -> `FloatingPointCounterHandler`
 /// * `Recorder` -> `RecorderHandler`
 /// * `Timer` -> `TimerHandler`
 ///
@@ -451,6 +533,13 @@ public protocol MetricsFactory {
     ///     - dimensions: The dimensions for the `CounterHandler`.
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
 
+    /// Create a backing `FloatingPointCounterHandler`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `FloatingPointCounterHandler`.
+    ///     - dimensions: The dimensions for the `FloatingPointCounterHandler`.
+    func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler
+
     /// Create a backing `RecorderHandler`.
     ///
     /// - parameters:
@@ -473,6 +562,13 @@ public protocol MetricsFactory {
     ///     - handler: The handler to be destroyed.
     func destroyCounter(_ handler: CounterHandler)
 
+    /// Invoked when the corresponding `FloatingPointCounter`'s `destroy()` function is invoked.
+    /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
+    ///
+    /// - parameters:
+    ///     - handler: The handler to be destroyed.
+    func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler)
+
     /// Invoked when the corresponding `Recorder`'s `destroy()` function is invoked.
     /// Upon receiving this signal the factory may eagerly release any resources related to this recorder.
     ///
@@ -486,6 +582,106 @@ public protocol MetricsFactory {
     /// - parameters:
     ///     - handler: The handler to be destroyed.
     func destroyTimer(_ handler: TimerHandler)
+}
+
+/// Wraps a CounterHandler, adding support for incrementing by floating point values by storing an accumulated floating point value and recording increments to the underlying CounterHandler after crossing integer boundaries.
+internal class AccumulatingRoundingFloatingPointCounter: FloatingPointCounterHandler {
+    private let lock = Lock()
+    private let counterHandler: CounterHandler
+    internal var fraction: Double = 0
+
+    init(label: String, dimensions: [(String, String)]) {
+        self.counterHandler = MetricsSystem
+            .factory.makeCounter(label: label, dimensions: dimensions)
+    }
+
+    func increment(by amount: Double) {
+        // Drop values in illegal values (Asserting in debug builds)
+        guard !amount.isNaN else {
+            assert(!_enableAssertions, "cannot increment by NaN")
+            return
+        }
+
+        guard !amount.isInfinite else {
+            assert(!_enableAssertions, "cannot increment by infinite quantities")
+            return
+        }
+
+        guard amount.sign == .plus else {
+            assert(!_enableAssertions, "cannot increment by negative values")
+            return
+        }
+
+        guard !amount.isZero else {
+            return
+        }
+
+        // If amount is in Int64.max..<+Inf
+        if amount.exponent >= 63 {
+            // Ceil to Int64.max
+            self.lock.withLockVoid {
+                self.counterHandler.increment(by: .max)
+            }
+        } else {
+            // Split amount into integer and fraction components
+            var (increment, fraction) = self.integerAndFractionComponents(of: amount)
+            self.lock.withLockVoid {
+                // Add the fractional component to the accumulated fraction.
+                self.fraction += fraction
+                // self.fraction may have cross an integer boundary, Split it
+                // and add any integer component.
+                let (integer, fraction) = integerAndFractionComponents(of: self.fraction)
+                increment += integer
+                self.fraction = fraction
+                // Increment the handler by the total integer component.
+                if increment > 0 {
+                    self.counterHandler.increment(by: increment)
+                }
+            }
+        }
+    }
+
+    @inline(__always)
+    private func integerAndFractionComponents(of value: Double) -> (Int64, Double) {
+        let integer = Int64(value)
+        let fraction = value - value.rounded(.towardZero)
+        return (integer, fraction)
+    }
+
+    func reset() {
+        self.lock.withLockVoid {
+            self.fraction = 0
+            self.counterHandler.reset()
+        }
+    }
+
+    func destroy() {
+        MetricsSystem.factory.destroyCounter(self.counterHandler)
+    }
+}
+
+extension MetricsFactory {
+    /// Create a default backing `FloatingPointCounterHandler` for backends which do not naively support floating point counters.
+    ///
+    /// The created FloatingPointCounterHandler is a wrapper around a backend's CounterHandler which accumulates floating point increments and records increments to an underlying CounterHandler after crossing integer boundaries.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `FloatingPointCounterHandler`.
+    ///     - dimensions: The dimensions for the `FloatingPointCounterHandler`.
+    public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
+        return AccumulatingRoundingFloatingPointCounter(label: label, dimensions: dimensions)
+    }
+
+    /// Invoked when the corresponding `FloatingPointCounter`'s `destroy()` function is invoked.
+    /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
+    ///
+    /// `destroyFloatingPointCounter` must be implemented if `makeFloatingPointCounter` is implemented.
+    ///
+    /// - parameters:
+    ///     - handler: The handler to be destroyed.
+    public func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler) {
+        (handler as? AccumulatingRoundingFloatingPointCounter)?.destroy()
+    }
 }
 
 /// A `CounterHandler` represents a backend implementation of a `Counter`.
@@ -505,6 +701,28 @@ public protocol CounterHandler: AnyObject {
     /// - parameters:
     ///     - by: Amount to increment by.
     func increment(by: Int64)
+
+    /// Reset the counter back to zero.
+    func reset()
+}
+
+/// A `FloatingPointCounterHandler` represents a backend implementation of a `FloatingPointCounter`.
+///
+/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
+/// To use the SwiftMetrics API, please refer to the documentation of `FloatingPointCounter`.
+///
+/// # Implementation requirements
+///
+/// To implement your own `FloatingPointCounterHandler` you should respect a few requirements that are necessary so applications work
+/// as expected regardless of the selected `FloatingPointCounterHandler` implementation.
+///
+/// - The `FloatingPointCounterHandler` must be a `class`.
+public protocol FloatingPointCounterHandler: AnyObject {
+    /// Increment the counter.
+    ///
+    /// - parameters:
+    ///     - by: Amount to increment by.
+    func increment(by: Double)
 
     /// Reset the counter back to zero.
     func reset()
@@ -578,6 +796,10 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         return MuxCounter(factories: self.factories, label: label, dimensions: dimensions)
     }
 
+    public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
+        return MuxFloatingPointCounter(factories: self.factories, label: label, dimensions: dimensions)
+    }
+
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         return MuxRecorder(factories: self.factories, label: label, dimensions: dimensions, aggregate: aggregate)
     }
@@ -589,6 +811,12 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     public func destroyCounter(_ handler: CounterHandler) {
         for factory in self.factories {
             factory.destroyCounter(handler)
+        }
+    }
+
+    public func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler) {
+        for factory in self.factories {
+            factory.destroyFloatingPointCounter(handler)
         }
     }
 
@@ -611,6 +839,21 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
 
         func increment(by amount: Int64) {
+            self.counters.forEach { $0.increment(by: amount) }
+        }
+
+        func reset() {
+            self.counters.forEach { $0.reset() }
+        }
+    }
+
+    private class MuxFloatingPointCounter: FloatingPointCounterHandler {
+        let counters: [FloatingPointCounterHandler]
+        public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)]) {
+            self.counters = factories.map { $0.makeFloatingPointCounter(label: label, dimensions: dimensions) }
+        }
+
+        func increment(by amount: Double) {
             self.counters.forEach { $0.increment(by: amount) }
         }
 
@@ -647,12 +890,16 @@ public final class MultiplexMetricsHandler: MetricsFactory {
 }
 
 /// Ships with the metrics module, used for initial bootstrapping.
-public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderHandler, TimerHandler {
+public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingPointCounterHandler, RecorderHandler, TimerHandler {
     public static let instance = NOOPMetricsHandler()
 
     private init() {}
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+        return self
+    }
+
+    public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
         return self
     }
 
@@ -665,10 +912,12 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, RecorderH
     }
 
     public func destroyCounter(_: CounterHandler) {}
+    public func destroyFloatingPointCounter(_: FloatingPointCounterHandler) {}
     public func destroyRecorder(_: RecorderHandler) {}
     public func destroyTimer(_: TimerHandler) {}
 
     public func increment(by: Int64) {}
+    public func increment(by: Double) {}
     public func reset() {}
     public func record(_: Int64) {}
     public func record(_: Double) {}

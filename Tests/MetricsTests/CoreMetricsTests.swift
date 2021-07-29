@@ -53,6 +53,114 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(counter.values.count, 0, "expected number of entries to match")
     }
 
+    func testDefaultFloatingPointCounter_ignoresNan() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // disable assertions to test fallback path
+        _enableAssertions = false
+        let label = "\(#function)-fp-counter-\(UUID())"
+        let fpCounter = FloatingPointCounter(label: label)
+        let counter = metrics.counters[label] as! TestCounter
+        fpCounter.increment(by: Double.nan)
+        fpCounter.increment(by: Double.signalingNaN)
+        XCTAssertEqual(counter.values.count, 0, "expected nan values to be ignored")
+        // reenable assertions
+        _enableAssertions = true
+    }
+
+    func testDefaultFloatingPointCounter_ignoresInfinity() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // disable assertions to test fallback path
+        _enableAssertions = false
+        let label = "\(#function)-fp-counter-\(UUID())"
+        let fpCounter = FloatingPointCounter(label: label)
+        let counter = metrics.counters[label] as! TestCounter
+        fpCounter.increment(by: Double.infinity)
+        fpCounter.increment(by: -Double.infinity)
+        XCTAssertEqual(counter.values.count, 0, "expected infinite values to be ignored")
+        // reenable assertions
+        _enableAssertions = true
+    }
+
+    func testDefaultFloatingPointCounter_ignoresNegativeValues() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // disable assertions to test fallback path
+        _enableAssertions = false
+        let label = "\(#function)-fp-counter-\(UUID())"
+        let fpCounter = FloatingPointCounter(label: label)
+        let counter = metrics.counters[label] as! TestCounter
+        fpCounter.increment(by: -100)
+        XCTAssertEqual(counter.values.count, 0, "expected negative values to be ignored")
+        // reenable assertions
+        _enableAssertions = true
+    }
+
+    func testDefaultFloatingPointCounter_ignoresZero() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // disable assertions to test fallback path
+        _enableAssertions = false
+        let label = "\(#function)-fp-counter-\(UUID())"
+        let fpCounter = FloatingPointCounter(label: label)
+        let counter = metrics.counters[label] as! TestCounter
+        fpCounter.increment(by: 0)
+        fpCounter.increment(by: -0)
+        XCTAssertEqual(counter.values.count, 0, "expected zero values to be ignored")
+        // reenable assertions
+        _enableAssertions = true
+    }
+
+    func testDefaultFloatingPointCounter_ceilsExtremeValues() {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        let label = "\(#function)-fp-counter-\(UUID())"
+        let fpCounter = FloatingPointCounter(label: label)
+        let counter = metrics.counters[label] as! TestCounter
+        // Just larger than Int64
+        fpCounter.increment(by: Double(sign: .plus, exponent: 63, significand: 1))
+        // Much larger than Int64
+        fpCounter.increment(by: Double.greatestFiniteMagnitude)
+        let values = counter.values.map { $0.1 }
+        XCTAssertEqual(values.count, 2, "expected number of entries to match")
+        XCTAssertEqual(values, [Int64.max, Int64.max], "expected extremely large values to be replaced with Int64.max")
+    }
+
+    func testDefaultFloatingPointCounter_accumulatesFloatingPointDecimalValues() {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        let label = "\(#function)-fp-counter-\(UUID())"
+        let fpCounter = FloatingPointCounter(label: label)
+        let rawFpCounter = fpCounter.handler as! AccumulatingRoundingFloatingPointCounter
+        let counter = metrics.counters[label] as! TestCounter
+
+        // Increment by a small value (perfectly representable)
+        fpCounter.increment(by: 0.75)
+        XCTAssertEqual(counter.values.count, 0, "expected number of entries to match")
+
+        // Increment by a small value that should grow the accumulated buffer past 1.0 (perfectly representable)
+        fpCounter.increment(by: 1.5)
+        var values = counter.values.map { $0.1 }
+        XCTAssertEqual(values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(values, [2], "expected entries to match")
+        XCTAssertEqual(rawFpCounter.fraction, 0.25, "")
+
+        // Increment by a large value that should leave a fraction in the accumulator
+        // 1110506744053.76
+        fpCounter.increment(by: Double(sign: .plus, exponent: 40, significand: 1.01))
+        values = counter.values.map { $0.1 }
+        XCTAssertEqual(values.count, 2, "expected number of entries to match")
+        XCTAssertEqual(values, [2, 1_110_506_744_054], "expected entries to match")
+        XCTAssertEqual(rawFpCounter.fraction, 0.010009765625, "expected fractional accumulated value")
+    }
+
     func testRecorders() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
