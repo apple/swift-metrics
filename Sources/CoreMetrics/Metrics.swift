@@ -12,10 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-// MARK: Testing API
-
-internal var _enableAssertions = true
-
 // MARK: User API
 
 extension Counter {
@@ -596,29 +592,18 @@ internal class AccumulatingRoundingFloatingPointCounter: FloatingPointCounterHan
     }
 
     func increment(by amount: Double) {
-        // Drop values in illegal values (Asserting in debug builds)
-        guard !amount.isNaN else {
-            assert(!_enableAssertions, "cannot increment by NaN")
-            return
-        }
+        // Drop illegal values
+        // - cannot increment by NaN
+        guard !amount.isNaN else { return }
+        // - cannot increment by infinite quantities
+        guard !amount.isInfinite else { return }
+        // - cannot increment by negative values
+        guard amount.sign == .plus else { return }
+        // - cannot increment by zero
+        guard !amount.isZero else { return }
 
-        guard !amount.isInfinite else {
-            assert(!_enableAssertions, "cannot increment by infinite quantities")
-            return
-        }
-
-        guard amount.sign == .plus else {
-            assert(!_enableAssertions, "cannot increment by negative values")
-            return
-        }
-
-        guard !amount.isZero else {
-            return
-        }
-
-        // If amount is in Int64.max..<+Inf
         if amount.exponent >= 63 {
-            // Ceil to Int64.max
+            // If amount is in Int64.max..<+Inf, ceil to Int64.max
             self.lock.withLockVoid {
                 self.counterHandler.increment(by: .max)
             }

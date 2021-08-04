@@ -57,63 +57,47 @@ class MetricsTests: XCTestCase {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
-        // disable assertions to test fallback path
-        _enableAssertions = false
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
         let counter = metrics.counters[label] as! TestCounter
         fpCounter.increment(by: Double.nan)
         fpCounter.increment(by: Double.signalingNaN)
         XCTAssertEqual(counter.values.count, 0, "expected nan values to be ignored")
-        // reenable assertions
-        _enableAssertions = true
     }
 
     func testDefaultFloatingPointCounter_ignoresInfinity() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
-        // disable assertions to test fallback path
-        _enableAssertions = false
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
         let counter = metrics.counters[label] as! TestCounter
         fpCounter.increment(by: Double.infinity)
         fpCounter.increment(by: -Double.infinity)
         XCTAssertEqual(counter.values.count, 0, "expected infinite values to be ignored")
-        // reenable assertions
-        _enableAssertions = true
     }
 
     func testDefaultFloatingPointCounter_ignoresNegativeValues() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
-        // disable assertions to test fallback path
-        _enableAssertions = false
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
         let counter = metrics.counters[label] as! TestCounter
         fpCounter.increment(by: -100)
         XCTAssertEqual(counter.values.count, 0, "expected negative values to be ignored")
-        // reenable assertions
-        _enableAssertions = true
     }
 
     func testDefaultFloatingPointCounter_ignoresZero() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
-        // disable assertions to test fallback path
-        _enableAssertions = false
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
         let counter = metrics.counters[label] as! TestCounter
         fpCounter.increment(by: 0)
         fpCounter.increment(by: -0)
         XCTAssertEqual(counter.values.count, 0, "expected zero values to be ignored")
-        // reenable assertions
-        _enableAssertions = true
     }
 
     func testDefaultFloatingPointCounter_ceilsExtremeValues() {
