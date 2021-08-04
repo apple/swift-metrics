@@ -111,7 +111,7 @@ extension FloatingPointCounter {
 
 /// A FloatingPointCounter is a cumulative metric that represents a single monotonically increasing FloatingPointCounter whose value can only increase or be reset to zero.
 /// For example, you can use a FloatingPointCounter to represent the number of requests served, tasks completed, or errors.
-/// FloatingPointCounter is not supported by all metrics backends, however a default implementation is provided which accumulates floating point increments and records increments to a standard Counter after crossing integer boundaries.
+/// FloatingPointCounter is not supported by all metrics backends, however a default implementation is provided which accumulates floating point values and records increments to a standard Counter after crossing integer boundaries.
 ///
 /// This is the user-facing FloatingPointCounter API.
 ///
@@ -648,7 +648,7 @@ internal class AccumulatingRoundingFloatingPointCounter: FloatingPointCounterHan
 extension MetricsFactory {
     /// Create a default backing `FloatingPointCounterHandler` for backends which do not naively support floating point counters.
     ///
-    /// The created FloatingPointCounterHandler is a wrapper around a backend's CounterHandler which accumulates floating point increments and records increments to an underlying CounterHandler after crossing integer boundaries.
+    /// The created FloatingPointCounterHandler is a wrapper around a backend's CounterHandler which accumulates floating point values and records increments to an underlying CounterHandler after crossing integer boundaries.
     ///
     /// - parameters:
     ///     - label: The label for the `FloatingPointCounterHandler`.
