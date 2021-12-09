@@ -22,7 +22,13 @@ To add a dependency on the metrics API package, you need to declare it in your `
 and to your application/library target, add "Metrics" to your dependencies:
 
 ```swift
-.target(name: "BestExampleApp", dependencies: ["Metrics"]),
+.target(
+    name: "BestExampleApp",
+    dependencies: [
+        // ... 
+        .product(name: "Metrics", package: "swift-metrics"),
+    ]
+),
 ```
 
 ###  Emitting metrics information
