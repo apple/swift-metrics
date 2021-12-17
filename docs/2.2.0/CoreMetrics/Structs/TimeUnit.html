@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>TimeUnit Enumeration Reference</title>
+    <title>TimeUnit Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,34 +14,34 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Enum/TimeUnit" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Struct/TimeUnit" class="dashAnchor"></a>
 
-    <a title="TimeUnit Enumeration Reference"></a>
+    <a title="TimeUnit Structure Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
         <a class="header-link" href="../index.html">
-          CoreMetrics 1.2.1 Docs
+          CoreMetrics 2.2.0 Docs
         </a>
-         (81% documented)
+         (83% documented)
       </p>
     
-      <p class="header-col--secondary">
+      <div class="header-col--secondary">
         <form role="search" action="../search.json">
           <input type="text" placeholder="Search documentation" data-typeahead>
         </form>
-      </p>
+      </div>
     
         <p class="header-col header-col--secondary">
           <a class="header-link" href="https://github.com/apple/swift-metrics">
-            <img class="header-icon" src="../img/gh.png"/>
+            <img class="header-icon" src="../img/gh.png" alt="GitHub"/>
             View on GitHub
           </a>
         </p>
     
         <p class="header-col header-col--secondary">
-          <a class="header-link" href="dash-feed://https%3A%2F%2Fapple%2Egithub%2Eio%2Fswift%2Dmetrics%2Fdocs%2F1%2E2%2E1%2FCoreMetrics%2Fdocsets%2FCoreMetrics%2Exml">
-            <img class="header-icon" src="../img/dash.png"/>
+          <a class="header-link" href="dash-feed://https%3A%2F%2Fapple.github.io%2Fswift-metrics%2Fdocs%2F2.2.0%2FCoreMetrics%2Fdocsets%2FCoreMetrics.xml">
+            <img class="header-icon" src="../img/dash.png" alt="Dash"/>
             Install in Dash
           </a>
         </p>
@@ -49,8 +49,8 @@
 
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">CoreMetrics Reference</a>
-      <img class="carat" src="../img/carat.png" />
-      TimeUnit Enumeration Reference
+      <img class="carat" src="../img/carat.png" alt=""/>
+      TimeUnit Structure Reference
     </p>
 
     <div class="content-wrapper">
@@ -61,6 +61,9 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/Counter.html">Counter</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/FloatingPointCounter.html">FloatingPointCounter</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/Gauge.html">Gauge</a>
@@ -85,9 +88,6 @@
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Enums/MetricsSystem.html">MetricsSystem</a>
               </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Enums/TimeUnit.html">TimeUnit</a>
-              </li>
             </ul>
           </li>
           <li class="nav-group-name">
@@ -95,6 +95,9 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Protocols/CounterHandler.html">CounterHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/FloatingPointCounterHandler.html">FloatingPointCounterHandler</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Protocols/MetricsFactory.html">MetricsFactory</a>
@@ -107,6 +110,14 @@
               </li>
             </ul>
           </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/TimeUnit.html">TimeUnit</a>
+              </li>
+            </ul>
+          </li>
         </ul>
       </nav>
       <article class="main-content">
@@ -116,12 +127,16 @@
             <h1>TimeUnit</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">TimeUnit</span></code></pre>
+                  
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">TimeUnit</span> <span class="p">:</span> <span class="kt">Equatable</span></code></pre>
 
                 </div>
               </div>
             <p>Undocumented</p>
 
+              <div class="slightly-smaller">
+                <a href="https://github.com/apple/swift-metrics/tree/2.2.0/Sources/CoreMetrics/Metrics.swift#L264-L292">Show on GitHub</a>
+              </div>
           </div>
         </section>
 
@@ -132,9 +147,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics8TimeUnitO11nanosecondsyA2CmF"></a>
-                    <a name="//apple_ref/swift/Element/nanoseconds" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO11nanosecondsyA2CmF">nanoseconds</a>
+                    <a name="/s:11CoreMetrics8TimeUnitV20scaleFromNanosecondss6UInt64Vvp"></a>
+                    <a name="//apple_ref/swift/Property/scaleFromNanoseconds" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitV20scaleFromNanosecondss6UInt64Vvp">scaleFromNanoseconds</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -149,12 +164,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">nanoseconds</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">scaleFromNanoseconds</span><span class="p">:</span> <span class="kt">UInt64</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.1/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/2.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -162,9 +177,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics8TimeUnitO12millisecondsyA2CmF"></a>
-                    <a name="//apple_ref/swift/Element/milliseconds" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO12millisecondsyA2CmF">milliseconds</a>
+                    <a name="/s:11CoreMetrics8TimeUnitV11nanosecondsACvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/nanoseconds" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitV11nanosecondsACvpZ">nanoseconds</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -179,12 +194,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">milliseconds</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">nanoseconds</span><span class="p">:</span> <span class="kt">TimeUnit</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.1/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/2.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -192,9 +207,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics8TimeUnitO7secondsyA2CmF"></a>
-                    <a name="//apple_ref/swift/Element/seconds" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO7secondsyA2CmF">seconds</a>
+                    <a name="/s:11CoreMetrics8TimeUnitV12microsecondsACvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/microseconds" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitV12microsecondsACvpZ">microseconds</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -209,12 +224,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">seconds</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">microseconds</span><span class="p">:</span> <span class="kt">TimeUnit</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.1/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/2.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -222,9 +237,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics8TimeUnitO7minutesyA2CmF"></a>
-                    <a name="//apple_ref/swift/Element/minutes" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO7minutesyA2CmF">minutes</a>
+                    <a name="/s:11CoreMetrics8TimeUnitV12millisecondsACvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/milliseconds" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitV12millisecondsACvpZ">milliseconds</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -239,12 +254,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">minutes</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">milliseconds</span><span class="p">:</span> <span class="kt">TimeUnit</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.1/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/2.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -252,9 +267,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics8TimeUnitO5hoursyA2CmF"></a>
-                    <a name="//apple_ref/swift/Element/hours" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO5hoursyA2CmF">hours</a>
+                    <a name="/s:11CoreMetrics8TimeUnitV7secondsACvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/seconds" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitV7secondsACvpZ">seconds</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -269,12 +284,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">hours</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">seconds</span><span class="p">:</span> <span class="kt">TimeUnit</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.1/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/2.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -282,9 +297,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11CoreMetrics8TimeUnitO4daysyA2CmF"></a>
-                    <a name="//apple_ref/swift/Element/days" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11CoreMetrics8TimeUnitO4daysyA2CmF">days</a>
+                    <a name="/s:11CoreMetrics8TimeUnitV7minutesACvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/minutes" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitV7minutesACvpZ">minutes</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -299,12 +314,72 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">days</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">minutes</span><span class="p">:</span> <span class="kt">TimeUnit</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-metrics/tree/1.2.1/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-metrics/tree/2.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11CoreMetrics8TimeUnitV5hoursACvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/hours" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitV5hoursACvpZ">hours</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">hours</span><span class="p">:</span> <span class="kt">TimeUnit</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/apple/swift-metrics/tree/2.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11CoreMetrics8TimeUnitV4daysACvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/days" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11CoreMetrics8TimeUnitV4daysACvpZ">days</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">days</span><span class="p">:</span> <span class="kt">TimeUnit</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/apple/swift-metrics/tree/2.2.0/Sources/CoreMetrics/Metrics.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -317,9 +392,8 @@
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2020 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external">SwiftMetrics team</a>. All rights reserved. (Last updated: 2020-02-28)</p>
-      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+      <p>&copy; 2021 <a class="link" href="https://github.com/apple/swift-metrics" target="_blank" rel="external noopener">SwiftMetrics team</a>. All rights reserved. (Last updated: 2021-12-17)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
     </section>
   </body>
-</div>
 </html>
