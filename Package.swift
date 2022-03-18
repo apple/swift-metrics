@@ -31,7 +31,7 @@ let package = Package(
             dependencies: ["CoreMetrics"]
         ),
         .target(
-            name: "MetricsTestUtils",
+            name: "MetricsTestKit",
             dependencies: ["Metrics"]
         ),
         .testTarget(
