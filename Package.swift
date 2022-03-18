@@ -30,6 +30,10 @@ let package = Package(
             name: "Metrics",
             dependencies: ["CoreMetrics"]
         ),
+        .target(
+            name: "MetricsTestKit",
+            dependencies: ["Metrics"]
+        ),
         .testTarget(
             name: "MetricsTests",
             dependencies: ["Metrics"]
