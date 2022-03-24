@@ -124,6 +124,11 @@ public final class TestMetrics: MetricsFactory {
     }
 }
 
+#if compiler(>=5.6)
+// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
+extension TestMetrics: @unchecked Sendable {}
+#endif
+
 extension TestMetrics.FullKey: Hashable {
     public func hash(into hasher: inout Hasher) {
         self.label.hash(into: &hasher)
@@ -139,14 +144,10 @@ extension TestMetrics.FullKey: Hashable {
     }
 }
 
-// ==== ----------------------------------------------------------------------------------------------------------------
-
-// MARK: Assertions
+// MARK: - Assertions
 
 extension TestMetrics {
-    // ==== ------------------------------------------------------------------------------------------------------------
-
-    // MARK: Counter
+    // MARK: - Counter
 
     public func expectCounter(_ metric: Counter) throws -> TestCounter {
         guard let counter = metric.handler as? TestCounter else {
@@ -168,21 +169,17 @@ extension TestMetrics {
         return testCounter
     }
 
-    // ==== ------------------------------------------------------------------------------------------------------------
-
-    // MARK: Gauge
+    // MARK: - Gauge
 
     public func expectGauge(_ metric: Gauge) throws -> TestRecorder {
-        return try self.expectRecorder(metric)
+        return try self.expectRecorder(metric.underlying)
     }
 
     public func expectGauge(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestRecorder {
         return try self.expectRecorder(label, dimensions)
     }
 
-    // ==== ------------------------------------------------------------------------------------------------------------
-
-    // MARK: Recorder
+    // MARK: - Recorder
 
     public func expectRecorder(_ metric: Recorder) throws -> TestRecorder {
         guard let recorder = metric.handler as? TestRecorder else {
@@ -204,9 +201,7 @@ extension TestMetrics {
         return testRecorder
     }
 
-    // ==== ------------------------------------------------------------------------------------------------------------
-
-    // MARK: Timer
+    // MARK: - Timer
 
     public func expectTimer(_ metric: CoreMetrics.Timer) throws -> TestTimer {
         guard let timer = metric.handler as? TestTimer else {
@@ -229,9 +224,7 @@ extension TestMetrics {
     }
 }
 
-// ==== ----------------------------------------------------------------------------------------------------------------
-
-// MARK: Metric type implementations
+// MARK: - Metric type implementations
 
 public protocol TestMetric {
     associatedtype Value
@@ -295,6 +288,11 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
     }
 }
 
+#if compiler(>=5.6)
+// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
+extension TestCounter: @unchecked Sendable {}
+#endif
+
 public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     public let id: String
     public let label: String
@@ -342,6 +340,11 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
         return lhs.id == rhs.id
     }
 }
+
+#if compiler(>=5.6)
+// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
+extension TestRecorder: @unchecked Sendable {}
+#endif
 
 public final class TestTimer: TestMetric, TimerHandler, Equatable {
     public let id: String
@@ -408,6 +411,11 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
     }
 }
 
+#if compiler(>=5.6)
+// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
+extension TestTimer: @unchecked Sendable {}
+#endif
+
 extension NSLock {
     fileprivate func withLock<T>(_ body: () -> T) -> T {
         self.lock()
@@ -418,11 +426,9 @@ extension NSLock {
     }
 }
 
-// ==== ----------------------------------------------------------------------------------------------------------------
-
-// MARK: Errors
+// MARK: - Errors
 
 public enum TestMetricsError: Error {
     case missingMetric(label: String, dimensions: [(String, String)])
-    case illegalMetricType(metric: Any, expected: String)
+    case illegalMetricType(metric: _SwiftMetricsSendable, expected: String)
 }

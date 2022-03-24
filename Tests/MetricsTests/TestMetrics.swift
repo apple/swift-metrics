@@ -40,8 +40,8 @@ internal final class TestMetrics: MetricsFactory {
     }
 
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
+        let item = maker(label, dimensions)
         return self.lock.withLock {
-            let item = maker(label, dimensions)
             registry[label] = item
             return item
         }
@@ -49,19 +49,25 @@ internal final class TestMetrics: MetricsFactory {
 
     func destroyCounter(_ handler: CounterHandler) {
         if let testCounter = handler as? TestCounter {
-            self.counters.removeValue(forKey: testCounter.label)
+            self.lock.withLock { () -> Void in
+                self.counters.removeValue(forKey: testCounter.label)
+            }
         }
     }
 
     func destroyRecorder(_ handler: RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
-            self.recorders.removeValue(forKey: testRecorder.label)
+            self.lock.withLock { () -> Void in
+                self.recorders.removeValue(forKey: testRecorder.label)
+            }
         }
     }
 
     func destroyTimer(_ handler: TimerHandler) {
         if let testTimer = handler as? TestTimer {
-            self.timers.removeValue(forKey: testTimer.label)
+            self.lock.withLock { () -> Void in
+                self.timers.removeValue(forKey: testTimer.label)
+            }
         }
     }
 }
@@ -99,6 +105,11 @@ internal class TestCounter: CounterHandler, Equatable {
     }
 }
 
+#if compiler(>=5.6)
+// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
+extension TestCounter: @unchecked Sendable {}
+#endif
+
 internal class TestRecorder: RecorderHandler, Equatable {
     let id: String
     let label: String
@@ -131,6 +142,11 @@ internal class TestRecorder: RecorderHandler, Equatable {
         return lhs.id == rhs.id
     }
 }
+
+#if compiler(>=5.6)
+// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
+extension TestRecorder: @unchecked Sendable {}
+#endif
 
 internal class TestTimer: TimerHandler, Equatable {
     let id: String
@@ -176,8 +192,13 @@ internal class TestTimer: TimerHandler, Equatable {
     }
 }
 
-private extension NSLock {
-    func withLock<T>(_ body: () -> T) -> T {
+#if compiler(>=5.6)
+// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
+extension TestTimer: @unchecked Sendable {}
+#endif
+
+extension NSLock {
+    fileprivate func withLock<T>(_ body: () -> T) -> T {
         self.lock()
         defer {
             self.unlock()
