@@ -1,4 +1,4 @@
-// swift-tools-version:4.2
+// swift-tools-version:5.5
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Metrics API open source project
