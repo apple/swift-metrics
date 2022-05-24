@@ -20,6 +20,7 @@ let package = Package(
     products: [
         .library(name: "CoreMetrics", targets: ["CoreMetrics"]),
         .library(name: "Metrics", targets: ["Metrics"]),
+        .library(name: "MetricsTestKit", targets: ["MetricsTestKit"]),
     ],
     targets: [
         .target(
