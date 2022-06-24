@@ -343,7 +343,7 @@ class MetricsTests: XCTestCase {
         let value = Double.random(in: -1000 ... 1000)
         let gauge = Gauge(label: name)
         gauge.record(value)
-        let recorder = gauge.underlying.handler as! TestRecorder
+        let recorder = gauge.handler as! TestRecorder
         XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
     }
@@ -384,7 +384,7 @@ class MetricsTests: XCTestCase {
     }
 
     func testCustomFactory() {
-        class CustomHandler: CounterHandler {
+        final class CustomHandler: CounterHandler {
             func increment<DataType>(by: DataType) where DataType: BinaryInteger {}
             func reset() {}
         }
@@ -405,7 +405,7 @@ class MetricsTests: XCTestCase {
         let gauge = Gauge(label: name)
         gauge.record(value)
 
-        let recorder = gauge.underlying.handler as! TestRecorder
+        let recorder = gauge.handler as! TestRecorder
         XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(recorder.values.first!.1, value, "expected value to match")
         XCTAssertEqual(metrics.recorders.count, 1, "recorder should have been stored")
@@ -417,7 +417,7 @@ class MetricsTests: XCTestCase {
         let gaugeAgain = Gauge(label: name)
         gaugeAgain.record(-value)
 
-        let recorderAgain = gaugeAgain.underlying.handler as! TestRecorder
+        let recorderAgain = gaugeAgain.handler as! TestRecorder
         XCTAssertEqual(recorderAgain.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(recorderAgain.values.first!.1, -value, "expected value to match")
 
@@ -495,7 +495,7 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual("\(counter)", "Counter(hello.counter, dimensions: [])")
 
         let gauge = Gauge(label: "hello.gauge")
-        XCTAssertEqual("\(gauge)", "Gauge(hello.gauge, dimensions: [])")
+        XCTAssertEqual("\(gauge)", "Gauge(hello.gauge, dimensions: [], aggregate: false)")
 
         let recorder = Recorder(label: "hello.recorder")
         XCTAssertEqual("\(recorder)", "Recorder(hello.recorder, dimensions: [], aggregate: true)")

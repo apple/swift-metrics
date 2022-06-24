@@ -124,11 +124,6 @@ public final class TestMetrics: MetricsFactory {
     }
 }
 
-#if compiler(>=5.6)
-// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
-extension TestMetrics: @unchecked Sendable {}
-#endif
-
 extension TestMetrics.FullKey: Hashable {
     public func hash(into hasher: inout Hasher) {
         self.label.hash(into: &hasher)
@@ -172,7 +167,7 @@ extension TestMetrics {
     // MARK: - Gauge
 
     public func expectGauge(_ metric: Gauge) throws -> TestRecorder {
-        return try self.expectRecorder(metric.underlying)
+        return try self.expectRecorder(metric)
     }
 
     public func expectGauge(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestRecorder {
@@ -288,11 +283,6 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
     }
 }
 
-#if compiler(>=5.6)
-// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
-extension TestCounter: @unchecked Sendable {}
-#endif
-
 public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     public let id: String
     public let label: String
@@ -340,11 +330,6 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
         return lhs.id == rhs.id
     }
 }
-
-#if compiler(>=5.6)
-// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
-extension TestRecorder: @unchecked Sendable {}
-#endif
 
 public final class TestTimer: TestMetric, TimerHandler, Equatable {
     public let id: String
@@ -411,11 +396,6 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
     }
 }
 
-#if compiler(>=5.6)
-// TODO: ideally this would not be @unchecked Sendable, but getting warnings even tho we are protecting the state with a lock
-extension TestTimer: @unchecked Sendable {}
-#endif
-
 extension NSLock {
     fileprivate func withLock<T>(_ body: () -> T) -> T {
         self.lock()
@@ -428,7 +408,25 @@ extension NSLock {
 
 // MARK: - Errors
 
+#if compiler(>=5.6)
 public enum TestMetricsError: Error {
     case missingMetric(label: String, dimensions: [(String, String)])
-    case illegalMetricType(metric: _SwiftMetricsSendable, expected: String)
+    case illegalMetricType(metric: Sendable, expected: String)
 }
+
+#else
+public enum TestMetricsError: Error {
+    case missingMetric(label: String, dimensions: [(String, String)])
+    case illegalMetricType(metric: Any, expected: String)
+}
+#endif
+
+// MARK: - Sendable support
+
+#if compiler(>=5.6)
+// ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
+extension TestMetrics: @unchecked Sendable {}
+extension TestCounter: @unchecked Sendable {}
+extension TestRecorder: @unchecked Sendable {}
+extension TestTimer: @unchecked Sendable {}
+#endif
