@@ -486,11 +486,7 @@ public enum MetricsSystem {
     }
 
     private final class FactoryBox {
-        #if canImport(WASILibc)
-        // WASILibc is single threaded, provides no locks
-        #else
         private let lock = ReadWriteLock()
-        #endif
         fileprivate var _underlying: MetricsFactory
         private var initialized = false
 
@@ -499,27 +495,17 @@ public enum MetricsSystem {
         }
 
         func replaceFactory(_ factory: MetricsFactory, validate: Bool) {
-            #if canImport(WASILibc)
-            precondition(!validate || !self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self._underlying)")
-            self._underlying = factory
-            self.initialized = true
-            #else
             self.lock.withWriterLock {
                 precondition(!validate || !self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self._underlying)")
                 self._underlying = factory
                 self.initialized = true
             }
-            #endif
         }
 
         var underlying: MetricsFactory {
-            #if canImport(WASILibc)
-            return self._underlying
-            #else
             return self.lock.withReaderLock {
                 return self._underlying
             }
-            #endif
         }
 
         func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
