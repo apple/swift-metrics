@@ -948,6 +948,7 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
 // MARK: - Sendable support helpers
 
 #if compiler(>=5.6)
+extension MetricsSystem: Sendable {}
 extension Counter: Sendable {}
 extension FloatingPointCounter: Sendable {}
 // must be @unchecked since Gauge inherits Recorder :(
