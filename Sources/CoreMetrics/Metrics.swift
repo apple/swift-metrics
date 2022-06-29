@@ -455,17 +455,7 @@ extension Timer: CustomStringConvertible {
 /// configured. `MetricsSystem` is set up just once in a given program to set up the desired metrics backend
 /// implementation.
 public enum MetricsSystem {
-    fileprivate static let lock = ReadWriteLock()
-    fileprivate static var _factory: MetricsFactory = NOOPMetricsHandler.instance
-    fileprivate static var initialized = false
-
-    /// Acquire a writer lock for the duration of the given block.
-    ///
-    /// - Parameter body: The block to execute while holding the lock.
-    /// - Returns: The value returned by the block.
-    public static func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
-        return try self.lock.withWriterLock(body)
-    }
+    private static let _factory = FactoryBox(NOOPMetricsHandler.instance)
 
     /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
@@ -474,23 +464,53 @@ public enum MetricsSystem {
     /// - parameters:
     ///     - factory: A factory that given an identifier produces instances of metrics handlers such as `CounterHandler`, `RecorderHandler` and `TimerHandler`.
     public static func bootstrap(_ factory: MetricsFactory) {
-        self.lock.withWriterLock {
-            precondition(!self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self._factory)")
-            self._factory = factory
-            self.initialized = true
-        }
+        self._factory.replaceFactory(factory, validate: true)
     }
 
     // for our testing we want to allow multiple bootstrapping
     internal static func bootstrapInternal(_ factory: MetricsFactory) {
-        self.lock.withWriterLock {
-            self._factory = factory
-        }
+        self._factory.replaceFactory(factory, validate: false)
     }
 
     /// Returns a reference to the configured factory.
     public static var factory: MetricsFactory {
-        return self.lock.withReaderLock { self._factory }
+        return self._factory.underlying
+    }
+
+    /// Acquire a writer lock for the duration of the given block.
+    ///
+    /// - Parameter body: The block to execute while holding the lock.
+    /// - Returns: The value returned by the block.
+    public static func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
+        return try self._factory.withWriterLock(body)
+    }
+
+    private final class FactoryBox {
+        private let lock = ReadWriteLock()
+        fileprivate var _underlying: MetricsFactory
+        private var initialized = false
+
+        init(_ underlying: MetricsFactory) {
+            self._underlying = underlying
+        }
+
+        func replaceFactory(_ factory: MetricsFactory, validate: Bool) {
+            self.lock.withWriterLock {
+                precondition(!validate || !self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self._underlying)")
+                self._underlying = factory
+                self.initialized = true
+            }
+        }
+
+        var underlying: MetricsFactory {
+            return self.lock.withReaderLock {
+                return self._underlying
+            }
+        }
+
+        func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
+            return try self.lock.withWriterLock(body)
+        }
     }
 }
 
