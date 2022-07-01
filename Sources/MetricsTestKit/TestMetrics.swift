@@ -139,14 +139,10 @@ extension TestMetrics.FullKey: Hashable {
     }
 }
 
-// ==== ----------------------------------------------------------------------------------------------------------------
-
-// MARK: Assertions
+// MARK: - Assertions
 
 extension TestMetrics {
-    // ==== ------------------------------------------------------------------------------------------------------------
-
-    // MARK: Counter
+    // MARK: - Counter
 
     public func expectCounter(_ metric: Counter) throws -> TestCounter {
         guard let counter = metric.handler as? TestCounter else {
@@ -168,9 +164,7 @@ extension TestMetrics {
         return testCounter
     }
 
-    // ==== ------------------------------------------------------------------------------------------------------------
-
-    // MARK: Gauge
+    // MARK: - Gauge
 
     public func expectGauge(_ metric: Gauge) throws -> TestRecorder {
         return try self.expectRecorder(metric)
@@ -180,9 +174,7 @@ extension TestMetrics {
         return try self.expectRecorder(label, dimensions)
     }
 
-    // ==== ------------------------------------------------------------------------------------------------------------
-
-    // MARK: Recorder
+    // MARK: - Recorder
 
     public func expectRecorder(_ metric: Recorder) throws -> TestRecorder {
         guard let recorder = metric.handler as? TestRecorder else {
@@ -204,9 +196,7 @@ extension TestMetrics {
         return testRecorder
     }
 
-    // ==== ------------------------------------------------------------------------------------------------------------
-
-    // MARK: Timer
+    // MARK: - Timer
 
     public func expectTimer(_ metric: CoreMetrics.Timer) throws -> TestTimer {
         guard let timer = metric.handler as? TestTimer else {
@@ -229,9 +219,7 @@ extension TestMetrics {
     }
 }
 
-// ==== ----------------------------------------------------------------------------------------------------------------
-
-// MARK: Metric type implementations
+// MARK: - Metric type implementations
 
 public protocol TestMetric {
     associatedtype Value
@@ -418,11 +406,27 @@ extension NSLock {
     }
 }
 
-// ==== ----------------------------------------------------------------------------------------------------------------
+// MARK: - Errors
 
-// MARK: Errors
+#if compiler(>=5.6)
+public enum TestMetricsError: Error {
+    case missingMetric(label: String, dimensions: [(String, String)])
+    case illegalMetricType(metric: Sendable, expected: String)
+}
 
+#else
 public enum TestMetricsError: Error {
     case missingMetric(label: String, dimensions: [(String, String)])
     case illegalMetricType(metric: Any, expected: String)
 }
+#endif
+
+// MARK: - Sendable support
+
+#if compiler(>=5.6)
+// ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
+extension TestMetrics: @unchecked Sendable {}
+extension TestCounter: @unchecked Sendable {}
+extension TestRecorder: @unchecked Sendable {}
+extension TestTimer: @unchecked Sendable {}
+#endif

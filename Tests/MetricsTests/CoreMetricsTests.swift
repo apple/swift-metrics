@@ -384,7 +384,7 @@ class MetricsTests: XCTestCase {
     }
 
     func testCustomFactory() {
-        class CustomHandler: CounterHandler {
+        final class CustomHandler: CounterHandler {
             func increment<DataType>(by: DataType) where DataType: BinaryInteger {}
             func reset() {}
         }

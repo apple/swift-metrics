@@ -40,8 +40,8 @@ internal final class TestMetrics: MetricsFactory {
     }
 
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
+        let item = maker(label, dimensions)
         return self.lock.withLock {
-            let item = maker(label, dimensions)
             registry[label] = item
             return item
         }
@@ -49,19 +49,25 @@ internal final class TestMetrics: MetricsFactory {
 
     func destroyCounter(_ handler: CounterHandler) {
         if let testCounter = handler as? TestCounter {
-            self.counters.removeValue(forKey: testCounter.label)
+            self.lock.withLock { () -> Void in
+                self.counters.removeValue(forKey: testCounter.label)
+            }
         }
     }
 
     func destroyRecorder(_ handler: RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
-            self.recorders.removeValue(forKey: testRecorder.label)
+            self.lock.withLock { () -> Void in
+                self.recorders.removeValue(forKey: testRecorder.label)
+            }
         }
     }
 
     func destroyTimer(_ handler: TimerHandler) {
         if let testTimer = handler as? TestTimer {
-            self.timers.removeValue(forKey: testTimer.label)
+            self.lock.withLock { () -> Void in
+                self.timers.removeValue(forKey: testTimer.label)
+            }
         }
     }
 }
@@ -176,8 +182,8 @@ internal class TestTimer: TimerHandler, Equatable {
     }
 }
 
-private extension NSLock {
-    func withLock<T>(_ body: () -> T) -> T {
+extension NSLock {
+    fileprivate func withLock<T>(_ body: () -> T) -> T {
         self.lock()
         defer {
             self.unlock()
@@ -185,3 +191,12 @@ private extension NSLock {
         return body()
     }
 }
+
+// MARK: - Sendable support
+
+#if compiler(>=5.6)
+// ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
+extension TestCounter: @unchecked Sendable {}
+extension TestRecorder: @unchecked Sendable {}
+extension TestTimer: @unchecked Sendable {}
+#endif

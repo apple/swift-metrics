@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-// MARK: User API
+// MARK: - User API
+
+// MARK: - Counter
 
 extension Counter {
     /// Create a new `Counter`.
@@ -39,9 +41,9 @@ extension Counter {
 /// This is the user-facing Counter API.
 ///
 /// Its behavior depends on the `CounterHandler` implementation.
-public class Counter {
+public final class Counter {
     @usableFromInline
-    var handler: CounterHandler
+    let handler: CounterHandler
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -90,6 +92,8 @@ extension Counter: CustomStringConvertible {
     }
 }
 
+// MARK: - FloatingPointCounter
+
 extension FloatingPointCounter {
     /// Create a new `FloatingPointCounter`.
     ///
@@ -116,9 +120,9 @@ extension FloatingPointCounter {
 /// This is the user-facing FloatingPointCounter API.
 ///
 /// Its behavior depends on the `FloatingCounterHandler` implementation.
-public class FloatingPointCounter {
+public final class FloatingPointCounter {
     @usableFromInline
-    var handler: FloatingPointCounterHandler
+    let handler: FloatingPointCounterHandler
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -167,13 +171,15 @@ extension FloatingPointCounter: CustomStringConvertible {
     }
 }
 
-public extension Recorder {
+// MARK: - Recorder
+
+extension Recorder {
     /// Create a new `Recorder`.
     ///
     /// - parameters:
     ///     - label: The label for the `Recorder`.
     ///     - dimensions: The dimensions for the `Recorder`.
-    convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
+    public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
         let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
     }
@@ -181,7 +187,7 @@ public extension Recorder {
     /// Signal the underlying metrics library that this recorder will never be updated again.
     /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
     @inlinable
-    func destroy() {
+    public func destroy() {
         MetricsSystem.factory.destroyRecorder(self.handler)
     }
 }
@@ -193,7 +199,7 @@ public extension Recorder {
 /// Its behavior depends on the `RecorderHandler` implementation.
 public class Recorder {
     @usableFromInline
-    var handler: RecorderHandler
+    let handler: RecorderHandler
     public let label: String
     public let dimensions: [(String, String)]
     public let aggregate: Bool
@@ -247,10 +253,12 @@ extension Recorder: CustomStringConvertible {
     }
 }
 
+// MARK: - Gauge
+
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
 /// Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
-public class Gauge: Recorder {
+public final class Gauge: Recorder {
     /// Create a new `Gauge`.
     ///
     /// - parameters:
@@ -260,6 +268,8 @@ public class Gauge: Recorder {
         self.init(label: label, dimensions: dimensions, aggregate: false)
     }
 }
+
+// MARK: - Timer
 
 public struct TimeUnit: Equatable {
     private enum Code: Equatable {
@@ -328,9 +338,9 @@ public extension Timer {
 /// This is the user-facing Timer API.
 ///
 /// Its behavior depends on the `TimerHandler` implementation.
-public class Timer {
+public final class Timer {
     @usableFromInline
-    var handler: TimerHandler
+    let handler: TimerHandler
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -451,6 +461,8 @@ extension Timer: CustomStringConvertible {
     }
 }
 
+// MARK: - MetricsSystem
+
 /// The `MetricsSystem` is a global facility where the default metrics backend implementation (`MetricsFactory`) can be
 /// configured. `MetricsSystem` is set up just once in a given program to set up the desired metrics backend
 /// implementation.
@@ -459,7 +471,7 @@ public enum MetricsSystem {
 
     /// `bootstrap` is an one-time configuration function which globally selects the desired metrics backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
-    /// lead to undefined behaviour, most likely a crash.
+    /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
     ///     - factory: A factory that given an identifier produces instances of metrics handlers such as `CounterHandler`, `RecorderHandler` and `TimerHandler`.
@@ -514,7 +526,9 @@ public enum MetricsSystem {
     }
 }
 
-// MARK: Library SPI, intended to be implemented by backend libraries
+// MARK: - Library SPI, intended to be implemented by backend libraries
+
+// MARK: - MetricsFactory
 
 /// The `MetricsFactory` is the bridge between the `MetricsSystem` and the metrics backend implementation.
 /// `MetricsFactory`'s role is to initialize concrete implementations of the various metric types:
@@ -601,7 +615,7 @@ public protocol MetricsFactory {
 }
 
 /// Wraps a CounterHandler, adding support for incrementing by floating point values by storing an accumulated floating point value and recording increments to the underlying CounterHandler after crossing integer boundaries.
-internal class AccumulatingRoundingFloatingPointCounter: FloatingPointCounterHandler {
+internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCounterHandler {
     private let lock = Lock()
     private let counterHandler: CounterHandler
     internal var fraction: Double = 0
@@ -689,6 +703,8 @@ extension MetricsFactory {
     }
 }
 
+// MARK: - Backend Handlers
+
 /// A `CounterHandler` represents a backend implementation of a `Counter`.
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
@@ -700,7 +716,7 @@ extension MetricsFactory {
 /// as expected regardless of the selected `CounterHandler` implementation.
 ///
 /// - The `CounterHandler` must be a `class`.
-public protocol CounterHandler: AnyObject {
+public protocol CounterHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Increment the counter.
     ///
     /// - parameters:
@@ -722,7 +738,7 @@ public protocol CounterHandler: AnyObject {
 /// as expected regardless of the selected `FloatingPointCounterHandler` implementation.
 ///
 /// - The `FloatingPointCounterHandler` must be a `class`.
-public protocol FloatingPointCounterHandler: AnyObject {
+public protocol FloatingPointCounterHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Increment the counter.
     ///
     /// - parameters:
@@ -744,7 +760,7 @@ public protocol FloatingPointCounterHandler: AnyObject {
 /// as expected regardless of the selected `RecorderHandler` implementation.
 ///
 /// - The `RecorderHandler` must be a `class`.
-public protocol RecorderHandler: AnyObject {
+public protocol RecorderHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Record a value.
     ///
     /// - parameters:
@@ -768,7 +784,7 @@ public protocol RecorderHandler: AnyObject {
 /// as expected regardless of the selected `TimerHandler` implementation.
 ///
 /// - The `TimerHandler` must be a `class`.
-public protocol TimerHandler: AnyObject {
+public protocol TimerHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Record a duration in nanoseconds.
     ///
     /// - parameters:
@@ -788,7 +804,7 @@ extension TimerHandler {
     }
 }
 
-// MARK: Predefined Metrics Handlers
+// MARK: - Predefined Metrics Handlers
 
 /// A pseudo-metrics handler that can be used to send messages to multiple other metrics handlers.
 public final class MultiplexMetricsHandler: MetricsFactory {
@@ -837,7 +853,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
     }
 
-    private class MuxCounter: CounterHandler {
+    private final class MuxCounter: CounterHandler {
         let counters: [CounterHandler]
         public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)]) {
             self.counters = factories.map { $0.makeCounter(label: label, dimensions: dimensions) }
@@ -852,7 +868,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
     }
 
-    private class MuxFloatingPointCounter: FloatingPointCounterHandler {
+    private final class MuxFloatingPointCounter: FloatingPointCounterHandler {
         let counters: [FloatingPointCounterHandler]
         public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)]) {
             self.counters = factories.map { $0.makeFloatingPointCounter(label: label, dimensions: dimensions) }
@@ -867,7 +883,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
     }
 
-    private class MuxRecorder: RecorderHandler {
+    private final class MuxRecorder: RecorderHandler {
         let recorders: [RecorderHandler]
         public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)], aggregate: Bool) {
             self.recorders = factories.map { $0.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate) }
@@ -882,7 +898,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
     }
 
-    private class MuxTimer: TimerHandler {
+    private final class MuxTimer: TimerHandler {
         let timers: [TimerHandler]
         public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)]) {
             self.timers = factories.map { $0.makeTimer(label: label, dimensions: dimensions) }
@@ -928,3 +944,22 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
     public func record(_: Double) {}
     public func recordNanoseconds(_: Int64) {}
 }
+
+// MARK: - Sendable support helpers
+
+#if compiler(>=5.6)
+extension MetricsSystem: Sendable {}
+extension Counter: Sendable {}
+extension FloatingPointCounter: Sendable {}
+// must be @unchecked since Gauge inherits Recorder :(
+extension Recorder: @unchecked Sendable {}
+extension Timer: Sendable {}
+// ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
+extension AccumulatingRoundingFloatingPointCounter: @unchecked Sendable {}
+#endif
+
+#if compiler(>=5.6)
+@preconcurrency public protocol _SwiftMetricsSendableProtocol: Sendable {}
+#else
+public protocol _SwiftMetricsSendableProtocol {}
+#endif
