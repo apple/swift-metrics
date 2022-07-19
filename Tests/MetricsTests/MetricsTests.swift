@@ -38,7 +38,7 @@ class MetricsExtensionsTests: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
         let timer = Timer(label: "test-timer")
-        let testTimer = timer.handler as! TestTimer
+        let testTimer = timer._handler as! TestTimer
         let timeInterval = TimeInterval(Double.random(in: 1 ... 500))
         timer.record(timeInterval)
         XCTAssertEqual(1, testTimer.values.count, "expected number of entries to match")
@@ -51,7 +51,7 @@ class MetricsExtensionsTests: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
         let timer = Timer(label: "test-timer")
-        let testTimer = timer.handler as! TestTimer
+        let testTimer = timer._handler as! TestTimer
         // nano
         let nano = DispatchTimeInterval.nanoseconds(Int.random(in: 1 ... 500))
         timer.record(nano)
@@ -89,7 +89,7 @@ class MetricsExtensionsTests: XCTestCase {
         let end = DispatchTime(uptimeNanoseconds: start.uptimeNanoseconds + 1000 * 1000 * 1000)
         timer.recordInterval(since: start, end: end)
 
-        let testTimer = timer.handler as! TestTimer
+        let testTimer = timer._handler as! TestTimer
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(UInt64(testTimer.values.first!.1), end.uptimeNanoseconds - start.uptimeNanoseconds, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
@@ -105,7 +105,7 @@ class MetricsExtensionsTests: XCTestCase {
         let timer = Timer(label: name)
         timer.recordNanoseconds(value)
 
-        let testTimer = timer.handler as! TestTimer
+        let testTimer = timer._handler as! TestTimer
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(testTimer.values.first!.1, value, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
@@ -115,7 +115,7 @@ class MetricsExtensionsTests: XCTestCase {
         let secondsTimer = Timer(label: secondsName, preferredDisplayUnit: .seconds)
         secondsTimer.recordSeconds(secondsValue)
 
-        let testSecondsTimer = secondsTimer.handler as! TestTimer
+        let testSecondsTimer = secondsTimer._handler as! TestTimer
         XCTAssertEqual(testSecondsTimer.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(metrics.timers.count, 2, "timer should have been stored")
     }
@@ -128,7 +128,7 @@ class MetricsExtensionsTests: XCTestCase {
         let timer = Timer(label: "test", preferredDisplayUnit: .seconds)
         timer.recordSeconds(value)
 
-        let testTimer = timer.handler as! TestTimer
+        let testTimer = timer._handler as! TestTimer
 
         testTimer.preferDisplayUnit(.nanoseconds)
         XCTAssertEqual(testTimer.retrieveValueInPreferredUnit(atIndex: 0), value * 1000 * 1000 * 1000, accuracy: 1.0, "expected value to match")
