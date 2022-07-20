@@ -31,7 +31,7 @@ extension Counter {
     /// In response the library MAY decide to eagerly release any resources held by this `Counter`.
     @inlinable
     public func destroy() {
-        MetricsSystem.factory.destroyCounter(self.handler)
+        MetricsSystem.factory.destroyCounter(self._handler)
     }
 }
 
@@ -42,8 +42,8 @@ extension Counter {
 ///
 /// Its behavior depends on the `CounterHandler` implementation.
 public final class Counter {
-    @usableFromInline
-    let handler: CounterHandler
+    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    public let _handler: CounterHandler
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -61,7 +61,7 @@ public final class Counter {
     public init(label: String, dimensions: [(String, String)], handler: CounterHandler) {
         self.label = label
         self.dimensions = dimensions
-        self.handler = handler
+        self._handler = handler
     }
 
     /// Increment the counter.
@@ -70,7 +70,7 @@ public final class Counter {
     ///     - by: Amount to increment by.
     @inlinable
     public func increment<DataType: BinaryInteger>(by amount: DataType) {
-        self.handler.increment(by: Int64(amount))
+        self._handler.increment(by: Int64(amount))
     }
 
     /// Increment the counter by one.
@@ -82,7 +82,7 @@ public final class Counter {
     /// Reset the counter back to zero.
     @inlinable
     public func reset() {
-        self.handler.reset()
+        self._handler.reset()
     }
 }
 
@@ -109,7 +109,7 @@ extension FloatingPointCounter {
     /// In response the library MAY decide to eagerly release any resources held by this `FloatingPointCounter`.
     @inlinable
     public func destroy() {
-        MetricsSystem.factory.destroyFloatingPointCounter(self.handler)
+        MetricsSystem.factory.destroyFloatingPointCounter(self._handler)
     }
 }
 
@@ -121,8 +121,8 @@ extension FloatingPointCounter {
 ///
 /// Its behavior depends on the `FloatingCounterHandler` implementation.
 public final class FloatingPointCounter {
-    @usableFromInline
-    let handler: FloatingPointCounterHandler
+    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    public let _handler: FloatingPointCounterHandler
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -140,7 +140,7 @@ public final class FloatingPointCounter {
     public init(label: String, dimensions: [(String, String)], handler: FloatingPointCounterHandler) {
         self.label = label
         self.dimensions = dimensions
-        self.handler = handler
+        self._handler = handler
     }
 
     /// Increment the FloatingPointCounter.
@@ -149,7 +149,7 @@ public final class FloatingPointCounter {
     ///     - by: Amount to increment by.
     @inlinable
     public func increment<DataType: BinaryFloatingPoint>(by amount: DataType) {
-        self.handler.increment(by: Double(amount))
+        self._handler.increment(by: Double(amount))
     }
 
     /// Increment the FloatingPointCounter by one.
@@ -161,7 +161,7 @@ public final class FloatingPointCounter {
     /// Reset the FloatingPointCounter back to zero.
     @inlinable
     public func reset() {
-        self.handler.reset()
+        self._handler.reset()
     }
 }
 
@@ -188,7 +188,7 @@ extension Recorder {
     /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
     @inlinable
     public func destroy() {
-        MetricsSystem.factory.destroyRecorder(self.handler)
+        MetricsSystem.factory.destroyRecorder(self._handler)
     }
 }
 
@@ -198,8 +198,8 @@ extension Recorder {
 ///
 /// Its behavior depends on the `RecorderHandler` implementation.
 public class Recorder {
-    @usableFromInline
-    let handler: RecorderHandler
+    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    public let _handler: RecorderHandler
     public let label: String
     public let dimensions: [(String, String)]
     public let aggregate: Bool
@@ -219,7 +219,7 @@ public class Recorder {
         self.label = label
         self.dimensions = dimensions
         self.aggregate = aggregate
-        self.handler = handler
+        self._handler = handler
     }
 
     /// Record a value.
@@ -231,7 +231,7 @@ public class Recorder {
     ///     - value: Value to record.
     @inlinable
     public func record<DataType: BinaryInteger>(_ value: DataType) {
-        self.handler.record(Int64(value))
+        self._handler.record(Int64(value))
     }
 
     /// Record a value.
@@ -243,7 +243,7 @@ public class Recorder {
     ///     - value: Value to record.
     @inlinable
     public func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-        self.handler.record(Double(value))
+        self._handler.record(Double(value))
     }
 }
 
@@ -328,7 +328,7 @@ public extension Timer {
     /// In response the library MAY decide to eagerly release any resources held by this `Timer`.
     @inlinable
     func destroy() {
-        MetricsSystem.factory.destroyTimer(self.handler)
+        MetricsSystem.factory.destroyTimer(self._handler)
     }
 }
 
@@ -339,8 +339,8 @@ public extension Timer {
 ///
 /// Its behavior depends on the `TimerHandler` implementation.
 public final class Timer {
-    @usableFromInline
-    let handler: TimerHandler
+    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    public let _handler: TimerHandler
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -358,7 +358,7 @@ public final class Timer {
     public init(label: String, dimensions: [(String, String)], handler: TimerHandler) {
         self.label = label
         self.dimensions = dimensions
-        self.handler = handler
+        self._handler = handler
     }
 
     /// Record a duration in nanoseconds.
@@ -367,7 +367,7 @@ public final class Timer {
     ///     - value: Duration to record.
     @inlinable
     public func recordNanoseconds(_ duration: Int64) {
-        self.handler.recordNanoseconds(duration)
+        self._handler.recordNanoseconds(duration)
     }
 
     /// Record a duration in nanoseconds.

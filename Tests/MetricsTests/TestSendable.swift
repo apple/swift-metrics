@@ -30,7 +30,7 @@ class SendableTest: XCTestCase {
 
             let task = Task.detached { () -> [Int64] in
                 counter.increment(by: value)
-                let handler = counter.handler as! TestCounter
+                let handler = counter._handler as! TestCounter
                 return handler.values.map { $0.1 }
             }
             let values = await task.value
@@ -45,7 +45,7 @@ class SendableTest: XCTestCase {
 
             let task = Task.detached { () -> Double in
                 counter.increment(by: value)
-                let handler = counter.handler as! AccumulatingRoundingFloatingPointCounter
+                let handler = counter._handler as! AccumulatingRoundingFloatingPointCounter
                 return handler.fraction
             }
             let fraction = await task.value
@@ -59,7 +59,7 @@ class SendableTest: XCTestCase {
 
             let task = Task.detached { () -> [Double] in
                 recorder.record(value)
-                let handler = recorder.handler as! TestRecorder
+                let handler = recorder._handler as! TestRecorder
                 return handler.values.map { $0.1 }
             }
             let values = await task.value
@@ -74,7 +74,7 @@ class SendableTest: XCTestCase {
 
             let task = Task.detached { () -> [Double] in
                 gauge.record(value)
-                let handler = gauge.handler as! TestRecorder
+                let handler = gauge._handler as! TestRecorder
                 return handler.values.map { $0.1 }
             }
             let values = await task.value
@@ -89,7 +89,7 @@ class SendableTest: XCTestCase {
 
             let task = Task.detached { () -> [Int64] in
                 timer.recordNanoseconds(value)
-                let handler = timer.handler as! TestTimer
+                let handler = timer._handler as! TestTimer
                 return handler.values.map { $0.1 }
             }
             let values = await task.value
