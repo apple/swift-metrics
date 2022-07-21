@@ -555,7 +555,7 @@ public enum MetricsSystem {
 /// While some libraries may not need to implement this destroying as they may be stateless or similar,
 /// libraries using the metrics API should always assume a library WILL make use of this signal, and shall not
 /// neglect calling these methods when appropriate.
-public protocol MetricsFactory {
+public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// Create a backing `CounterHandler`.
     ///
     /// - parameters:
