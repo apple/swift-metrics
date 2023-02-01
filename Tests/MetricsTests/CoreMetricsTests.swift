@@ -361,25 +361,61 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
     }
 
-    func testMUX() throws {
+    func testMUX_Counter() throws {
         // bootstrap with our test metrics
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
         MetricsSystem.bootstrapInternal(MultiplexMetricsHandler(factories: factories))
         // run the test
         let name = NSUUID().uuidString
         let value = Int.random(in: Int.min ... Int.max)
-        let mux = Counter(label: name)
-        mux.increment(by: value)
+        let muxCounter = Counter(label: name)
+        muxCounter.increment(by: value)
         factories.forEach { factory in
             let counter = factory.counters.first?.1 as! TestCounter
             XCTAssertEqual(counter.label, name, "expected label to match")
             XCTAssertEqual(counter.values.count, 1, "expected number of entries to match")
             XCTAssertEqual(counter.values[0].1, Int64(value), "expected value to match")
         }
-        mux.reset()
+        muxCounter.reset()
         factories.forEach { factory in
             let counter = factory.counters.first?.1 as! TestCounter
             XCTAssertEqual(counter.values.count, 0, "expected number of entries to match")
+        }
+    }
+
+    func testMUX_Recorder() throws {
+        // bootstrap with our test metrics
+        let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
+        MetricsSystem.bootstrapInternal(MultiplexMetricsHandler(factories: factories))
+        // run the test
+        let name = NSUUID().uuidString
+        let value = Double.random(in: 0 ... 1)
+        let muxRecorder = Recorder(label: name)
+        muxRecorder.record(value)
+        factories.forEach { factory in
+            let recorder = factory.recorders.first?.1 as! TestRecorder
+            XCTAssertEqual(recorder.label, name, "expected label to match")
+            XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
+            XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
+        }
+    }
+
+    func testMUX_Timer() throws {
+        // bootstrap with our test metrics
+        let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
+        MetricsSystem.bootstrapInternal(MultiplexMetricsHandler(factories: factories))
+        // run the test
+        let name = NSUUID().uuidString
+        let seconds = Int.random(in: 1 ... 10)
+        let muxTimer = Timer(label: name, preferredDisplayUnit: .minutes)
+        muxTimer.recordSeconds(seconds)
+        factories.forEach { factory in
+            let timer = factory.timers.first?.1 as! TestTimer
+            XCTAssertEqual(timer.label, name, "expected label to match")
+            XCTAssertEqual(timer.values.count, 1, "expected number of entries to match")
+            XCTAssertEqual(timer.values[0].1, Int64(seconds * 1_000_000_000), "expected value to match")
+            XCTAssertEqual(timer.displayUnit, .minutes, "expected value to match")
+            XCTAssertEqual(timer.retrieveValueInPreferredUnit(atIndex: 0), Double(seconds) / 60.0, "seconds should be returned as minutes")
         }
     }
 
