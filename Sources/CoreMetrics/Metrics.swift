@@ -907,6 +907,10 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         func recordNanoseconds(_ duration: Int64) {
             self.timers.forEach { $0.recordNanoseconds(duration) }
         }
+
+        func preferDisplayUnit(_ unit: TimeUnit) {
+            self.timers.forEach { $0.preferDisplayUnit(unit) }
+        }
     }
 }
 
