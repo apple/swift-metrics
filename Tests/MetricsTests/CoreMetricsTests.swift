@@ -334,7 +334,9 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(testTimer.values[3].1, Int64.max, "expected value to match")
     }
 
-    func testGauge() throws {
+    // FIXME: address warning in LinuxMain
+    @available(*, deprecated)
+    func t1estGauge() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
@@ -348,7 +350,9 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
     }
 
-    func testGaugeBlock() throws {
+    // FIXME: address warning in LinuxMain
+    @available(*, deprecated)
+    func t1estGaugeBlock() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
@@ -359,6 +363,33 @@ class MetricsTests: XCTestCase {
         let recorder = metrics.recorders[name] as! TestRecorder
         XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
+    }
+
+    func testGauge2() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "gauge-\(NSUUID().uuidString)"
+        let value = Double.random(in: -1000 ... 1000)
+        let gauge = Gauge2(label: name)
+        gauge.record(value)
+        let testGauge = gauge._handler as! TestGauge
+        XCTAssertEqual(testGauge.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testGauge.values[0].1, value, "expected value to match")
+    }
+
+    func testGauge2Block() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "gauge-\(NSUUID().uuidString)"
+        let value = Double.random(in: -1000 ... 1000)
+        Gauge2(label: name).record(value)
+        let testGauge = metrics.gauges[name] as! TestGauge
+        XCTAssertEqual(testGauge.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testGauge.values[0].1, value, "expected value to match")
     }
 
     func testMUX_Counter() throws {
@@ -400,6 +431,23 @@ class MetricsTests: XCTestCase {
         }
     }
 
+    func testMUX_Gauge() throws {
+        // bootstrap with our test metrics
+        let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
+        MetricsSystem.bootstrapInternal(MultiplexMetricsHandler(factories: factories))
+        // run the test
+        let name = NSUUID().uuidString
+        let value = Double.random(in: 0 ... 1)
+        let muxGauge = Gauge2(label: name)
+        muxGauge.record(value)
+        factories.forEach { factory in
+            let gauge = factory.gauges.first?.1 as! TestGauge
+            XCTAssertEqual(gauge.label, name, "expected label to match")
+            XCTAssertEqual(gauge.values.count, 1, "expected number of entries to match")
+            XCTAssertEqual(gauge.values[0].1, value, "expected value to match")
+        }
+    }
+
     func testMUX_Timer() throws {
         // bootstrap with our test metrics
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
@@ -431,7 +479,9 @@ class MetricsTests: XCTestCase {
         XCTAssertTrue(counter2._handler is CustomHandler, "expected custom log handler")
     }
 
-    func testDestroyingGauge() throws {
+    // FIXME: address warning in LinuxMain
+    @available(*, deprecated)
+    func t1estDestroyingGauge() throws {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
 
@@ -458,6 +508,36 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(recorderAgain.values.first!.1, -value, "expected value to match")
 
         let identityAgain = ObjectIdentifier(recorderAgain)
+        XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
+    }
+
+    func testDestroyingGauge2() throws {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let name = "gauge-\(NSUUID().uuidString)"
+        let value = Double.random(in: -1000 ... 1000)
+
+        let gauge = Gauge2(label: name)
+        gauge.record(value)
+
+        let testGauge = gauge._handler as! TestGauge
+        XCTAssertEqual(testGauge.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testGauge.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(metrics.gauges.count, 1, "recorder should have been stored")
+
+        let identity = ObjectIdentifier(testGauge)
+        gauge.destroy()
+        XCTAssertEqual(metrics.recorders.count, 0, "recorder should have been released")
+
+        let gaugeAgain = Gauge2(label: name)
+        gaugeAgain.record(-value)
+
+        let testGaugeAgain = gaugeAgain._handler as! TestGauge
+        XCTAssertEqual(testGaugeAgain.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testGaugeAgain.values.first!.1, -value, "expected value to match")
+
+        let identityAgain = ObjectIdentifier(testGaugeAgain)
         XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
     }
 
@@ -530,8 +610,8 @@ class MetricsTests: XCTestCase {
         let counter = Counter(label: "hello.counter")
         XCTAssertEqual("\(counter)", "Counter(hello.counter, dimensions: [])")
 
-        let gauge = Gauge(label: "hello.gauge")
-        XCTAssertEqual("\(gauge)", "Gauge(hello.gauge, dimensions: [], aggregate: false)")
+        let gauge = Gauge2(label: "hello.gauge")
+        XCTAssertEqual("\(gauge)", "Gauge2(hello.gauge, dimensions: [])")
 
         let recorder = Recorder(label: "hello.recorder")
         XCTAssertEqual("\(recorder)", "Recorder(hello.recorder, dimensions: [], aggregate: true)")

@@ -23,6 +23,7 @@ internal final class TestMetrics: MetricsFactory {
     var counters = [String: CounterHandler]()
     var recorders = [String: RecorderHandler]()
     var timers = [String: TimerHandler]()
+    var gauges = [String: GaugeHandler]()
 
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
@@ -39,6 +40,10 @@ internal final class TestMetrics: MetricsFactory {
         return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
     }
 
+    func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
+        return self.make(label: label, dimensions: dimensions, registry: &self.gauges, maker: TestGauge.init)
+    }
+
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
         let item = maker(label, dimensions)
         return self.lock.withLock {
@@ -49,7 +54,7 @@ internal final class TestMetrics: MetricsFactory {
 
     func destroyCounter(_ handler: CounterHandler) {
         if let testCounter = handler as? TestCounter {
-            self.lock.withLock { () -> Void in
+            self.lock.withLock { () in
                 self.counters.removeValue(forKey: testCounter.label)
             }
         }
@@ -57,7 +62,7 @@ internal final class TestMetrics: MetricsFactory {
 
     func destroyRecorder(_ handler: RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
-            self.lock.withLock { () -> Void in
+            self.lock.withLock { () in
                 self.recorders.removeValue(forKey: testRecorder.label)
             }
         }
@@ -65,7 +70,7 @@ internal final class TestMetrics: MetricsFactory {
 
     func destroyTimer(_ handler: TimerHandler) {
         if let testTimer = handler as? TestTimer {
-            self.lock.withLock { () -> Void in
+            self.lock.withLock { () in
                 self.timers.removeValue(forKey: testTimer.label)
             }
         }
@@ -182,7 +187,59 @@ internal class TestTimer: TimerHandler, Equatable {
     }
 }
 
+internal class TestGauge: GaugeHandler, Equatable {
+    let id: String
+    let label: String
+    let dimensions: [(String, String)]
+
+    let lock = NSLock()
+    var values = [(Date, Double)]()
+
+    init(label: String, dimensions: [(String, String)]) {
+        self.id = NSUUID().uuidString
+        self.label = label
+        self.dimensions = dimensions
+    }
+
+    func record(_ value: Int64) {
+        self.record(Double(value))
+    }
+
+    func record(_ value: Double) {
+        self.lock.withLock {
+            // this may loose precision but good enough as an example
+            values.append((Date(), Double(value)))
+        }
+        print("recording \(value) in \(self.label)")
+    }
+
+    func increment(by amount: Double) {
+        let newValue: Double = self.lock.withLock {
+            let lastValue = self.values.last?.1 ?? 0
+            let newValue = lastValue + amount
+            values.append((Date(), Double(newValue)))
+            return newValue
+        }
+        print("recording \(newValue) in \(self.label)")
+    }
+
+    func decrement(by amount: Double) {
+        let newValue: Double = self.lock.withLock {
+            let lastValue = self.values.last?.1 ?? 0
+            let newValue = lastValue - amount
+            values.append((Date(), Double(newValue)))
+            return newValue
+        }
+        print("recording \(newValue) in \(self.label)")
+    }
+
+    public static func == (lhs: TestGauge, rhs: TestGauge) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
 extension NSLock {
+    @discardableResult
     fileprivate func withLock<T>(_ body: () -> T) -> T {
         self.lock()
         defer {
@@ -199,4 +256,5 @@ extension NSLock {
 extension TestCounter: @unchecked Sendable {}
 extension TestRecorder: @unchecked Sendable {}
 extension TestTimer: @unchecked Sendable {}
+extension TestGauge: @unchecked Sendable {}
 #endif
