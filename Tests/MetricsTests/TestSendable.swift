@@ -73,7 +73,7 @@ class SendableTest: XCTestCase {
             let gauge = Gauge2(label: name)
 
             let task = Task.detached { () -> [Double] in
-                gauge.record(value)
+                gauge.set(value)
                 let handler = gauge._handler as! TestGauge
                 return handler.values.map { $0.1 }
             }

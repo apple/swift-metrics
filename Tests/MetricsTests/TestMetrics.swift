@@ -143,6 +143,57 @@ internal class TestRecorder: RecorderHandler, Equatable {
     }
 }
 
+internal class TestGauge: GaugeHandler, Equatable {
+    let id: String
+    let label: String
+    let dimensions: [(String, String)]
+
+    let lock = NSLock()
+    var values = [(Date, Double)]()
+
+    init(label: String, dimensions: [(String, String)]) {
+        self.id = NSUUID().uuidString
+        self.label = label
+        self.dimensions = dimensions
+    }
+
+    func set(_ value: Int64) {
+        self.set(Double(value))
+    }
+
+    func set(_ value: Double) {
+        self.lock.withLock {
+            // this may loose precision but good enough as an example
+            values.append((Date(), Double(value)))
+        }
+        print("setting \(value) in \(self.label)")
+    }
+
+    func increment(by amount: Double) {
+        let newValue: Double = self.lock.withLock {
+            let lastValue = self.values.last?.1 ?? 0
+            let newValue = lastValue + amount
+            values.append((Date(), Double(newValue)))
+            return newValue
+        }
+        print("recording \(newValue) in \(self.label)")
+    }
+
+    func decrement(by amount: Double) {
+        let newValue: Double = self.lock.withLock {
+            let lastValue = self.values.last?.1 ?? 0
+            let newValue = lastValue - amount
+            values.append((Date(), Double(newValue)))
+            return newValue
+        }
+        print("recording \(newValue) in \(self.label)")
+    }
+
+    public static func == (lhs: TestGauge, rhs: TestGauge) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
 internal class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
@@ -187,57 +238,6 @@ internal class TestTimer: TimerHandler, Equatable {
     }
 }
 
-internal class TestGauge: GaugeHandler, Equatable {
-    let id: String
-    let label: String
-    let dimensions: [(String, String)]
-
-    let lock = NSLock()
-    var values = [(Date, Double)]()
-
-    init(label: String, dimensions: [(String, String)]) {
-        self.id = NSUUID().uuidString
-        self.label = label
-        self.dimensions = dimensions
-    }
-
-    func record(_ value: Int64) {
-        self.record(Double(value))
-    }
-
-    func record(_ value: Double) {
-        self.lock.withLock {
-            // this may loose precision but good enough as an example
-            values.append((Date(), Double(value)))
-        }
-        print("recording \(value) in \(self.label)")
-    }
-
-    func increment(by amount: Double) {
-        let newValue: Double = self.lock.withLock {
-            let lastValue = self.values.last?.1 ?? 0
-            let newValue = lastValue + amount
-            values.append((Date(), Double(newValue)))
-            return newValue
-        }
-        print("recording \(newValue) in \(self.label)")
-    }
-
-    func decrement(by amount: Double) {
-        let newValue: Double = self.lock.withLock {
-            let lastValue = self.values.last?.1 ?? 0
-            let newValue = lastValue - amount
-            values.append((Date(), Double(newValue)))
-            return newValue
-        }
-        print("recording \(newValue) in \(self.label)")
-    }
-
-    public static func == (lhs: TestGauge, rhs: TestGauge) -> Bool {
-        return lhs.id == rhs.id
-    }
-}
-
 extension NSLock {
     @discardableResult
     fileprivate func withLock<T>(_ body: () -> T) -> T {
@@ -255,6 +255,6 @@ extension NSLock {
 // ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
 extension TestCounter: @unchecked Sendable {}
 extension TestRecorder: @unchecked Sendable {}
-extension TestTimer: @unchecked Sendable {}
 extension TestGauge: @unchecked Sendable {}
+extension TestTimer: @unchecked Sendable {}
 #endif

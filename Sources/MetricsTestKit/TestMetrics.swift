@@ -372,11 +372,11 @@ public final class TestGauge: TestMetric, GaugeHandler, Equatable {
         self.dimensions = dimensions
     }
 
-    public func record(_ value: Int64) {
-        self.record(Double(value))
+    public func set(_ value: Int64) {
+        self.set(Double(value))
     }
 
-    public func record(_ value: Double) {
+    public func set(_ value: Double) {
         self.lock.withLock {
             // this may loose precision but good enough as an example
             values.append((Date(), Double(value)))
@@ -514,5 +514,6 @@ public enum TestMetricsError: Error {
 extension TestMetrics: @unchecked Sendable {}
 extension TestCounter: @unchecked Sendable {}
 extension TestRecorder: @unchecked Sendable {}
+extension TestGauge: @unchecked Sendable {}
 extension TestTimer: @unchecked Sendable {}
 #endif

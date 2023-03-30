@@ -23,16 +23,12 @@ let package = Package(
         .library(name: "MetricsTestKit", targets: ["MetricsTestKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.0"),
         // ~~~ SwiftPM Plugins ~~~
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
     ],
     targets: [
         .target(
-            name: "CoreMetrics",
-            dependencies: [
-                .product(name: "Atomics", package: "swift-atomics"),
-            ]
+            name: "CoreMetrics"
         ),
         .target(
             name: "Metrics",

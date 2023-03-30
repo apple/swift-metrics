@@ -12,10 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if canImport(Atomics)
-@_implementationOnly import Atomics
-#endif
-
 // MARK: - User API
 
 // MARK: - Counter
@@ -199,6 +195,7 @@ public class Recorder {
     /// - parameters:
     ///     - label: The label for the `Recorder`.
     ///     - dimensions: The dimensions for the `Recorder`.
+    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
     ///     - handler: The custom backend.
     public init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
         self.label = label
@@ -238,6 +235,7 @@ extension Recorder {
     /// - parameters:
     ///     - label: The label for the `Recorder`.
     ///     - dimensions: The dimensions for the `Recorder`.
+    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
     public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
         let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
@@ -285,12 +283,12 @@ public final class Gauge2 {
     public let label: String
     public let dimensions: [(String, String)]
 
-    /// Alternative way to create a new `Gauge2`, while providing an explicit `RecorderHandler`.
+    /// Alternative way to create a new `Gauge2`, while providing an explicit `GaugeHandler`.
     ///
     /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
     ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
-    /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `Gauge2` instances using the configured metrics backend.
     ///
     /// - parameters:
     ///     - label: The label for the `Recorder`.
@@ -302,28 +300,22 @@ public final class Gauge2 {
         self._handler = handler
     }
 
-    /// Record a value.
-    ///
-    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
-    /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
+    /// Set a value.
     ///
     /// - parameters:
-    ///     - value: Value to record.
+    ///     - value: Value to set.
     @inlinable
-    public func record<DataType: BinaryInteger>(_ value: DataType) {
-        self._handler.record(Int64(value))
+    public func set<DataType: BinaryInteger>(_ value: DataType) {
+        self._handler.set(Int64(value))
     }
 
-    /// Record a value.
-    ///
-    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
-    /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
+    /// Set a value.
     ///
     /// - parameters:
-    ///     - value: Value to record.
+    ///     - value: Value to est.
     @inlinable
-    public func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-        self._handler.record(Double(value))
+    public func set<DataType: BinaryFloatingPoint>(_ value: DataType) {
+        self._handler.set(Double(value))
     }
 }
 
@@ -788,12 +780,12 @@ internal final class AccumulatingCounter: GaugeHandler {
             .factory.makeRecorder(label: label, dimensions: dimensions, aggregate: true)
     }
 
-    func record(_ value: Int64) {
-        self._record(Double(value))
+    func set(_ value: Int64) {
+        self._set(Double(value))
     }
 
-    func record(_ value: Double) {
-        self._record(value)
+    func set(_ value: Double) {
+        self._set(value)
     }
 
     func increment(by amount: Double) {
@@ -812,7 +804,7 @@ internal final class AccumulatingCounter: GaugeHandler {
         self.recorderHandler.record(newValue)
     }
 
-    private func _record(_ value: Double) {
+    private func _set(_ value: Double) {
         self.lock.withLockVoid {
             self.value = value
         }
@@ -954,16 +946,16 @@ public protocol RecorderHandler: AnyObject, _SwiftMetricsSendableProtocol {
 ///
 /// - The `RecorderHandler` must be a `class`.
 public protocol GaugeHandler: AnyObject, _SwiftMetricsSendableProtocol {
-    /// Record a value.
+    /// Set a value.
     ///
     /// - parameters:
-    ///     - value: Value to record.
-    func record(_ value: Int64)
-    /// Record a value.
+    ///     - value: Value to set.
+    func set(_ value: Int64)
+    /// Set a value.
     ///
     /// - parameters:
-    ///     - value: Value to record.
-    func record(_ value: Double)
+    ///     - value: Value to set.
+    func set(_ value: Double)
 
     /// Increment the value.
     ///
@@ -1113,12 +1105,12 @@ public final class MultiplexMetricsHandler: MetricsFactory {
             self.gauges = factories.map { $0.makeGauge(label: label, dimensions: dimensions) }
         }
 
-        func record(_ value: Int64) {
-            self.gauges.forEach { $0.record(value) }
+        func set(_ value: Int64) {
+            self.gauges.forEach { $0.set(value) }
         }
 
-        func record(_ value: Double) {
-            self.gauges.forEach { $0.record(value) }
+        func set(_ value: Double) {
+            self.gauges.forEach { $0.set(value) }
         }
 
         func increment(by amount: Double) {
@@ -1185,6 +1177,8 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
     public func record(_: Int64) {}
     public func record(_: Double) {}
     public func recordNanoseconds(_: Int64) {}
+    public func set(_: Int64) {}
+    public func set(_: Double) {}
 }
 
 // MARK: - Sendable support helpers
@@ -1196,6 +1190,7 @@ extension FloatingPointCounter: Sendable {}
 // must be @unchecked since Gauge inherits Recorder :(
 extension Recorder: @unchecked Sendable {}
 extension Timer: Sendable {}
+extension Gauge2: Sendable {}
 // ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
 extension AccumulatingRoundingFloatingPointCounter: @unchecked Sendable {}
 #endif

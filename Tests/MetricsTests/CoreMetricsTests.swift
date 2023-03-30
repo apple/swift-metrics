@@ -373,7 +373,7 @@ class MetricsTests: XCTestCase {
         let name = "gauge-\(NSUUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
         let gauge = Gauge2(label: name)
-        gauge.record(value)
+        gauge.set(value)
         let testGauge = gauge._handler as! TestGauge
         XCTAssertEqual(testGauge.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(testGauge.values[0].1, value, "expected value to match")
@@ -386,7 +386,7 @@ class MetricsTests: XCTestCase {
         // run the test
         let name = "gauge-\(NSUUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
-        Gauge2(label: name).record(value)
+        Gauge2(label: name).set(value)
         let testGauge = metrics.gauges[name] as! TestGauge
         XCTAssertEqual(testGauge.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(testGauge.values[0].1, value, "expected value to match")
@@ -439,7 +439,7 @@ class MetricsTests: XCTestCase {
         let name = NSUUID().uuidString
         let value = Double.random(in: 0 ... 1)
         let muxGauge = Gauge2(label: name)
-        muxGauge.record(value)
+        muxGauge.set(value)
         factories.forEach { factory in
             let gauge = factory.gauges.first?.1 as! TestGauge
             XCTAssertEqual(gauge.label, name, "expected label to match")
@@ -519,7 +519,7 @@ class MetricsTests: XCTestCase {
         let value = Double.random(in: -1000 ... 1000)
 
         let gauge = Gauge2(label: name)
-        gauge.record(value)
+        gauge.set(value)
 
         let testGauge = gauge._handler as! TestGauge
         XCTAssertEqual(testGauge.values.count, 1, "expected number of entries to match")
@@ -531,7 +531,7 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(metrics.recorders.count, 0, "recorder should have been released")
 
         let gaugeAgain = Gauge2(label: name)
-        gaugeAgain.record(-value)
+        gaugeAgain.set(-value)
 
         let testGaugeAgain = gaugeAgain._handler as! TestGauge
         XCTAssertEqual(testGaugeAgain.values.count, 1, "expected number of entries to match")
