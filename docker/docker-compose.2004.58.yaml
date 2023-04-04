@@ -6,7 +6,8 @@ services:
     image: swift-metrics:20.04-5.8
     build:
       args:
-        base_image: "swiftlang/swift:nightly-5.8-focal"
+        ubuntu_version: "focal"
+        swift_version: "5.8"
 
   test:
     image: swift-metrics:20.04-5.8
