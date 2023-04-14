@@ -134,10 +134,12 @@ Given the above, an implementation of a metric backend needs to conform to `prot
 ```swift
 public protocol MetricsFactory {
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
-    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
+    func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler    
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
 
     func destroyCounter(_ handler: CounterHandler)
+    func destroyGauge(_ handler: GaugeHandler)
     func destroyRecorder(_ handler: RecorderHandler)
     func destroyTimer(_ handler: TimerHandler)
 }
@@ -151,6 +153,17 @@ The `MetricsFactory` is responsible for instantiating the concrete metrics class
 public protocol CounterHandler: AnyObject {
     func increment(by: Int64)
     func reset()
+}
+```
+
+**Gauge**
+
+```swift
+public protocol GaugeHandler: AnyObject {
+    func set(_ value: Int64)
+    func set(_ value: Double)
+    func increment(by: Double)
+    func decrement(by: Double)
 }
 ```
 
@@ -201,9 +214,12 @@ class SimpleMetricsLibrary: MetricsFactory {
         return ExampleCounter(label, dimensions)
     }
 
+    func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
+        return ExampleGauge(label, dimensions)
+    }
+
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-        let maker: (String, [(String, String)]) -> RecorderHandler = aggregate ? ExampleRecorder.init : ExampleGauge.init
-        return maker(label, dimensions)
+        return ExampleRecorder(label, dimensions, aggregate)
     }
 
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
@@ -212,7 +228,8 @@ class SimpleMetricsLibrary: MetricsFactory {
 
     // implementation is stateless, so nothing to do on destroy calls
     func destroyCounter(_ handler: CounterHandler) {}
-    func destroyRecorder(_ handler: RecorderHandler) {}
+    func destroyGauge(_ handler: TimerHandler) {}
+    func destroyRecorder(_ handler: RecorderHandler) {}    
     func destroyTimer(_ handler: TimerHandler) {}
 
     private class ExampleCounter: CounterHandler {
@@ -233,8 +250,31 @@ class SimpleMetricsLibrary: MetricsFactory {
         }
     }
 
-    private class ExampleRecorder: RecorderHandler {
+    private class ExampleGauge: GaugeHandler {
         init(_: String, _: [(String, String)]) {}
+
+        let lock = NSLock()
+        var _value: Double = 0
+
+        func set(_ value: Int64) {
+            self.set(Double(value))
+        }
+
+        func set(_ value: Double) {
+            self.lock.withLock { _value = value }
+        }
+
+        func increment(by value: Double) {
+            self.lock.withLock { self._value += value }
+        }
+
+        func decrement(by value: Double) {
+            self.lock.withLock { self._value -= value }
+        }
+    }
+
+    private class ExampleRecorder: RecorderHandler {
+        init(_: String, _: [(String, String)], _: Bool) {}
 
         private let lock = NSLock()
         var values = [(Int64, Double)]()
@@ -274,23 +314,14 @@ class SimpleMetricsLibrary: MetricsFactory {
         }
     }
 
-    private class ExampleGauge: RecorderHandler {
+    private class ExampleTimer: TimerHandler {
         init(_: String, _: [(String, String)]) {}
 
         let lock = NSLock()
-        var _value: Double = 0
-        func record(_ value: Int64) {
-            self.record(Double(value))
-        }
+        var _value: Int64 = 0
 
-        func record(_ value: Double) {
-            self.lock.withLock { _value = value }
-        }
-    }
-
-    private class ExampleTimer: ExampleRecorder, TimerHandler {
         func recordNanoseconds(_ duration: Int64) {
-            super.record(duration)
+            self.lock.withLock { _value = duration }
         }
     }
 }

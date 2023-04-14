@@ -171,90 +171,6 @@ extension FloatingPointCounter: CustomStringConvertible {
     }
 }
 
-// MARK: - Recorder
-
-/// A recorder collects observations within a time window (usually things like response sizes) and *can* provide aggregated information about the data sample, for example, count, sum, min, max and various quantiles.
-///
-/// This is the user-facing Recorder API.
-///
-/// Its behavior depends on the `RecorderHandler` implementation.
-public class Recorder {
-    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
-    public let _handler: RecorderHandler
-    public let label: String
-    public let dimensions: [(String, String)]
-    public let aggregate: Bool
-
-    /// Alternative way to create a new `Recorder`, while providing an explicit `RecorderHandler`.
-    ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
-    ///
-    /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
-    ///
-    /// - parameters:
-    ///     - label: The label for the `Recorder`.
-    ///     - dimensions: The dimensions for the `Recorder`.
-    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
-    ///     - handler: The custom backend.
-    public init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
-        self.label = label
-        self.dimensions = dimensions
-        self.aggregate = aggregate
-        self._handler = handler
-    }
-
-    /// Record a value.
-    ///
-    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
-    /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
-    ///
-    /// - parameters:
-    ///     - value: Value to record.
-    @inlinable
-    public func record<DataType: BinaryInteger>(_ value: DataType) {
-        self._handler.record(Int64(value))
-    }
-
-    /// Record a value.
-    ///
-    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
-    /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
-    ///
-    /// - parameters:
-    ///     - value: Value to record.
-    @inlinable
-    public func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
-        self._handler.record(Double(value))
-    }
-}
-
-extension Recorder {
-    /// Create a new `Recorder`.
-    ///
-    /// - parameters:
-    ///     - label: The label for the `Recorder`.
-    ///     - dimensions: The dimensions for the `Recorder`.
-    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
-    public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
-        let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
-        self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
-    }
-
-    /// Signal the underlying metrics library that this recorder will never be updated again.
-    /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
-    @inlinable
-    public func destroy() {
-        MetricsSystem.factory.destroyRecorder(self._handler)
-    }
-}
-
-extension Recorder: CustomStringConvertible {
-    public var description: String {
-        return "\(type(of: self))(\(self.label), dimensions: \(self.dimensions), aggregate: \(self.aggregate))"
-    }
-}
-
 // MARK: - Gauge
 
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
@@ -340,6 +256,90 @@ extension Gauger {
 extension Gauger: CustomStringConvertible {
     public var description: String {
         return "\(type(of: self))(\(self.label), dimensions: \(self.dimensions))"
+    }
+}
+
+// MARK: - Recorder
+
+/// A recorder collects observations within a time window (usually things like response sizes) and *can* provide aggregated information about the data sample, for example, count, sum, min, max and various quantiles.
+///
+/// This is the user-facing Recorder API.
+///
+/// Its behavior depends on the `RecorderHandler` implementation.
+public class Recorder {
+    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    public let _handler: RecorderHandler
+    public let label: String
+    public let dimensions: [(String, String)]
+    public let aggregate: Bool
+
+    /// Alternative way to create a new `Recorder`, while providing an explicit `RecorderHandler`.
+    ///
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    ///
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Recorder`.
+    ///     - dimensions: The dimensions for the `Recorder`.
+    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
+    ///     - handler: The custom backend.
+    public init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
+        self.label = label
+        self.dimensions = dimensions
+        self.aggregate = aggregate
+        self._handler = handler
+    }
+
+    /// Record a value.
+    ///
+    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
+    /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
+    ///
+    /// - parameters:
+    ///     - value: Value to record.
+    @inlinable
+    public func record<DataType: BinaryInteger>(_ value: DataType) {
+        self._handler.record(Int64(value))
+    }
+
+    /// Record a value.
+    ///
+    /// Recording a value is meant to have "set" semantics, rather than "add" semantics.
+    /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
+    ///
+    /// - parameters:
+    ///     - value: Value to record.
+    @inlinable
+    public func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
+        self._handler.record(Double(value))
+    }
+}
+
+extension Recorder {
+    /// Create a new `Recorder`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Recorder`.
+    ///     - dimensions: The dimensions for the `Recorder`.
+    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
+    public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
+        let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+        self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
+    }
+
+    /// Signal the underlying metrics library that this recorder will never be updated again.
+    /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
+    @inlinable
+    public func destroy() {
+        MetricsSystem.factory.destroyRecorder(self._handler)
+    }
+}
+
+extension Recorder: CustomStringConvertible {
+    public var description: String {
+        return "\(type(of: self))(\(self.label), dimensions: \(self.dimensions), aggregate: \(self.aggregate))"
     }
 }
 
@@ -644,6 +644,13 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     ///     - dimensions: The dimensions for the `FloatingPointCounterHandler`.
     func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler
 
+    /// Create a backing `GaugeHandler`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `GaugeHandler`.
+    ///     - dimensions: The dimensions for the `GaugeHandler`.
+    func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler
+
     /// Create a backing `RecorderHandler`.
     ///
     /// - parameters:
@@ -651,13 +658,6 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     ///     - dimensions: The dimensions for the `RecorderHandler`.
     ///     - aggregate: Is data aggregation expected.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
-
-    /// Create a backing `GaugeHandler`.
-    ///
-    /// - parameters:
-    ///     - label: The label for the `GaugeHandler`.
-    ///     - dimensions: The dimensions for the `GaugeHandler`.
-    func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler
 
     /// Create a backing `TimerHandler`.
     ///
@@ -673,6 +673,13 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     ///     - handler: The handler to be destroyed.
     func destroyCounter(_ handler: CounterHandler)
 
+    /// Invoked when the corresponding `Gauge`'s `destroy()` function is invoked.
+    /// Upon receiving this signal the factory may eagerly release any resources related to this recorder.
+    ///
+    /// - parameters:
+    ///     - handler: The handler to be destroyed.
+    func destroyGauge(_ handler: GaugeHandler)
+
     /// Invoked when the corresponding `FloatingPointCounter`'s `destroy()` function is invoked.
     /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
     ///
@@ -686,13 +693,6 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// - parameters:
     ///     - handler: The handler to be destroyed.
     func destroyRecorder(_ handler: RecorderHandler)
-
-    /// Invoked when the corresponding `Gauge`'s `destroy()` function is invoked.
-    /// Upon receiving this signal the factory may eagerly release any resources related to this recorder.
-    ///
-    /// - parameters:
-    ///     - handler: The handler to be destroyed.
-    func destroyGauge(_ handler: GaugeHandler)
 
     /// Invoked when the corresponding `Timer`'s `destroy()` function is invoked.
     /// Upon receiving this signal the factory may eagerly release any resources related to this timer.
@@ -1151,11 +1151,11 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
         return self
     }
 
-    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+    public func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
         return self
     }
 
-    public func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
+    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         return self
     }
 
@@ -1165,8 +1165,8 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
 
     public func destroyCounter(_: CounterHandler) {}
     public func destroyFloatingPointCounter(_: FloatingPointCounterHandler) {}
-    public func destroyRecorder(_: RecorderHandler) {}
     public func destroyGauge(_: GaugeHandler) {}
+    public func destroyRecorder(_: RecorderHandler) {}
     public func destroyTimer(_: TimerHandler) {}
 
     public func increment(by: Int64) {}

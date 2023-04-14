@@ -29,6 +29,10 @@ internal final class TestMetrics: MetricsFactory {
         return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
     }
 
+    func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
+        return self.make(label: label, dimensions: dimensions, registry: &self.gauges, maker: TestGauge.init)
+    }
+
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
@@ -38,10 +42,6 @@ internal final class TestMetrics: MetricsFactory {
 
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
-    }
-
-    func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
-        return self.make(label: label, dimensions: dimensions, registry: &self.gauges, maker: TestGauge.init)
     }
 
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
@@ -56,6 +56,14 @@ internal final class TestMetrics: MetricsFactory {
         if let testCounter = handler as? TestCounter {
             self.lock.withLock { () in
                 self.counters.removeValue(forKey: testCounter.label)
+            }
+        }
+    }
+
+    func destroyGauge(_ handler: GaugeHandler) {
+        if let testGauge = handler as? TestGauge {
+            self.lock.withLock { () in
+                self.counters.removeValue(forKey: testGauge.label)
             }
         }
     }
