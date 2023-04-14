@@ -260,7 +260,7 @@ extension Recorder: CustomStringConvertible {
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
 /// Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
-@available(*, deprecated, message: "replaced by Gauge2")
+@available(*, deprecated, message: "replaced by Gauger")
 public final class Gauge: Recorder {
     /// Create a new `Gauge`.
     ///
@@ -272,23 +272,22 @@ public final class Gauge: Recorder {
     }
 }
 
-// MARK: - Gauge2
+// MARK: - Gauger
 
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
-// FIXME: better name please!
-public final class Gauge2 {
+public final class Gauger {
     /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
     public let _handler: GaugeHandler
     public let label: String
     public let dimensions: [(String, String)]
 
-    /// Alternative way to create a new `Gauge2`, while providing an explicit `GaugeHandler`.
+    /// Alternative way to create a new `Gauger`, while providing an explicit `GaugeHandler`.
     ///
     /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
     ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
-    /// - SeeAlso: Use `init(label:dimensions:)` to create `Gauge2` instances using the configured metrics backend.
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `Gauger` instances using the configured metrics backend.
     ///
     /// - parameters:
     ///     - label: The label for the `Recorder`.
@@ -319,12 +318,12 @@ public final class Gauge2 {
     }
 }
 
-extension Gauge2 {
-    /// Create a new `Gauge2`.
+extension Gauger {
+    /// Create a new `Gauger`.
     ///
     /// - parameters:
-    ///     - label: The label for the `Gauge2`.
-    ///     - dimensions: The dimensions for the `Gauge2`.
+    ///     - label: The label for the `Gauger`.
+    ///     - dimensions: The dimensions for the `Gauger`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         let handler = MetricsSystem.factory.makeGauge(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
@@ -338,7 +337,7 @@ extension Gauge2 {
     }
 }
 
-extension Gauge2: CustomStringConvertible {
+extension Gauger: CustomStringConvertible {
     public var description: String {
         return "\(type(of: self))(\(self.label), dimensions: \(self.dimensions))"
     }
@@ -1190,7 +1189,7 @@ extension FloatingPointCounter: Sendable {}
 // must be @unchecked since Gauge inherits Recorder :(
 extension Recorder: @unchecked Sendable {}
 extension Timer: Sendable {}
-extension Gauge2: Sendable {}
+extension Gauger: Sendable {}
 // ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
 extension AccumulatingRoundingFloatingPointCounter: @unchecked Sendable {}
 #endif

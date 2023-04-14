@@ -177,14 +177,14 @@ extension TestMetrics {
         return try self.expectRecorder(label, dimensions)
     }
 
-    public func expectGauge2(_ metric: Gauge2) throws -> TestGauge {
+    public func expectGauger(_ metric: Gauger) throws -> TestGauge {
         guard let gauge = metric._handler as? TestGauge else {
             throw TestMetricsError.illegalMetricType(metric: metric._handler, expected: "\(TestGauge.self)")
         }
         return gauge
     }
 
-    public func expectGauge2(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestGauge {
+    public func expectGauger(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestGauge {
         let maybeItem = self.lock.withLock {
             self.gauges[.init(label: label, dimensions: dimensions)]
         }

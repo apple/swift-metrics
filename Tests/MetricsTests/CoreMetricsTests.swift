@@ -365,28 +365,28 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
     }
 
-    func testGauge2() throws {
+    func testGauger() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
         let name = "gauge-\(NSUUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
-        let gauge = Gauge2(label: name)
+        let gauge = Gauger(label: name)
         gauge.set(value)
         let testGauge = gauge._handler as! TestGauge
         XCTAssertEqual(testGauge.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(testGauge.values[0].1, value, "expected value to match")
     }
 
-    func testGauge2Block() throws {
+    func testGaugerBlock() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
         let name = "gauge-\(NSUUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
-        Gauge2(label: name).set(value)
+        Gauger(label: name).set(value)
         let testGauge = metrics.gauges[name] as! TestGauge
         XCTAssertEqual(testGauge.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(testGauge.values[0].1, value, "expected value to match")
@@ -438,7 +438,7 @@ class MetricsTests: XCTestCase {
         // run the test
         let name = NSUUID().uuidString
         let value = Double.random(in: 0 ... 1)
-        let muxGauge = Gauge2(label: name)
+        let muxGauge = Gauger(label: name)
         muxGauge.set(value)
         factories.forEach { factory in
             let gauge = factory.gauges.first?.1 as! TestGauge
@@ -511,14 +511,14 @@ class MetricsTests: XCTestCase {
         XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
     }
 
-    func testDestroyingGauge2() throws {
+    func testDestroyingGauger() throws {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
 
         let name = "gauge-\(NSUUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
 
-        let gauge = Gauge2(label: name)
+        let gauge = Gauger(label: name)
         gauge.set(value)
 
         let testGauge = gauge._handler as! TestGauge
@@ -530,7 +530,7 @@ class MetricsTests: XCTestCase {
         gauge.destroy()
         XCTAssertEqual(metrics.recorders.count, 0, "recorder should have been released")
 
-        let gaugeAgain = Gauge2(label: name)
+        let gaugeAgain = Gauger(label: name)
         gaugeAgain.set(-value)
 
         let testGaugeAgain = gaugeAgain._handler as! TestGauge
@@ -610,8 +610,8 @@ class MetricsTests: XCTestCase {
         let counter = Counter(label: "hello.counter")
         XCTAssertEqual("\(counter)", "Counter(hello.counter, dimensions: [])")
 
-        let gauge = Gauge2(label: "hello.gauge")
-        XCTAssertEqual("\(gauge)", "Gauge2(hello.gauge, dimensions: [])")
+        let gauge = Gauger(label: "hello.gauge")
+        XCTAssertEqual("\(gauge)", "Gauger(hello.gauge, dimensions: [])")
 
         let recorder = Recorder(label: "hello.recorder")
         XCTAssertEqual("\(recorder)", "Recorder(hello.recorder, dimensions: [], aggregate: true)")
