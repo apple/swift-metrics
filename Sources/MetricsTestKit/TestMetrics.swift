@@ -243,7 +243,7 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
     private var values = [(Date, Int64)]()
 
     init(label: String, dimensions: [(String, String)]) {
-        self.id = NSUUID().uuidString
+        self.id = UUID().uuidString
         self.label = label
         self.dimensions = dimensions
     }
@@ -297,7 +297,7 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     private var values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)], aggregate: Bool) {
-        self.id = NSUUID().uuidString
+        self.id = UUID().uuidString
         self.label = label
         self.dimensions = dimensions
         self.aggregate = aggregate
@@ -345,7 +345,7 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
     private var _values = [(Date, Int64)]()
 
     init(label: String, dimensions: [(String, String)]) {
-        self.id = NSUUID().uuidString
+        self.id = UUID().uuidString
         self.label = label
         self.displayUnit = nil
         self.dimensions = dimensions
