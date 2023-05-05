@@ -24,7 +24,7 @@ class SendableTest: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
 
         do {
-            let name = "counter-\(NSUUID().uuidString)"
+            let name = "counter-\(UUID().uuidString)"
             let value = Int.random(in: 0 ... 1000)
             let counter = Counter(label: name)
 
@@ -39,7 +39,7 @@ class SendableTest: XCTestCase {
         }
 
         do {
-            let name = "floating-point-counter-\(NSUUID().uuidString)"
+            let name = "floating-point-counter-\(UUID().uuidString)"
             let value = Double.random(in: 0 ... 0.9999)
             let counter = FloatingPointCounter(label: name)
 
@@ -53,7 +53,7 @@ class SendableTest: XCTestCase {
         }
 
         do {
-            let name = "recorder-\(NSUUID().uuidString)"
+            let name = "recorder-\(UUID().uuidString)"
             let value = Double.random(in: -1000 ... 1000)
             let recorder = Recorder(label: name)
 
@@ -68,7 +68,7 @@ class SendableTest: XCTestCase {
         }
 
         do {
-            let name = "gauge-\(NSUUID().uuidString)"
+            let name = "gauge-\(UUID().uuidString)"
             let value = Double.random(in: -1000 ... 1000)
             let gauge = Gauge(label: name)
 
@@ -83,7 +83,7 @@ class SendableTest: XCTestCase {
         }
 
         do {
-            let name = "timer-\(NSUUID().uuidString)"
+            let name = "timer-\(UUID().uuidString)"
             let value = Int64.random(in: 0 ... 1000)
             let timer = Timer(label: name)
 

@@ -22,7 +22,7 @@ class MetricsExtensionsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let name = "timer-\(NSUUID().uuidString)"
+        let name = "timer-\(UUID().uuidString)"
         let delay = 0.05
         Timer.measure(label: name) {
             Thread.sleep(forTimeInterval: delay)
@@ -99,7 +99,7 @@ class MetricsExtensionsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
 
-        let name = "timer-\(NSUUID().uuidString)"
+        let name = "timer-\(UUID().uuidString)"
         let value = Int64.random(in: 0 ... 1000)
 
         let timer = Timer(label: name)
@@ -110,7 +110,7 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(testTimer.values.first!.1, value, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
 
-        let secondsName = "timer-seconds-\(NSUUID().uuidString)"
+        let secondsName = "timer-seconds-\(UUID().uuidString)"
         let secondsValue = Int64.random(in: 0 ... 1000)
         let secondsTimer = Timer(label: secondsName, preferredDisplayUnit: .seconds)
         secondsTimer.recordSeconds(secondsValue)

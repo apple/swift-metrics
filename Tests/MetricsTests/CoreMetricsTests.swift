@@ -21,7 +21,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         let group = DispatchGroup()
-        let name = "counter-\(NSUUID().uuidString)"
+        let name = "counter-\(UUID().uuidString)"
         let counter = Counter(label: name)
         let testCounter = counter._handler as! TestCounter
         let total = Int.random(in: 500 ... 1000)
@@ -43,7 +43,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let name = "counter-\(NSUUID().uuidString)"
+        let name = "counter-\(UUID().uuidString)"
         let value = Int.random(in: Int.min ... Int.max)
         Counter(label: name).increment(by: value)
         let counter = metrics.counters[name] as! TestCounter
@@ -150,7 +150,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         let group = DispatchGroup()
-        let name = "recorder-\(NSUUID().uuidString)"
+        let name = "recorder-\(UUID().uuidString)"
         let recorder = Recorder(label: name)
         let testRecorder = recorder._handler as! TestRecorder
         let total = Int.random(in: 500 ... 1000)
@@ -202,7 +202,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let name = "recorder-\(NSUUID().uuidString)"
+        let name = "recorder-\(UUID().uuidString)"
         let value = Double.random(in: Double(Int.min) ... Double(Int.max))
         Recorder(label: name).record(value)
         let recorder = metrics.recorders[name] as! TestRecorder
@@ -215,7 +215,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         let group = DispatchGroup()
-        let name = "timer-\(NSUUID().uuidString)"
+        let name = "timer-\(UUID().uuidString)"
         let timer = Timer(label: name)
         let testTimer = timer._handler as! TestTimer
         let total = Int.random(in: 500 ... 1000)
@@ -235,7 +235,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let name = "timer-\(NSUUID().uuidString)"
+        let name = "timer-\(UUID().uuidString)"
         let value = Int64.random(in: Int64.min ... Int64.max)
         Timer(label: name).recordNanoseconds(value)
         let timer = metrics.timers[name] as! TestTimer
@@ -339,7 +339,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let name = "gauge-\(NSUUID().uuidString)"
+        let name = "gauge-\(UUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
         let gauge = Gauge(label: name)
         gauge.record(value)
@@ -353,7 +353,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         // run the test
-        let name = "gauge-\(NSUUID().uuidString)"
+        let name = "gauge-\(UUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
         Gauge(label: name).record(value)
         let recorder = metrics.recorders[name] as! TestRecorder
@@ -366,7 +366,7 @@ class MetricsTests: XCTestCase {
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
         MetricsSystem.bootstrapInternal(MultiplexMetricsHandler(factories: factories))
         // run the test
-        let name = NSUUID().uuidString
+        let name = UUID().uuidString
         let value = Int.random(in: Int.min ... Int.max)
         let muxCounter = Counter(label: name)
         muxCounter.increment(by: value)
@@ -388,7 +388,7 @@ class MetricsTests: XCTestCase {
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
         MetricsSystem.bootstrapInternal(MultiplexMetricsHandler(factories: factories))
         // run the test
-        let name = NSUUID().uuidString
+        let name = UUID().uuidString
         let value = Double.random(in: 0 ... 1)
         let muxRecorder = Recorder(label: name)
         muxRecorder.record(value)
@@ -405,7 +405,7 @@ class MetricsTests: XCTestCase {
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
         MetricsSystem.bootstrapInternal(MultiplexMetricsHandler(factories: factories))
         // run the test
-        let name = NSUUID().uuidString
+        let name = UUID().uuidString
         let seconds = Int.random(in: 1 ... 10)
         let muxTimer = Timer(label: name, preferredDisplayUnit: .minutes)
         muxTimer.recordSeconds(seconds)
@@ -435,7 +435,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
 
-        let name = "gauge-\(NSUUID().uuidString)"
+        let name = "gauge-\(UUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
 
         let gauge = Gauge(label: name)
@@ -465,7 +465,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
 
-        let name = "counter-\(NSUUID().uuidString)"
+        let name = "counter-\(UUID().uuidString)"
         let value = Int.random(in: 0 ... 1000)
 
         let counter = Counter(label: name)
@@ -495,7 +495,7 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
 
-        let name = "timer-\(NSUUID().uuidString)"
+        let name = "timer-\(UUID().uuidString)"
         let value = Int64.random(in: 0 ... 1000)
 
         let timer = Timer(label: name)
