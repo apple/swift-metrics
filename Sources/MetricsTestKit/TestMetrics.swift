@@ -49,8 +49,8 @@ public final class TestMetrics: MetricsFactory {
     }
 
     private var counters = [FullKey: CounterHandler]()
+    private var meters = [FullKey: MeterHandler]()
     private var recorders = [FullKey: RecorderHandler]()
-    private var gauges = [FullKey: GaugeHandler]()
     private var timers = [FullKey: TimerHandler]()
 
     public init() {
@@ -62,6 +62,7 @@ public final class TestMetrics: MetricsFactory {
     public func reset() {
         self.lock.withLock {
             self.counters = [:]
+            self.meters = [:]
             self.recorders = [:]
             self.timers = [:]
         }
@@ -74,6 +75,17 @@ public final class TestMetrics: MetricsFactory {
             }
             let item = TestCounter(label: label, dimensions: dimensions)
             self.counters[.init(label: label, dimensions: dimensions)] = item
+            return item
+        }
+    }
+
+    public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+        return self.lock.withLock { () -> MeterHandler in
+            if let existing = self.meters[.init(label: label, dimensions: dimensions)] {
+                return existing
+            }
+            let item = TestMeter(label: label, dimensions: dimensions)
+            self.meters[.init(label: label, dimensions: dimensions)] = item
             return item
         }
     }
@@ -104,6 +116,14 @@ public final class TestMetrics: MetricsFactory {
         if let testCounter = handler as? TestCounter {
             self.lock.withLock { () in
                 self.counters.removeValue(forKey: testCounter.key)
+            }
+        }
+    }
+
+    public func destroyMeter(_ handler: MeterHandler) {
+        if let testMeter = handler as? TestMeter {
+            self.lock.withLock { () in
+                self.meters.removeValue(forKey: testMeter.key)
             }
         }
     }
@@ -167,34 +187,34 @@ extension TestMetrics {
 
     // MARK: - Gauge
 
-    @available(*, deprecated)
     public func expectGauge(_ metric: Gauge) throws -> TestRecorder {
         return try self.expectRecorder(metric)
     }
 
-    @available(*, deprecated)
     public func expectGauge(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestRecorder {
         return try self.expectRecorder(label, dimensions)
     }
 
-    public func expectGauger(_ metric: Gauger) throws -> TestGauge {
-        guard let gauge = metric._handler as? TestGauge else {
-            throw TestMetricsError.illegalMetricType(metric: metric._handler, expected: "\(TestGauge.self)")
+    // MARK: - Meter
+
+    public func expectMeter(_ metric: Meter) throws -> TestMeter {
+        guard let meter = metric._handler as? TestMeter else {
+            throw TestMetricsError.illegalMetricType(metric: metric._handler, expected: "\(TestMeter.self)")
         }
-        return gauge
+        return meter
     }
 
-    public func expectGauger(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestGauge {
+    public func expectMeter(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestMeter {
         let maybeItem = self.lock.withLock {
-            self.gauges[.init(label: label, dimensions: dimensions)]
+            self.meters[.init(label: label, dimensions: dimensions)]
         }
-        guard let maybeGauge = maybeItem else {
+        guard let maybeMeter = maybeItem else {
             throw TestMetricsError.missingMetric(label: label, dimensions: dimensions)
         }
-        guard let testGauge = maybeGauge as? TestGauge else {
-            throw TestMetricsError.illegalMetricType(metric: maybeGauge, expected: "\(TestGauge.self)")
+        guard let testMeter = maybeMeter as? TestMeter else {
+            throw TestMetricsError.illegalMetricType(metric: maybeMeter, expected: "\(TestMeter.self)")
         }
-        return testGauge
+        return testMeter
     }
 
     // MARK: - Recorder
@@ -306,55 +326,7 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
     }
 }
 
-public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
-    public let id: String
-    public let label: String
-    public let dimensions: [(String, String)]
-    public let aggregate: Bool
-
-    public var key: TestMetrics.FullKey {
-        return TestMetrics.FullKey(label: self.label, dimensions: self.dimensions)
-    }
-
-    let lock = NSLock()
-    private var values = [(Date, Double)]()
-
-    init(label: String, dimensions: [(String, String)], aggregate: Bool) {
-        self.id = UUID().uuidString
-        self.label = label
-        self.dimensions = dimensions
-        self.aggregate = aggregate
-    }
-
-    public func record(_ value: Int64) {
-        self.record(Double(value))
-    }
-
-    public func record(_ value: Double) {
-        self.lock.withLock {
-            // this may loose precision but good enough as an example
-            values.append((Date(), Double(value)))
-        }
-    }
-
-    public var lastValue: Double? {
-        return self.lock.withLock {
-            values.last?.1
-        }
-    }
-
-    public var last: (Date, Double)? {
-        return self.lock.withLock {
-            values.last
-        }
-    }
-
-    public static func == (lhs: TestRecorder, rhs: TestRecorder) -> Bool {
-        return lhs.id == rhs.id
-    }
-}
-
-public final class TestGauge: TestMetric, GaugeHandler, Equatable {
+public final class TestMeter: TestMetric, MeterHandler, Equatable {
     public let id: String
     public let label: String
     public let dimensions: [(String, String)]
@@ -411,7 +383,55 @@ public final class TestGauge: TestMetric, GaugeHandler, Equatable {
         }
     }
 
-    public static func == (lhs: TestGauge, rhs: TestGauge) -> Bool {
+    public static func == (lhs: TestMeter, rhs: TestMeter) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
+    public let id: String
+    public let label: String
+    public let dimensions: [(String, String)]
+    public let aggregate: Bool
+
+    public var key: TestMetrics.FullKey {
+        return TestMetrics.FullKey(label: self.label, dimensions: self.dimensions)
+    }
+
+    let lock = NSLock()
+    private var values = [(Date, Double)]()
+
+    init(label: String, dimensions: [(String, String)], aggregate: Bool) {
+        self.id = NSUUID().uuidString
+        self.label = label
+        self.dimensions = dimensions
+        self.aggregate = aggregate
+    }
+
+    public func record(_ value: Int64) {
+        self.record(Double(value))
+    }
+
+    public func record(_ value: Double) {
+        self.lock.withLock {
+            // this may loose precision but good enough as an example
+            values.append((Date(), Double(value)))
+        }
+    }
+
+    public var lastValue: Double? {
+        return self.lock.withLock {
+            values.last?.1
+        }
+    }
+
+    public var last: (Date, Double)? {
+        return self.lock.withLock {
+            values.last
+        }
+    }
+
+    public static func == (lhs: TestRecorder, rhs: TestRecorder) -> Bool {
         return lhs.id == rhs.id
     }
 }
@@ -513,7 +533,7 @@ public enum TestMetricsError: Error {
 // ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
 extension TestMetrics: @unchecked Sendable {}
 extension TestCounter: @unchecked Sendable {}
+extension TestMeter: @unchecked Sendable {}
 extension TestRecorder: @unchecked Sendable {}
-extension TestGauge: @unchecked Sendable {}
 extension TestTimer: @unchecked Sendable {}
 #endif

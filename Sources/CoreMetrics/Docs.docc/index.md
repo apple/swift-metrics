@@ -90,7 +90,8 @@ This API was designed with the contributors to the Swift on Server community and
 
 ### Metric types
 
-- ``Gauge2``
-- ``Recorder``
 - ``Counter``
+- ``Meter``
+- ``Recorder``
 - ``Timer``
+

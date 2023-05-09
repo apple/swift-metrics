@@ -176,7 +176,6 @@ extension FloatingPointCounter: CustomStringConvertible {
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
 /// Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
-@available(*, deprecated, message: "replaced by Gauger")
 public final class Gauge: Recorder {
     /// Create a new `Gauge`.
     ///
@@ -188,28 +187,28 @@ public final class Gauge: Recorder {
     }
 }
 
-// MARK: - Gauger
+// MARK: - Meter
 
-/// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
-/// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
-public final class Gauger {
+/// A meter is similar to a gauge, it is a metric that represents a single numerical value that can arbitrarily go up and down.
+/// Meters are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
+public final class Meter {
     /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
-    public let _handler: GaugeHandler
+    public let _handler: MeterHandler
     public let label: String
     public let dimensions: [(String, String)]
 
-    /// Alternative way to create a new `Gauger`, while providing an explicit `GaugeHandler`.
+    /// Alternative way to create a new `Meter`, while providing an explicit `MeterHandler`.
     ///
     /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
     ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
-    /// - SeeAlso: Use `init(label:dimensions:)` to create `Gauger` instances using the configured metrics backend.
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `Meter` instances using the configured metrics backend.
     ///
     /// - parameters:
     ///     - label: The label for the `Recorder`.
     ///     - dimensions: The dimensions for the `Recorder`.
     ///     - handler: The custom backend.
-    public init(label: String, dimensions: [(String, String)], handler: GaugeHandler) {
+    public init(label: String, dimensions: [(String, String)], handler: MeterHandler) {
         self.label = label
         self.dimensions = dimensions
         self._handler = handler
@@ -234,14 +233,14 @@ public final class Gauger {
     }
 }
 
-extension Gauger {
-    /// Create a new `Gauger`.
+extension Meter {
+    /// Create a new `Meter`.
     ///
     /// - parameters:
-    ///     - label: The label for the `Gauger`.
-    ///     - dimensions: The dimensions for the `Gauger`.
+    ///     - label: The label for the `Meter`.
+    ///     - dimensions: The dimensions for the `Meter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        let handler = MetricsSystem.factory.makeGauge(label: label, dimensions: dimensions)
+        let handler = MetricsSystem.factory.makeMeter(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler)
     }
 
@@ -249,11 +248,11 @@ extension Gauger {
     /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
     @inlinable
     public func destroy() {
-        MetricsSystem.factory.destroyGauge(self._handler)
+        MetricsSystem.factory.destroyMeter(self._handler)
     }
 }
 
-extension Gauger: CustomStringConvertible {
+extension Meter: CustomStringConvertible {
     public var description: String {
         return "\(type(of: self))(\(self.label), dimensions: \(self.dimensions))"
     }
@@ -644,12 +643,12 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     ///     - dimensions: The dimensions for the `FloatingPointCounterHandler`.
     func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler
 
-    /// Create a backing `GaugeHandler`.
+    /// Create a backing `MeterHandler`.
     ///
     /// - parameters:
-    ///     - label: The label for the `GaugeHandler`.
-    ///     - dimensions: The dimensions for the `GaugeHandler`.
-    func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler
+    ///     - label: The label for the `MeterHandler`.
+    ///     - dimensions: The dimensions for the `MeterHandler`.
+    func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler
 
     /// Create a backing `RecorderHandler`.
     ///
@@ -673,12 +672,12 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     ///     - handler: The handler to be destroyed.
     func destroyCounter(_ handler: CounterHandler)
 
-    /// Invoked when the corresponding `Gauge`'s `destroy()` function is invoked.
+    /// Invoked when the corresponding `Meter`'s `destroy()` function is invoked.
     /// Upon receiving this signal the factory may eagerly release any resources related to this recorder.
     ///
     /// - parameters:
     ///     - handler: The handler to be destroyed.
-    func destroyGauge(_ handler: GaugeHandler)
+    func destroyMeter(_ handler: MeterHandler)
 
     /// Invoked when the corresponding `FloatingPointCounter`'s `destroy()` function is invoked.
     /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
@@ -768,7 +767,7 @@ internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCoun
 }
 
 /// Wraps a RecorderHandler, adding support for incrementing values by storing an accumulated  value and recording increments to the underlying CounterHandler after crossing integer boundaries.
-internal final class AccumulatingCounter: GaugeHandler {
+internal final class AccumulatingMeter: MeterHandler {
     private let recorderHandler: RecorderHandler
     // FIXME: use atomics when available
     private var value: Double = 0
@@ -840,26 +839,26 @@ extension MetricsFactory {
 }
 
 extension MetricsFactory {
-    /// Create a default backing `GaugeHandler` for backends which do not naively support gauges.
+    /// Create a default backing `MeterHandler` for backends which do not naively support meters.
     ///
-    /// The created GaugeHandler is a wrapper around a backend's RecorderHandler which records current values.
+    /// The created MeterHandler is a wrapper around a backend's RecorderHandler which records current values.
     ///
     /// - parameters:
-    ///     - label: The label for the `GaugeHandler`.
-    ///     - dimensions: The dimensions for the `GaugeHandler`.
-    public func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
-        return AccumulatingCounter(label: label, dimensions: dimensions)
+    ///     - label: The label for the `MeterHandler`.
+    ///     - dimensions: The dimensions for the `MeterHandler`.
+    public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+        return AccumulatingMeter(label: label, dimensions: dimensions)
     }
 
-    /// Invoked when the corresponding `Gauge`'s `destroy()` function is invoked.
+    /// Invoked when the corresponding `Meter`'s `destroy()` function is invoked.
     /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
     ///
-    /// `destroyGauge` must be implemented if `makeGauge` is implemented.
+    /// `destroyMeter` must be implemented if `makeMeter` is implemented.
     ///
     /// - parameters:
     ///     - handler: The handler to be destroyed.
-    public func destroyGauge(_ handler: GaugeHandler) {
-        (handler as? AccumulatingCounter)?.destroy()
+    public func destroyMeter(_ handler: MeterHandler) {
+        (handler as? AccumulatingMeter)?.destroy()
     }
 }
 
@@ -933,18 +932,18 @@ public protocol RecorderHandler: AnyObject, _SwiftMetricsSendableProtocol {
     func record(_ value: Double)
 }
 
-/// A `GaugeHandler` represents a backend implementation of a `Gauge`.
+/// A `MeterHandler` represents a backend implementation of a `Meter`.
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-/// To use the SwiftMetrics API, please refer to the documentation of `Gauge`.
+/// To use the SwiftMetrics API, please refer to the documentation of `Meter`.
 ///
 /// # Implementation requirements
 ///
-/// To implement your own `GaugeHandler` you should respect a few requirements that are necessary so applications work
-/// as expected regardless of the selected `GaugeHandler` implementation.
+/// To implement your own `MeterHandler` you should respect a few requirements that are necessary so applications work
+/// as expected regardless of the selected `MeterHandler` implementation.
 ///
 /// - The `RecorderHandler` must be a `class`.
-public protocol GaugeHandler: AnyObject, _SwiftMetricsSendableProtocol {
+public protocol MeterHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Set a value.
     ///
     /// - parameters:
@@ -1017,12 +1016,12 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         return MuxFloatingPointCounter(factories: self.factories, label: label, dimensions: dimensions)
     }
 
-    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-        return MuxRecorder(factories: self.factories, label: label, dimensions: dimensions, aggregate: aggregate)
+    public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+        return MuxMeter(factories: self.factories, label: label, dimensions: dimensions)
     }
 
-    public func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
-        return MuxGauge(factories: self.factories, label: label, dimensions: dimensions)
+    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+        return MuxRecorder(factories: self.factories, label: label, dimensions: dimensions, aggregate: aggregate)
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
@@ -1038,6 +1037,12 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     public func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler) {
         for factory in self.factories {
             factory.destroyFloatingPointCounter(handler)
+        }
+    }
+
+    public func destroyMeter(_ handler: MeterHandler) {
+        for factory in self.factories {
+            factory.destroyMeter(handler)
         }
     }
 
@@ -1083,6 +1088,29 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
     }
 
+    private final class MuxMeter: MeterHandler {
+        let meters: [MeterHandler]
+        public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)]) {
+            self.meters = factories.map { $0.makeMeter(label: label, dimensions: dimensions) }
+        }
+
+        func set(_ value: Int64) {
+            self.meters.forEach { $0.set(value) }
+        }
+
+        func set(_ value: Double) {
+            self.meters.forEach { $0.set(value) }
+        }
+
+        func increment(by amount: Double) {
+            self.meters.forEach { $0.increment(by: amount) }
+        }
+
+        func decrement(by amount: Double) {
+            self.meters.forEach { $0.decrement(by: amount) }
+        }
+    }
+
     private final class MuxRecorder: RecorderHandler {
         let recorders: [RecorderHandler]
         public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)], aggregate: Bool) {
@@ -1095,29 +1123,6 @@ public final class MultiplexMetricsHandler: MetricsFactory {
 
         func record(_ value: Double) {
             self.recorders.forEach { $0.record(value) }
-        }
-    }
-
-    private final class MuxGauge: GaugeHandler {
-        let gauges: [GaugeHandler]
-        public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)]) {
-            self.gauges = factories.map { $0.makeGauge(label: label, dimensions: dimensions) }
-        }
-
-        func set(_ value: Int64) {
-            self.gauges.forEach { $0.set(value) }
-        }
-
-        func set(_ value: Double) {
-            self.gauges.forEach { $0.set(value) }
-        }
-
-        func increment(by amount: Double) {
-            self.gauges.forEach { $0.increment(by: amount) }
-        }
-
-        func decrement(by amount: Double) {
-            self.gauges.forEach { $0.decrement(by: amount) }
         }
     }
 
@@ -1138,7 +1143,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
 }
 
 /// Ships with the metrics module, used for initial bootstrapping.
-public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingPointCounterHandler, RecorderHandler, GaugeHandler, TimerHandler {
+public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingPointCounterHandler, MeterHandler, RecorderHandler, TimerHandler {
     public static let instance = NOOPMetricsHandler()
 
     private init() {}
@@ -1151,7 +1156,7 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
         return self
     }
 
-    public func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
+    public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
         return self
     }
 
@@ -1165,7 +1170,7 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
 
     public func destroyCounter(_: CounterHandler) {}
     public func destroyFloatingPointCounter(_: FloatingPointCounterHandler) {}
-    public func destroyGauge(_: GaugeHandler) {}
+    public func destroyMeter(_: MeterHandler) {}
     public func destroyRecorder(_: RecorderHandler) {}
     public func destroyTimer(_: TimerHandler) {}
 
@@ -1189,7 +1194,7 @@ extension FloatingPointCounter: Sendable {}
 // must be @unchecked since Gauge inherits Recorder :(
 extension Recorder: @unchecked Sendable {}
 extension Timer: Sendable {}
-extension Gauger: Sendable {}
+extension Meter: Sendable {}
 // ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
 extension AccumulatingRoundingFloatingPointCounter: @unchecked Sendable {}
 #endif

@@ -21,16 +21,16 @@ import Foundation
 internal final class TestMetrics: MetricsFactory {
     private let lock = NSLock()
     var counters = [String: CounterHandler]()
+    var meters = [String: MeterHandler]()
     var recorders = [String: RecorderHandler]()
     var timers = [String: TimerHandler]()
-    var gauges = [String: GaugeHandler]()
 
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
     }
 
-    func makeGauge(label: String, dimensions: [(String, String)]) -> GaugeHandler {
-        return self.make(label: label, dimensions: dimensions, registry: &self.gauges, maker: TestGauge.init)
+    func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+        return self.make(label: label, dimensions: dimensions, registry: &self.meters, maker: TestMeter.init)
     }
 
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
@@ -60,10 +60,10 @@ internal final class TestMetrics: MetricsFactory {
         }
     }
 
-    func destroyGauge(_ handler: GaugeHandler) {
-        if let testGauge = handler as? TestGauge {
+    func destroyMeter(_ handler: MeterHandler) {
+        if let testMeter = handler as? TestMeter {
             self.lock.withLock { () in
-                self.counters.removeValue(forKey: testGauge.label)
+                self.meters.removeValue(forKey: testMeter.label)
             }
         }
     }
@@ -85,7 +85,7 @@ internal final class TestMetrics: MetricsFactory {
     }
 }
 
-internal class TestCounter: CounterHandler, Equatable {
+internal final class TestCounter: CounterHandler, Equatable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
@@ -118,40 +118,7 @@ internal class TestCounter: CounterHandler, Equatable {
     }
 }
 
-internal class TestRecorder: RecorderHandler, Equatable {
-    let id: String
-    let label: String
-    let dimensions: [(String, String)]
-    let aggregate: Bool
-
-    let lock = NSLock()
-    var values = [(Date, Double)]()
-
-    init(label: String, dimensions: [(String, String)], aggregate: Bool) {
-        self.id = UUID().uuidString
-        self.label = label
-        self.dimensions = dimensions
-        self.aggregate = aggregate
-    }
-
-    func record(_ value: Int64) {
-        self.record(Double(value))
-    }
-
-    func record(_ value: Double) {
-        self.lock.withLock {
-            // this may loose precision but good enough as an example
-            values.append((Date(), Double(value)))
-        }
-        print("recording \(value) in \(self.label)")
-    }
-
-    public static func == (lhs: TestRecorder, rhs: TestRecorder) -> Bool {
-        return lhs.id == rhs.id
-    }
-}
-
-internal class TestGauge: GaugeHandler, Equatable {
+internal final class TestMeter: MeterHandler, Equatable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
@@ -197,12 +164,45 @@ internal class TestGauge: GaugeHandler, Equatable {
         print("recording \(newValue) in \(self.label)")
     }
 
-    public static func == (lhs: TestGauge, rhs: TestGauge) -> Bool {
+    public static func == (lhs: TestMeter, rhs: TestMeter) -> Bool {
         return lhs.id == rhs.id
     }
 }
 
-internal class TestTimer: TimerHandler, Equatable {
+internal final class TestRecorder: RecorderHandler, Equatable {
+    let id: String
+    let label: String
+    let dimensions: [(String, String)]
+    let aggregate: Bool
+
+    let lock = NSLock()
+    var values = [(Date, Double)]()
+
+    init(label: String, dimensions: [(String, String)], aggregate: Bool) {
+        self.id = NSUUID().uuidString
+        self.label = label
+        self.dimensions = dimensions
+        self.aggregate = aggregate
+    }
+
+    func record(_ value: Int64) {
+        self.record(Double(value))
+    }
+
+    func record(_ value: Double) {
+        self.lock.withLock {
+            // this may loose precision but good enough as an example
+            values.append((Date(), Double(value)))
+        }
+        print("recording \(value) in \(self.label)")
+    }
+
+    public static func == (lhs: TestRecorder, rhs: TestRecorder) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+internal final class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
     var displayUnit: TimeUnit?
@@ -262,7 +262,7 @@ extension NSLock {
 #if compiler(>=5.6)
 // ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
 extension TestCounter: @unchecked Sendable {}
+extension TestMeter: @unchecked Sendable {}
 extension TestRecorder: @unchecked Sendable {}
-extension TestGauge: @unchecked Sendable {}
 extension TestTimer: @unchecked Sendable {}
 #endif
