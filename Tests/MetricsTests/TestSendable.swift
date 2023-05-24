@@ -68,13 +68,13 @@ class SendableTest: XCTestCase {
         }
 
         do {
-            let name = "gauge-\(UUID().uuidString)"
+            let name = "meter-\(NSUUID().uuidString)"
             let value = Double.random(in: -1000 ... 1000)
-            let gauge = Gauge(label: name)
+            let meter = Meter(label: name)
 
             let task = Task.detached { () -> [Double] in
-                gauge.record(value)
-                let handler = gauge._handler as! TestRecorder
+                meter.set(value)
+                let handler = meter._handler as! TestMeter
                 return handler.values.map { $0.1 }
             }
             let values = await task.value

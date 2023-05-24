@@ -21,11 +21,16 @@ import Foundation
 internal final class TestMetrics: MetricsFactory {
     private let lock = NSLock()
     var counters = [String: CounterHandler]()
+    var meters = [String: MeterHandler]()
     var recorders = [String: RecorderHandler]()
     var timers = [String: TimerHandler]()
 
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
+    }
+
+    func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+        return self.make(label: label, dimensions: dimensions, registry: &self.meters, maker: TestMeter.init)
     }
 
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
@@ -49,15 +54,23 @@ internal final class TestMetrics: MetricsFactory {
 
     func destroyCounter(_ handler: CounterHandler) {
         if let testCounter = handler as? TestCounter {
-            self.lock.withLock { () -> Void in
+            self.lock.withLock { () in
                 self.counters.removeValue(forKey: testCounter.label)
+            }
+        }
+    }
+
+    func destroyMeter(_ handler: MeterHandler) {
+        if let testMeter = handler as? TestMeter {
+            self.lock.withLock { () in
+                self.meters.removeValue(forKey: testMeter.label)
             }
         }
     }
 
     func destroyRecorder(_ handler: RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
-            self.lock.withLock { () -> Void in
+            self.lock.withLock { () in
                 self.recorders.removeValue(forKey: testRecorder.label)
             }
         }
@@ -65,14 +78,14 @@ internal final class TestMetrics: MetricsFactory {
 
     func destroyTimer(_ handler: TimerHandler) {
         if let testTimer = handler as? TestTimer {
-            self.lock.withLock { () -> Void in
+            self.lock.withLock { () in
                 self.timers.removeValue(forKey: testTimer.label)
             }
         }
     }
 }
 
-internal class TestCounter: CounterHandler, Equatable {
+internal final class TestCounter: CounterHandler, Equatable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
@@ -105,7 +118,58 @@ internal class TestCounter: CounterHandler, Equatable {
     }
 }
 
-internal class TestRecorder: RecorderHandler, Equatable {
+internal final class TestMeter: MeterHandler, Equatable {
+    let id: String
+    let label: String
+    let dimensions: [(String, String)]
+
+    let lock = NSLock()
+    var values = [(Date, Double)]()
+
+    init(label: String, dimensions: [(String, String)]) {
+        self.id = NSUUID().uuidString
+        self.label = label
+        self.dimensions = dimensions
+    }
+
+    func set(_ value: Int64) {
+        self.set(Double(value))
+    }
+
+    func set(_ value: Double) {
+        self.lock.withLock {
+            // this may loose precision but good enough as an example
+            values.append((Date(), Double(value)))
+        }
+        print("setting \(value) in \(self.label)")
+    }
+
+    func increment(by amount: Double) {
+        let newValue: Double = self.lock.withLock {
+            let lastValue = self.values.last?.1 ?? 0
+            let newValue = lastValue + amount
+            values.append((Date(), Double(newValue)))
+            return newValue
+        }
+        print("recording \(newValue) in \(self.label)")
+    }
+
+    func decrement(by amount: Double) {
+        let newValue: Double = self.lock.withLock {
+            let lastValue = self.values.last?.1 ?? 0
+            let newValue = lastValue - amount
+            values.append((Date(), Double(newValue)))
+            return newValue
+        }
+        print("recording \(newValue) in \(self.label)")
+    }
+
+    public static func == (lhs: TestMeter, rhs: TestMeter) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+internal final class TestRecorder: RecorderHandler, Equatable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
@@ -115,7 +179,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
     var values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)], aggregate: Bool) {
-        self.id = UUID().uuidString
+        self.id = NSUUID().uuidString
         self.label = label
         self.dimensions = dimensions
         self.aggregate = aggregate
@@ -138,7 +202,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
     }
 }
 
-internal class TestTimer: TimerHandler, Equatable {
+internal final class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
     var displayUnit: TimeUnit?
@@ -183,6 +247,7 @@ internal class TestTimer: TimerHandler, Equatable {
 }
 
 extension NSLock {
+    @discardableResult
     fileprivate func withLock<T>(_ body: () -> T) -> T {
         self.lock()
         defer {
@@ -197,6 +262,7 @@ extension NSLock {
 #if compiler(>=5.6)
 // ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
 extension TestCounter: @unchecked Sendable {}
+extension TestMeter: @unchecked Sendable {}
 extension TestRecorder: @unchecked Sendable {}
 extension TestTimer: @unchecked Sendable {}
 #endif

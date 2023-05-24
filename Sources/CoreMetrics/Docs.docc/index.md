@@ -27,7 +27,7 @@ and to your application/library target, add "Metrics" to your dependencies:
 .target(
     name: "BestExampleApp",
     dependencies: [
-        // ... 
+        // ...
         .product(name: "Metrics", package: "swift-metrics"),
     ]
 ),
@@ -90,7 +90,8 @@ This API was designed with the contributors to the Swift on Server community and
 
 ### Metric types
 
-- ``Gauge``
-- ``Recorder``
 - ``Counter``
+- ``Meter``
+- ``Recorder``
 - ``Timer``
+

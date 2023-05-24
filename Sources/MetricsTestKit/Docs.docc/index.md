@@ -27,11 +27,11 @@ final class ExampleTests: XCTestCase {
 
     func test_example() async throws {
         // Create a metric using the bootstrapped test metrics backend:
-        Gauge(label: "example").record(100)
+        Recorder(label: "example").record(100)
         
-        // extract the `TestGauge` out of the 
-        let gauge = try self.metrics.expectGauge("example")
-        gauge.lastValue?.shouldEqual(6)
+        // extract the `TestRecorder` out of the 
+        let recorder = try self.metrics.expectRecorder("example")
+        recorder.lastValue?.shouldEqual(6)
     }
 }
 ```
@@ -40,6 +40,7 @@ final class ExampleTests: XCTestCase {
 
 ### Test metrics
 
-- ``TestRecorder``
 - ``TestCounter``
+- ``TestMeter``
+- ``TestRecorder``
 - ``TestTimer``

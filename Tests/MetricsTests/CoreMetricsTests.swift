@@ -361,6 +361,33 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
     }
 
+    func testMeter() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "meter-\(NSUUID().uuidString)"
+        let value = Double.random(in: -1000 ... 1000)
+        let meter = Meter(label: name)
+        meter.set(value)
+        let testMeter = meter._handler as! TestMeter
+        XCTAssertEqual(testMeter.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testMeter.values[0].1, value, "expected value to match")
+    }
+
+    func testMeterBlock() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "meter-\(NSUUID().uuidString)"
+        let value = Double.random(in: -1000 ... 1000)
+        Meter(label: name).set(value)
+        let testMeter = metrics.meters[name] as! TestMeter
+        XCTAssertEqual(testMeter.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testMeter.values[0].1, value, "expected value to match")
+    }
+
     func testMUX_Counter() throws {
         // bootstrap with our test metrics
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
@@ -380,6 +407,23 @@ class MetricsTests: XCTestCase {
         factories.forEach { factory in
             let counter = factory.counters.first?.1 as! TestCounter
             XCTAssertEqual(counter.values.count, 0, "expected number of entries to match")
+        }
+    }
+
+    func testMUX_Meter() throws {
+        // bootstrap with our test metrics
+        let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
+        MetricsSystem.bootstrapInternal(MultiplexMetricsHandler(factories: factories))
+        // run the test
+        let name = NSUUID().uuidString
+        let value = Double.random(in: 0 ... 1)
+        let muxMeter = Meter(label: name)
+        muxMeter.set(value)
+        factories.forEach { factory in
+            let meter = factory.meters.first?.1 as! TestMeter
+            XCTAssertEqual(meter.label, name, "expected label to match")
+            XCTAssertEqual(meter.values.count, 1, "expected number of entries to match")
+            XCTAssertEqual(meter.values[0].1, value, "expected value to match")
         }
     }
 
@@ -461,6 +505,36 @@ class MetricsTests: XCTestCase {
         XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
     }
 
+    func testDestroyingMeter() throws {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let name = "meter-\(NSUUID().uuidString)"
+        let value = Double.random(in: -1000 ... 1000)
+
+        let meter = Meter(label: name)
+        meter.set(value)
+
+        let testMeter = meter._handler as! TestMeter
+        XCTAssertEqual(testMeter.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testMeter.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(metrics.meters.count, 1, "recorder should have been stored")
+
+        let identity = ObjectIdentifier(testMeter)
+        meter.destroy()
+        XCTAssertEqual(metrics.recorders.count, 0, "recorder should have been released")
+
+        let meterAgain = Meter(label: name)
+        meterAgain.set(-value)
+
+        let testMeterAgain = meterAgain._handler as! TestMeter
+        XCTAssertEqual(testMeterAgain.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testMeterAgain.values.first!.1, -value, "expected value to match")
+
+        let identityAgain = ObjectIdentifier(testMeterAgain)
+        XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
+    }
+
     func testDestroyingCounter() throws {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
@@ -524,14 +598,17 @@ class MetricsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
 
-        let timer = Timer(label: "hello.timer")
-        XCTAssertEqual("\(timer)", "Timer(hello.timer, dimensions: [])")
-
         let counter = Counter(label: "hello.counter")
         XCTAssertEqual("\(counter)", "Counter(hello.counter, dimensions: [])")
 
         let gauge = Gauge(label: "hello.gauge")
         XCTAssertEqual("\(gauge)", "Gauge(hello.gauge, dimensions: [], aggregate: false)")
+
+        let meter = Meter(label: "hello.meter")
+        XCTAssertEqual("\(meter)", "Meter(hello.meter, dimensions: [])")
+
+        let timer = Timer(label: "hello.timer")
+        XCTAssertEqual("\(timer)", "Timer(hello.timer, dimensions: [])")
 
         let recorder = Recorder(label: "hello.recorder")
         XCTAssertEqual("\(recorder)", "Recorder(hello.recorder, dimensions: [], aggregate: true)")

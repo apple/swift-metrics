@@ -28,8 +28,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "CoreMetrics",
-            dependencies: []
+            name: "CoreMetrics"
         ),
         .target(
             name: "Metrics",

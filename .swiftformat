@@ -10,4 +10,7 @@
 --stripunusedargs unnamed-only
 --ifdef no-indent
 
+# Configure the placement of an extension's access control keyword.
+--extensionacl on-declarations
+
 # rules
