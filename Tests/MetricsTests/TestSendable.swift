@@ -14,6 +14,7 @@
 
 @testable import CoreMetrics
 import Dispatch
+@testable import MetricsTestKit
 import XCTest
 
 class SendableTest: XCTestCase {
@@ -90,7 +91,7 @@ class SendableTest: XCTestCase {
             let task = Task.detached { () -> [Int64] in
                 timer.recordNanoseconds(value)
                 let handler = timer._handler as! TestTimer
-                return handler.values.map { $0.1 }
+                return handler.values
             }
             let values = await task.value
             XCTAssertEqual(values.count, 1, "expected number of entries to match")

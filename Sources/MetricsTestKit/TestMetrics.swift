@@ -48,10 +48,10 @@ public final class TestMetrics: MetricsFactory {
         let dimensions: [(String, String)]
     }
 
-    private var counters = [FullKey: CounterHandler]()
-    private var meters = [FullKey: MeterHandler]()
-    private var recorders = [FullKey: RecorderHandler]()
-    private var timers = [FullKey: TimerHandler]()
+    private var _counters = [FullKey: TestCounter]()
+    private var _meters = [FullKey: TestMeter]()
+    private var _recorders = [FullKey: TestRecorder]()
+    private var _timers = [FullKey: TestTimer]()
 
     public init() {
         // nothing to do
@@ -61,61 +61,61 @@ public final class TestMetrics: MetricsFactory {
     /// Invoke this method in between test runs to verify that Counters are created as needed.
     public func reset() {
         self.lock.withLock {
-            self.counters = [:]
-            self.meters = [:]
-            self.recorders = [:]
-            self.timers = [:]
+            self._counters = [:]
+            self._recorders = [:]
+            self._meters = [:]
+            self._timers = [:]
         }
     }
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         return self.lock.withLock { () -> CounterHandler in
-            if let existing = self.counters[.init(label: label, dimensions: dimensions)] {
+            if let existing = self._counters[.init(label: label, dimensions: dimensions)] {
                 return existing
             }
             let item = TestCounter(label: label, dimensions: dimensions)
-            self.counters[.init(label: label, dimensions: dimensions)] = item
+            self._counters[.init(label: label, dimensions: dimensions)] = item
             return item
         }
     }
 
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
         return self.lock.withLock { () -> MeterHandler in
-            if let existing = self.meters[.init(label: label, dimensions: dimensions)] {
+            if let existing = self._meters[.init(label: label, dimensions: dimensions)] {
                 return existing
             }
             let item = TestMeter(label: label, dimensions: dimensions)
-            self.meters[.init(label: label, dimensions: dimensions)] = item
+            self._meters[.init(label: label, dimensions: dimensions)] = item
             return item
         }
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         return self.lock.withLock { () -> RecorderHandler in
-            if let existing = self.recorders[.init(label: label, dimensions: dimensions)] {
+            if let existing = self._recorders[.init(label: label, dimensions: dimensions)] {
                 return existing
             }
             let item = TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
-            self.recorders[.init(label: label, dimensions: dimensions)] = item
+            self._recorders[.init(label: label, dimensions: dimensions)] = item
             return item
         }
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         return self.lock.withLock { () -> TimerHandler in
-            if let existing = self.timers[.init(label: label, dimensions: dimensions)] {
+            if let existing = self._timers[.init(label: label, dimensions: dimensions)] {
                 return existing
             }
             let item = TestTimer(label: label, dimensions: dimensions)
-            self.timers[.init(label: label, dimensions: dimensions)] = item
+            self._timers[.init(label: label, dimensions: dimensions)] = item
             return item
         }
     }
 
     public func destroyCounter(_ handler: CounterHandler) {
         if let testCounter = handler as? TestCounter {
-            self.lock.withLock { () in
-                self.counters.removeValue(forKey: testCounter.key)
+            self.lock.withLock {
+                self._counters.removeValue(forKey: testCounter.key)
             }
         }
     }
@@ -123,23 +123,23 @@ public final class TestMetrics: MetricsFactory {
     public func destroyMeter(_ handler: MeterHandler) {
         if let testMeter = handler as? TestMeter {
             self.lock.withLock { () in
-                self.meters.removeValue(forKey: testMeter.key)
+                self._meters.removeValue(forKey: testMeter.key)
             }
         }
     }
 
     public func destroyRecorder(_ handler: RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
-            self.lock.withLock { () in
-                self.recorders.removeValue(forKey: testRecorder.key)
+            self.lock.withLock {
+                self._recorders.removeValue(forKey: testRecorder.key)
             }
         }
     }
 
     public func destroyTimer(_ handler: TimerHandler) {
         if let testTimer = handler as? TestTimer {
-            self.lock.withLock { () in
-                self.timers.removeValue(forKey: testTimer.key)
+            self.lock.withLock {
+                self._timers.removeValue(forKey: testTimer.key)
             }
         }
     }
@@ -174,15 +174,20 @@ extension TestMetrics {
 
     public func expectCounter(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestCounter {
         let maybeItem = self.lock.withLock {
-            self.counters[.init(label: label, dimensions: dimensions)]
+            self._counters[.init(label: label, dimensions: dimensions)]
         }
-        guard let maybeCounter = maybeItem else {
+        guard let testCounter = maybeItem else {
             throw TestMetricsError.missingMetric(label: label, dimensions: dimensions)
         }
-        guard let testCounter = maybeCounter as? TestCounter else {
-            throw TestMetricsError.illegalMetricType(metric: maybeCounter, expected: "\(TestCounter.self)")
-        }
         return testCounter
+    }
+
+    /// All the counters which have been created and not destroyed
+    var counters: [TestCounter] {
+        let counters = self.lock.withLock {
+            self._counters
+        }
+        return Array(counters.values)
     }
 
     // MARK: - Gauge
@@ -206,15 +211,20 @@ extension TestMetrics {
 
     public func expectMeter(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestMeter {
         let maybeItem = self.lock.withLock {
-            self.meters[.init(label: label, dimensions: dimensions)]
+            self._meters[.init(label: label, dimensions: dimensions)]
         }
-        guard let maybeMeter = maybeItem else {
+        guard let testMeter = maybeItem else {
             throw TestMetricsError.missingMetric(label: label, dimensions: dimensions)
         }
-        guard let testMeter = maybeMeter as? TestMeter else {
-            throw TestMetricsError.illegalMetricType(metric: maybeMeter, expected: "\(TestMeter.self)")
-        }
         return testMeter
+    }
+
+    /// All the meters which have been created and not destroyed
+    var meters: [TestMeter] {
+        let meters = self.lock.withLock {
+            self._meters
+        }
+        return Array(meters.values)
     }
 
     // MARK: - Recorder
@@ -228,15 +238,20 @@ extension TestMetrics {
 
     public func expectRecorder(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestRecorder {
         let maybeItem = self.lock.withLock {
-            self.recorders[.init(label: label, dimensions: dimensions)]
+            self._recorders[.init(label: label, dimensions: dimensions)]
         }
-        guard let maybeRecorder = maybeItem else {
+        guard let testRecorder = maybeItem else {
             throw TestMetricsError.missingMetric(label: label, dimensions: dimensions)
         }
-        guard let testRecorder = maybeRecorder as? TestRecorder else {
-            throw TestMetricsError.illegalMetricType(metric: maybeRecorder, expected: "\(TestRecorder.self)")
-        }
         return testRecorder
+    }
+
+    /// All the recorders which have been created and not destroyed
+    var recorders: [TestRecorder] {
+        let recorders = self.lock.withLock {
+            self._recorders
+        }
+        return Array(recorders.values)
     }
 
     // MARK: - Timer
@@ -250,15 +265,20 @@ extension TestMetrics {
 
     public func expectTimer(_ label: String, _ dimensions: [(String, String)] = []) throws -> TestTimer {
         let maybeItem = self.lock.withLock {
-            self.timers[.init(label: label, dimensions: dimensions)]
+            self._timers[.init(label: label, dimensions: dimensions)]
         }
-        guard let maybeTimer = maybeItem else {
+        guard let testTimer = maybeItem else {
             throw TestMetricsError.missingMetric(label: label, dimensions: dimensions)
         }
-        guard let testTimer = maybeTimer as? TestTimer else {
-            throw TestMetricsError.illegalMetricType(metric: maybeTimer, expected: "\(TestTimer.self)")
-        }
         return testTimer
+    }
+
+    /// All the timers which have been created and not destroyed
+    var timers: [TestTimer] {
+        let timers = self.lock.withLock {
+            self._timers
+        }
+        return Array(timers.values)
     }
 }
 
@@ -283,7 +303,7 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
     }
 
     let lock = NSLock()
-    private var values = [(Date, Int64)]()
+    private var _values = [(Date, Int64)]()
 
     init(label: String, dimensions: [(String, String)]) {
         self.id = UUID().uuidString
@@ -293,31 +313,31 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
 
     public func increment(by amount: Int64) {
         self.lock.withLock {
-            self.values.append((Date(), amount))
+            self._values.append((Date(), amount))
         }
     }
 
     public func reset() {
         return self.lock.withLock {
-            self.values = []
+            self._values = []
         }
     }
 
     public var lastValue: Int64? {
-        return self.lock.withLock {
-            return values.last?.1
-        }
+        return self.values.last?.1
     }
 
     public var totalValue: Int64 {
-        return self.lock.withLock {
-            return values.map { $0.1 }.reduce(0, +)
-        }
+        return self.values.map { $0.1 }.reduce(0, +)
     }
 
     public var last: (Date, Int64)? {
+        return self.values.last
+    }
+
+    var values: [(Date, Int64)] {
         return self.lock.withLock {
-            values.last
+            self._values
         }
     }
 
@@ -336,7 +356,7 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
     }
 
     let lock = NSLock()
-    private var values = [(Date, Double)]()
+    private var _values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)]) {
         self.id = NSUUID().uuidString
@@ -350,36 +370,38 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
 
     public func set(_ value: Double) {
         self.lock.withLock {
-            // this may loose precision but good enough as an example
-            values.append((Date(), Double(value)))
+            // this may lose precision but good enough as an example
+            _values.append((Date(), Double(value)))
         }
     }
 
     public func increment(by amount: Double) {
         self.lock.withLock {
-            let lastValue = self.values.last?.1 ?? 0
+            let lastValue = self._values.last?.1 ?? 0
             let newValue = lastValue - amount
-            values.append((Date(), Double(newValue)))
+            _values.append((Date(), Double(newValue)))
         }
     }
 
     public func decrement(by amount: Double) {
         self.lock.withLock {
-            let lastValue = self.values.last?.1 ?? 0
+            let lastValue = self._values.last?.1 ?? 0
             let newValue = lastValue - amount
-            values.append((Date(), Double(newValue)))
+            _values.append((Date(), Double(newValue)))
         }
     }
 
     public var lastValue: Double? {
-        return self.lock.withLock {
-            values.last?.1
-        }
+        return self.last?.1
     }
 
     public var last: (Date, Double)? {
+        return self.values.last
+    }
+
+    var values: [(Date, Double)] {
         return self.lock.withLock {
-            values.last
+            self._values
         }
     }
 
@@ -399,7 +421,7 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     }
 
     let lock = NSLock()
-    private var values = [(Date, Double)]()
+    private var _values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)], aggregate: Bool) {
         self.id = NSUUID().uuidString
@@ -414,20 +436,22 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
 
     public func record(_ value: Double) {
         self.lock.withLock {
-            // this may loose precision but good enough as an example
-            values.append((Date(), Double(value)))
+            // this may lose precision but good enough as an example
+            _values.append((Date(), Double(value)))
         }
     }
 
     public var lastValue: Double? {
-        return self.lock.withLock {
-            values.last?.1
-        }
+        return self.last?.1
     }
 
     public var last: (Date, Double)? {
+        return self.values.last
+    }
+
+    var values: [(Date, Double)] {
         return self.lock.withLock {
-            values.last
+            self._values
         }
     }
 
@@ -480,19 +504,19 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
 
     public var lastValue: Int64? {
         return self.lock.withLock {
-            return _values.last?.1
+            return self._values.last?.1
         }
     }
 
     public var values: [Int64] {
         return self.lock.withLock {
-            return _values.map { $0.1 }
+            return self._values.map { $0.1 }
         }
     }
 
     public var last: (Date, Int64)? {
         return self.lock.withLock {
-            return _values.last
+            return self._values.last
         }
     }
 
