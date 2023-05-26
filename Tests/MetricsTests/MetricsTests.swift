@@ -132,25 +132,25 @@ class MetricsExtensionsTests: XCTestCase {
         let testTimer = timer._handler as! TestTimer
 
         testTimer.preferDisplayUnit(.nanoseconds)
-        XCTAssertEqual(testTimer.retrieveValueInPreferredUnit(atIndex: 0), value * 1000 * 1000 * 1000, accuracy: 1.0, "expected value to match")
+        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value * 1000 * 1000 * 1000, accuracy: 1.0, "expected value to match")
 
         testTimer.preferDisplayUnit(.microseconds)
-        XCTAssertEqual(testTimer.retrieveValueInPreferredUnit(atIndex: 0), value * 1000 * 1000, accuracy: 0.001, "expected value to match")
+        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value * 1000 * 1000, accuracy: 0.001, "expected value to match")
 
         testTimer.preferDisplayUnit(.milliseconds)
-        XCTAssertEqual(testTimer.retrieveValueInPreferredUnit(atIndex: 0), value * 1000, accuracy: 0.000001, "expected value to match")
+        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value * 1000, accuracy: 0.000001, "expected value to match")
 
         testTimer.preferDisplayUnit(.seconds)
-        XCTAssertEqual(testTimer.retrieveValueInPreferredUnit(atIndex: 0), value, accuracy: 0.000000001, "expected value to match")
+        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value, accuracy: 0.000000001, "expected value to match")
 
         testTimer.preferDisplayUnit(.minutes)
-        XCTAssertEqual(testTimer.retrieveValueInPreferredUnit(atIndex: 0), value / 60, accuracy: 0.000000001, "expected value to match")
+        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value / 60, accuracy: 0.000000001, "expected value to match")
 
         testTimer.preferDisplayUnit(.hours)
-        XCTAssertEqual(testTimer.retrieveValueInPreferredUnit(atIndex: 0), value / (60 * 60), accuracy: 0.000000001, "expected value to match")
+        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value / (60 * 60), accuracy: 0.000000001, "expected value to match")
 
         testTimer.preferDisplayUnit(.days)
-        XCTAssertEqual(testTimer.retrieveValueInPreferredUnit(atIndex: 0), value / (60 * 60 * 24), accuracy: 0.000000001, "expected value to match")
+        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value / (60 * 60 * 24), accuracy: 0.000000001, "expected value to match")
     }
 }
 

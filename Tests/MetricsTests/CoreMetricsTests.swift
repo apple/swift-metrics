@@ -460,7 +460,7 @@ class MetricsTests: XCTestCase {
             XCTAssertEqual(timer?.values.count, 1, "expected number of entries to match")
             XCTAssertEqual(timer?.values[0], Int64(seconds * 1_000_000_000), "expected value to match")
             XCTAssertEqual(timer?.displayUnit, .minutes, "expected value to match")
-            XCTAssertEqual(timer?.retrieveValueInPreferredUnit(atIndex: 0), Double(seconds) / 60.0, "seconds should be returned as minutes")
+            XCTAssertEqual(timer?.valueInPreferredUnit(atIndex: 0), Double(seconds) / 60.0, "seconds should be returned as minutes")
         }
     }
 

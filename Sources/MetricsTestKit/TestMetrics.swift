@@ -492,7 +492,7 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
         }
     }
 
-    public func retrieveValueInPreferredUnit(atIndex i: Int) -> Double {
+    public func valueInPreferredUnit(atIndex i: Int) -> Double {
         let value = self.values[i]
         guard let displayUnit = self.displayUnit else {
             return Double(value)
