@@ -183,7 +183,7 @@ extension TestMetrics {
     }
 
     /// All the counters which have been created and not destroyed
-    var counters: [TestCounter] {
+    public var counters: [TestCounter] {
         let counters = self.lock.withLock {
             self._counters
         }
@@ -220,7 +220,7 @@ extension TestMetrics {
     }
 
     /// All the meters which have been created and not destroyed
-    var meters: [TestMeter] {
+    public var meters: [TestMeter] {
         let meters = self.lock.withLock {
             self._meters
         }
@@ -247,7 +247,7 @@ extension TestMetrics {
     }
 
     /// All the recorders which have been created and not destroyed
-    var recorders: [TestRecorder] {
+    public var recorders: [TestRecorder] {
         let recorders = self.lock.withLock {
             self._recorders
         }
@@ -274,7 +274,7 @@ extension TestMetrics {
     }
 
     /// All the timers which have been created and not destroyed
-    var timers: [TestTimer] {
+    public var timers: [TestTimer] {
         let timers = self.lock.withLock {
             self._timers
         }
