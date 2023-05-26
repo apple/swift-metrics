@@ -14,7 +14,7 @@
 
 @testable import CoreMetrics
 @testable import Metrics
-@testable import MetricsTestKit
+import MetricsTestKit
 import XCTest
 
 class MetricsExtensionsTests: XCTestCase {

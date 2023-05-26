@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 @testable import CoreMetrics
-@testable import MetricsTestKit
+import MetricsTestKit
 import XCTest
 
 class MetricsTests: XCTestCase {
@@ -49,7 +49,7 @@ class MetricsTests: XCTestCase {
         Counter(label: name).increment(by: value)
         let counter = try metrics.expectCounter(name)
         XCTAssertEqual(counter.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(counter.values[0].1, Int64(value), "expected value to match")
+        XCTAssertEqual(counter.values[0], Int64(value), "expected value to match")
         counter.reset()
         XCTAssertEqual(counter.values.count, 0, "expected number of entries to match")
     }
@@ -112,7 +112,7 @@ class MetricsTests: XCTestCase {
         fpCounter.increment(by: Double(sign: .plus, exponent: 63, significand: 1))
         // Much larger than Int64
         fpCounter.increment(by: Double.greatestFiniteMagnitude)
-        let values = counter.values.map { $0.1 }
+        let values = counter.values
         XCTAssertEqual(values.count, 2, "expected number of entries to match")
         XCTAssertEqual(values, [Int64.max, Int64.max], "expected extremely large values to be replaced with Int64.max")
     }
@@ -132,7 +132,7 @@ class MetricsTests: XCTestCase {
 
         // Increment by a small value that should grow the accumulated buffer past 1.0 (perfectly representable)
         fpCounter.increment(by: 1.5)
-        var values = counter.values.map { $0.1 }
+        var values = counter.values
         XCTAssertEqual(values.count, 1, "expected number of entries to match")
         XCTAssertEqual(values, [2], "expected entries to match")
         XCTAssertEqual(rawFpCounter.fraction, 0.25, "")
@@ -140,7 +140,7 @@ class MetricsTests: XCTestCase {
         // Increment by a large value that should leave a fraction in the accumulator
         // 1110506744053.76
         fpCounter.increment(by: Double(sign: .plus, exponent: 40, significand: 1.01))
-        values = counter.values.map { $0.1 }
+        values = counter.values
         XCTAssertEqual(values.count, 2, "expected number of entries to match")
         XCTAssertEqual(values, [2, 1_110_506_744_054], "expected entries to match")
         XCTAssertEqual(rawFpCounter.fraction, 0.010009765625, "expected fractional accumulated value")
@@ -178,7 +178,7 @@ class MetricsTests: XCTestCase {
         }
         XCTAssertEqual(values.count, testRecorder.values.count, "expected number of entries to match")
         for i in 0 ... values.count - 1 {
-            XCTAssertEqual(Int32(testRecorder.values[i].1), values[i], "expected value #\(i) to match.")
+            XCTAssertEqual(Int32(testRecorder.values[i]), values[i], "expected value #\(i) to match.")
         }
     }
 
@@ -194,7 +194,7 @@ class MetricsTests: XCTestCase {
         }
         XCTAssertEqual(values.count, testRecorder.values.count, "expected number of entries to match")
         for i in 0 ... values.count - 1 {
-            XCTAssertEqual(Float(testRecorder.values[i].1), values[i], "expected value #\(i) to match.")
+            XCTAssertEqual(Float(testRecorder.values[i]), values[i], "expected value #\(i) to match.")
         }
     }
 
@@ -373,7 +373,7 @@ class MetricsTests: XCTestCase {
         meter.set(value)
         let testMeter = meter._handler as! TestMeter
         XCTAssertEqual(testMeter.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testMeter.values[0].1, value, "expected value to match")
+        XCTAssertEqual(testMeter.values[0], value, "expected value to match")
     }
 
     func testMeterBlock() throws {
@@ -386,7 +386,7 @@ class MetricsTests: XCTestCase {
         Meter(label: name).set(value)
         let testMeter = try metrics.expectMeter(name)
         XCTAssertEqual(testMeter.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testMeter.values[0].1, value, "expected value to match")
+        XCTAssertEqual(testMeter.values[0], value, "expected value to match")
     }
 
     func testMUX_Counter() throws {
@@ -424,7 +424,7 @@ class MetricsTests: XCTestCase {
             let meter = factory.meters.first
             XCTAssertEqual(meter?.label, name, "expected label to match")
             XCTAssertEqual(meter?.values.count, 1, "expected number of entries to match")
-            XCTAssertEqual(meter?.values[0].1, value, "expected value to match")
+            XCTAssertEqual(meter?.values[0], value, "expected value to match")
         }
     }
 
@@ -441,7 +441,7 @@ class MetricsTests: XCTestCase {
             let recorder = factory.recorders.first
             XCTAssertEqual(recorder?.label, name, "expected label to match")
             XCTAssertEqual(recorder?.values.count, 1, "expected number of entries to match")
-            XCTAssertEqual(recorder?.values[0].1, value, "expected value to match")
+            XCTAssertEqual(recorder?.values[0], value, "expected value to match")
         }
     }
 
@@ -488,7 +488,7 @@ class MetricsTests: XCTestCase {
 
         let recorder = gauge._handler as! TestRecorder
         XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(recorder.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(recorder.values.first, value, "expected value to match")
         XCTAssertEqual(metrics.recorders.count, 1, "recorder should have been stored")
 
         let identity = ObjectIdentifier(recorder)
@@ -500,7 +500,7 @@ class MetricsTests: XCTestCase {
 
         let recorderAgain = gaugeAgain._handler as! TestRecorder
         XCTAssertEqual(recorderAgain.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(recorderAgain.values.first!.1, -value, "expected value to match")
+        XCTAssertEqual(recorderAgain.values.first, -value, "expected value to match")
 
         let identityAgain = ObjectIdentifier(recorderAgain)
         XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
@@ -518,7 +518,7 @@ class MetricsTests: XCTestCase {
 
         let testMeter = meter._handler as! TestMeter
         XCTAssertEqual(testMeter.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testMeter.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(testMeter.values.first, value, "expected value to match")
         XCTAssertEqual(metrics.meters.count, 1, "recorder should have been stored")
 
         let identity = ObjectIdentifier(testMeter)
@@ -530,7 +530,7 @@ class MetricsTests: XCTestCase {
 
         let testMeterAgain = meterAgain._handler as! TestMeter
         XCTAssertEqual(testMeterAgain.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testMeterAgain.values.first!.1, -value, "expected value to match")
+        XCTAssertEqual(testMeterAgain.values.first, -value, "expected value to match")
 
         let identityAgain = ObjectIdentifier(testMeterAgain)
         XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
@@ -548,7 +548,7 @@ class MetricsTests: XCTestCase {
 
         let testCounter = counter._handler as! TestCounter
         XCTAssertEqual(testCounter.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testCounter.values.first!.1, Int64(value), "expected value to match")
+        XCTAssertEqual(testCounter.values.first, Int64(value), "expected value to match")
         XCTAssertEqual(metrics.counters.count, 1, "counter should have been stored")
 
         let identity = ObjectIdentifier(counter)
@@ -560,7 +560,7 @@ class MetricsTests: XCTestCase {
 
         let testCounterAgain = counterAgain._handler as! TestCounter
         XCTAssertEqual(testCounterAgain.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testCounterAgain.values.first!.1, Int64(value), "expected value to match")
+        XCTAssertEqual(testCounterAgain.values.first, Int64(value), "expected value to match")
 
         let identityAgain = ObjectIdentifier(counterAgain)
         XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")

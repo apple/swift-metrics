@@ -324,20 +324,22 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
     }
 
     public var lastValue: Int64? {
-        return self.values.last?.1
+        return self.last?.1
     }
 
     public var totalValue: Int64 {
-        return self.values.map { $0.1 }.reduce(0, +)
+        return self.values.reduce(0, +)
     }
 
     public var last: (Date, Int64)? {
-        return self.values.last
+        return self.lock.withLock {
+            self._values.last
+        }
     }
 
-    var values: [(Date, Int64)] {
+    public var values: [Int64] {
         return self.lock.withLock {
-            self._values
+            self._values.map { $0.1 }
         }
     }
 
@@ -396,12 +398,14 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
     }
 
     public var last: (Date, Double)? {
-        return self.values.last
+        return self.lock.withLock {
+            self._values.last
+        }
     }
 
-    var values: [(Date, Double)] {
+    public var values: [Double] {
         return self.lock.withLock {
-            self._values
+            self._values.map { $0.1 }
         }
     }
 
@@ -446,12 +450,14 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     }
 
     public var last: (Date, Double)? {
-        return self.values.last
+        return self.lock.withLock {
+            self._values.last
+        }
     }
 
-    var values: [(Date, Double)] {
+    public var values: [Double] {
         return self.lock.withLock {
-            self._values
+            self._values.map { $0.1 }
         }
     }
 
@@ -486,14 +492,12 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
         }
     }
 
-    func retrieveValueInPreferredUnit(atIndex i: Int) -> Double {
-        return self.lock.withLock {
-            let value = _values[i].1
-            guard let displayUnit = self.displayUnit else {
-                return Double(value)
-            }
-            return Double(value) / Double(displayUnit.scaleFromNanoseconds)
+    public func retrieveValueInPreferredUnit(atIndex i: Int) -> Double {
+        let value = self.values[i]
+        guard let displayUnit = self.displayUnit else {
+            return Double(value)
         }
+        return Double(value) / Double(displayUnit.scaleFromNanoseconds)
     }
 
     public func recordNanoseconds(_ duration: Int64) {
@@ -503,9 +507,7 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
     }
 
     public var lastValue: Int64? {
-        return self.lock.withLock {
-            return self._values.last?.1
-        }
+        return self.last?.1
     }
 
     public var values: [Int64] {
