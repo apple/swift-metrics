@@ -373,7 +373,7 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
     public func set(_ value: Double) {
         self.lock.withLock {
             // this may lose precision but good enough as an example
-            _values.append((Date(), Double(value)))
+            self._values.append((Date(), Double(value)))
         }
     }
 
@@ -381,7 +381,7 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
         self.lock.withLock {
             let lastValue = self._values.last?.1 ?? 0
             let newValue = lastValue - amount
-            _values.append((Date(), Double(newValue)))
+            self._values.append((Date(), Double(newValue)))
         }
     }
 
@@ -389,7 +389,7 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
         self.lock.withLock {
             let lastValue = self._values.last?.1 ?? 0
             let newValue = lastValue - amount
-            _values.append((Date(), Double(newValue)))
+            self._values.append((Date(), Double(newValue)))
         }
     }
 
@@ -441,7 +441,7 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     public func record(_ value: Double) {
         self.lock.withLock {
             // this may lose precision but good enough as an example
-            _values.append((Date(), Double(value)))
+            self._values.append((Date(), Double(value)))
         }
     }
 
@@ -502,7 +502,7 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
 
     public func recordNanoseconds(_ duration: Int64) {
         self.lock.withLock {
-            _values.append((Date(), duration))
+            self._values.append((Date(), duration))
         }
     }
 
@@ -512,13 +512,13 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
 
     public var values: [Int64] {
         return self.lock.withLock {
-            return self._values.map { $0.1 }
+            self._values.map { $0.1 }
         }
     }
 
     public var last: (Date, Int64)? {
         return self.lock.withLock {
-            return self._values.last
+            self._values.last
         }
     }
 

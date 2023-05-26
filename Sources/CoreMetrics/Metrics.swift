@@ -589,7 +589,7 @@ public enum MetricsSystem {
 
         var underlying: MetricsFactory {
             return self.lock.withReaderLock {
-                return self._underlying
+                self._underlying
             }
         }
 
@@ -736,7 +736,7 @@ internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCoun
                 self.fraction += fraction
                 // self.fraction may have cross an integer boundary, Split it
                 // and add any integer component.
-                let (integer, fraction) = integerAndFractionComponents(of: self.fraction)
+                let (integer, fraction) = self.integerAndFractionComponents(of: self.fraction)
                 increment += integer
                 self.fraction = fraction
                 // Increment the handler by the total integer component.
