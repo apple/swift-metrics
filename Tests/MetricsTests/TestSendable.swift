@@ -14,7 +14,7 @@
 
 @testable import CoreMetrics
 import Dispatch
-@testable import MetricsTestKit
+import MetricsTestKit
 import XCTest
 
 class SendableTest: XCTestCase {
@@ -32,7 +32,7 @@ class SendableTest: XCTestCase {
             let task = Task.detached { () -> [Int64] in
                 counter.increment(by: value)
                 let handler = counter._handler as! TestCounter
-                return handler.values.map { $0.1 }
+                return handler.values
             }
             let values = await task.value
             XCTAssertEqual(values.count, 1, "expected number of entries to match")
@@ -61,7 +61,7 @@ class SendableTest: XCTestCase {
             let task = Task.detached { () -> [Double] in
                 recorder.record(value)
                 let handler = recorder._handler as! TestRecorder
-                return handler.values.map { $0.1 }
+                return handler.values
             }
             let values = await task.value
             XCTAssertEqual(values.count, 1, "expected number of entries to match")
@@ -76,7 +76,7 @@ class SendableTest: XCTestCase {
             let task = Task.detached { () -> [Double] in
                 meter.set(value)
                 let handler = meter._handler as! TestMeter
-                return handler.values.map { $0.1 }
+                return handler.values
             }
             let values = await task.value
             XCTAssertEqual(values.count, 1, "expected number of entries to match")
