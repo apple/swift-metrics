@@ -14,6 +14,7 @@
 
 @testable import CoreMetrics
 @testable import Metrics
+@testable import MetricsTestKit
 import XCTest
 
 class MetricsExtensionsTests: XCTestCase {
@@ -27,9 +28,9 @@ class MetricsExtensionsTests: XCTestCase {
         Timer.measure(label: name) {
             Thread.sleep(forTimeInterval: delay)
         }
-        let timer = metrics.timers[name] as! TestTimer
+        let timer = try metrics.expectTimer(name)
         XCTAssertEqual(1, timer.values.count, "expected number of entries to match")
-        XCTAssertGreaterThan(timer.values[0].1, Int64(delay * 1_000_000_000), "expected delay to match")
+        XCTAssertGreaterThan(timer.values[0], Int64(delay * 1_000_000_000), "expected delay to match")
     }
 
     func testTimerWithTimeInterval() throws {
@@ -42,7 +43,7 @@ class MetricsExtensionsTests: XCTestCase {
         let timeInterval = TimeInterval(Double.random(in: 1 ... 500))
         timer.record(timeInterval)
         XCTAssertEqual(1, testTimer.values.count, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[0].1, Int64(timeInterval * 1_000_000_000), "expected value to match")
+        XCTAssertEqual(testTimer.values[0], Int64(timeInterval * 1_000_000_000), "expected value to match")
     }
 
     func testTimerWithDispatchTime() throws {
@@ -56,26 +57,26 @@ class MetricsExtensionsTests: XCTestCase {
         let nano = DispatchTimeInterval.nanoseconds(Int.random(in: 1 ... 500))
         timer.record(nano)
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(Int(testTimer.values[0].1), nano.nano(), "expected value to match")
+        XCTAssertEqual(Int(testTimer.values[0]), nano.nano(), "expected value to match")
         // micro
         let micro = DispatchTimeInterval.microseconds(Int.random(in: 1 ... 500))
         timer.record(micro)
         XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
-        XCTAssertEqual(Int(testTimer.values[1].1), micro.nano(), "expected value to match")
+        XCTAssertEqual(Int(testTimer.values[1]), micro.nano(), "expected value to match")
         // milli
         let milli = DispatchTimeInterval.milliseconds(Int.random(in: 1 ... 500))
         timer.record(milli)
         XCTAssertEqual(testTimer.values.count, 3, "expected number of entries to match")
-        XCTAssertEqual(Int(testTimer.values[2].1), milli.nano(), "expected value to match")
+        XCTAssertEqual(Int(testTimer.values[2]), milli.nano(), "expected value to match")
         // seconds
         let sec = DispatchTimeInterval.seconds(Int.random(in: 1 ... 500))
         timer.record(sec)
         XCTAssertEqual(testTimer.values.count, 4, "expected number of entries to match")
-        XCTAssertEqual(Int(testTimer.values[3].1), sec.nano(), "expected value to match")
+        XCTAssertEqual(Int(testTimer.values[3]), sec.nano(), "expected value to match")
         // never
         timer.record(DispatchTimeInterval.never)
         XCTAssertEqual(testTimer.values.count, 5, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[4].1, 0, "expected value to match")
+        XCTAssertEqual(testTimer.values[4], 0, "expected value to match")
     }
 
     func testTimerWithDispatchTimeInterval() {
@@ -91,7 +92,7 @@ class MetricsExtensionsTests: XCTestCase {
 
         let testTimer = timer._handler as! TestTimer
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(UInt64(testTimer.values.first!.1), end.uptimeNanoseconds - start.uptimeNanoseconds, "expected value to match")
+        XCTAssertEqual(UInt64(testTimer.values.first!), end.uptimeNanoseconds - start.uptimeNanoseconds, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
     }
 
@@ -107,7 +108,7 @@ class MetricsExtensionsTests: XCTestCase {
 
         let testTimer = timer._handler as! TestTimer
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(testTimer.values.first, value, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
 
         let secondsName = "timer-seconds-\(UUID().uuidString)"

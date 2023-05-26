@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 @testable import CoreMetrics
+@testable import MetricsTestKit
 import XCTest
 
 class MetricsTests: XCTestCase {
@@ -46,7 +47,7 @@ class MetricsTests: XCTestCase {
         let name = "counter-\(UUID().uuidString)"
         let value = Int.random(in: Int.min ... Int.max)
         Counter(label: name).increment(by: value)
-        let counter = metrics.counters[name] as! TestCounter
+        let counter = try metrics.expectCounter(name)
         XCTAssertEqual(counter.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(counter.values[0].1, Int64(value), "expected value to match")
         counter.reset()
@@ -59,7 +60,7 @@ class MetricsTests: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
-        let counter = metrics.counters[label] as! TestCounter
+        let counter = try metrics.expectCounter(label)
         fpCounter.increment(by: Double.nan)
         fpCounter.increment(by: Double.signalingNaN)
         XCTAssertEqual(counter.values.count, 0, "expected nan values to be ignored")
@@ -71,7 +72,7 @@ class MetricsTests: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
-        let counter = metrics.counters[label] as! TestCounter
+        let counter = try metrics.expectCounter(label)
         fpCounter.increment(by: Double.infinity)
         fpCounter.increment(by: -Double.infinity)
         XCTAssertEqual(counter.values.count, 0, "expected infinite values to be ignored")
@@ -83,7 +84,7 @@ class MetricsTests: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
-        let counter = metrics.counters[label] as! TestCounter
+        let counter = try metrics.expectCounter(label)
         fpCounter.increment(by: -100)
         XCTAssertEqual(counter.values.count, 0, "expected negative values to be ignored")
     }
@@ -94,19 +95,19 @@ class MetricsTests: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
-        let counter = metrics.counters[label] as! TestCounter
+        let counter = try metrics.expectCounter(label)
         fpCounter.increment(by: 0)
         fpCounter.increment(by: -0)
         XCTAssertEqual(counter.values.count, 0, "expected zero values to be ignored")
     }
 
-    func testDefaultFloatingPointCounter_ceilsExtremeValues() {
+    func testDefaultFloatingPointCounter_ceilsExtremeValues() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
-        let counter = metrics.counters[label] as! TestCounter
+        let counter = try metrics.expectCounter(label)
         // Just larger than Int64
         fpCounter.increment(by: Double(sign: .plus, exponent: 63, significand: 1))
         // Much larger than Int64
@@ -116,14 +117,14 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(values, [Int64.max, Int64.max], "expected extremely large values to be replaced with Int64.max")
     }
 
-    func testDefaultFloatingPointCounter_accumulatesFloatingPointDecimalValues() {
+    func testDefaultFloatingPointCounter_accumulatesFloatingPointDecimalValues() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         let label = "\(#function)-fp-counter-\(UUID())"
         let fpCounter = FloatingPointCounter(label: label)
         let rawFpCounter = fpCounter._handler as! AccumulatingRoundingFloatingPointCounter
-        let counter = metrics.counters[label] as! TestCounter
+        let counter = try metrics.expectCounter(label)
 
         // Increment by a small value (perfectly representable)
         fpCounter.increment(by: 0.75)
@@ -205,9 +206,9 @@ class MetricsTests: XCTestCase {
         let name = "recorder-\(UUID().uuidString)"
         let value = Double.random(in: Double(Int.min) ... Double(Int.max))
         Recorder(label: name).record(value)
-        let recorder = metrics.recorders[name] as! TestRecorder
+        let recorder = try metrics.expectRecorder(name)
         XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
+        XCTAssertEqual(recorder.lastValue, value, "expected value to match")
     }
 
     func testTimers() throws {
@@ -238,9 +239,9 @@ class MetricsTests: XCTestCase {
         let name = "timer-\(UUID().uuidString)"
         let value = Int64.random(in: Int64.min ... Int64.max)
         Timer(label: name).recordNanoseconds(value)
-        let timer = metrics.timers[name] as! TestTimer
+        let timer = try metrics.expectTimer(name)
         XCTAssertEqual(timer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(timer.values[0].1, value, "expected value to match")
+        XCTAssertEqual(timer.values[0], value, "expected value to match")
     }
 
     func testTimerVariants() throws {
@@ -254,22 +255,22 @@ class MetricsTests: XCTestCase {
         let nano = Int64.random(in: 0 ... 5)
         timer.recordNanoseconds(nano)
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[0].1, nano, "expected value to match")
+        XCTAssertEqual(testTimer.values[0], nano, "expected value to match")
         // micro
         let micro = Int64.random(in: 0 ... 5)
         timer.recordMicroseconds(micro)
         XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[1].1, micro * 1000, "expected value to match")
+        XCTAssertEqual(testTimer.values[1], micro * 1000, "expected value to match")
         // milli
         let milli = Int64.random(in: 0 ... 5)
         timer.recordMilliseconds(milli)
         XCTAssertEqual(testTimer.values.count, 3, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[2].1, milli * 1_000_000, "expected value to match")
+        XCTAssertEqual(testTimer.values[2], milli * 1_000_000, "expected value to match")
         // seconds
         let sec = Int64.random(in: 0 ... 5)
         timer.recordSeconds(sec)
         XCTAssertEqual(testTimer.values.count, 4, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[3].1, sec * 1_000_000_000, "expected value to match")
+        XCTAssertEqual(testTimer.values[3], sec * 1_000_000_000, "expected value to match")
     }
 
     func testTimerOverflow() throws {
@@ -282,31 +283,31 @@ class MetricsTests: XCTestCase {
         // nano (integer)
         timer.recordNanoseconds(Int64.max)
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[0].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[0], Int64.max, "expected value to match")
         // micro (integer)
         timer.recordMicroseconds(Int64.max)
         XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[1].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[1], Int64.max, "expected value to match")
         // micro (double)
         timer.recordMicroseconds(Double(Int64.max) + 1)
         XCTAssertEqual(testTimer.values.count, 3, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[1].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[1], Int64.max, "expected value to match")
         // milli (integer)
         timer.recordMilliseconds(Int64.max)
         XCTAssertEqual(testTimer.values.count, 4, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[2].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[2], Int64.max, "expected value to match")
         // milli (double)
         timer.recordMilliseconds(Double(Int64.max) + 1)
         XCTAssertEqual(testTimer.values.count, 5, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[2].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[2], Int64.max, "expected value to match")
         // seconds (integer)
         timer.recordSeconds(Int64.max)
         XCTAssertEqual(testTimer.values.count, 6, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[3].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[3], Int64.max, "expected value to match")
         // seconds (double)
         timer.recordSeconds(Double(Int64.max) * 1)
         XCTAssertEqual(testTimer.values.count, 7, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[3].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[3], Int64.max, "expected value to match")
     }
 
     func testTimerHandlesUnsignedOverflow() throws {
@@ -319,19 +320,19 @@ class MetricsTests: XCTestCase {
         // nano
         timer.recordNanoseconds(UInt64.max)
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[0].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[0], Int64.max, "expected value to match")
         // micro
         timer.recordMicroseconds(UInt64.max)
         XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[1].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[1], Int64.max, "expected value to match")
         // milli
         timer.recordMilliseconds(UInt64.max)
         XCTAssertEqual(testTimer.values.count, 3, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[2].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[2], Int64.max, "expected value to match")
         // seconds
         timer.recordSeconds(UInt64.max)
         XCTAssertEqual(testTimer.values.count, 4, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values[3].1, Int64.max, "expected value to match")
+        XCTAssertEqual(testTimer.values[3], Int64.max, "expected value to match")
     }
 
     func testGauge() throws {
@@ -345,7 +346,7 @@ class MetricsTests: XCTestCase {
         gauge.record(value)
         let recorder = gauge._handler as! TestRecorder
         XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
+        XCTAssertEqual(recorder.lastValue, value, "expected value to match")
     }
 
     func testGaugeBlock() throws {
@@ -356,9 +357,9 @@ class MetricsTests: XCTestCase {
         let name = "gauge-\(UUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
         Gauge(label: name).record(value)
-        let recorder = metrics.recorders[name] as! TestRecorder
+        let recorder = try metrics.expectRecorder(name)
         XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
+        XCTAssertEqual(recorder.lastValue, value, "expected value to match")
     }
 
     func testMeter() throws {
@@ -383,7 +384,7 @@ class MetricsTests: XCTestCase {
         let name = "meter-\(NSUUID().uuidString)"
         let value = Double.random(in: -1000 ... 1000)
         Meter(label: name).set(value)
-        let testMeter = metrics.meters[name] as! TestMeter
+        let testMeter = try metrics.expectMeter(name)
         XCTAssertEqual(testMeter.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(testMeter.values[0].1, value, "expected value to match")
     }
@@ -398,15 +399,15 @@ class MetricsTests: XCTestCase {
         let muxCounter = Counter(label: name)
         muxCounter.increment(by: value)
         factories.forEach { factory in
-            let counter = factory.counters.first?.1 as! TestCounter
-            XCTAssertEqual(counter.label, name, "expected label to match")
-            XCTAssertEqual(counter.values.count, 1, "expected number of entries to match")
-            XCTAssertEqual(counter.values[0].1, Int64(value), "expected value to match")
+            let counter = factory.counters.first
+            XCTAssertEqual(counter?.label, name, "expected label to match")
+            XCTAssertEqual(counter?.values.count, 1, "expected number of entries to match")
+            XCTAssertEqual(counter?.lastValue, Int64(value), "expected value to match")
         }
         muxCounter.reset()
         factories.forEach { factory in
-            let counter = factory.counters.first?.1 as! TestCounter
-            XCTAssertEqual(counter.values.count, 0, "expected number of entries to match")
+            let counter = factory.counters.first
+            XCTAssertEqual(counter?.values.count, 0, "expected number of entries to match")
         }
     }
 
@@ -420,10 +421,10 @@ class MetricsTests: XCTestCase {
         let muxMeter = Meter(label: name)
         muxMeter.set(value)
         factories.forEach { factory in
-            let meter = factory.meters.first?.1 as! TestMeter
-            XCTAssertEqual(meter.label, name, "expected label to match")
-            XCTAssertEqual(meter.values.count, 1, "expected number of entries to match")
-            XCTAssertEqual(meter.values[0].1, value, "expected value to match")
+            let meter = factory.meters.first
+            XCTAssertEqual(meter?.label, name, "expected label to match")
+            XCTAssertEqual(meter?.values.count, 1, "expected number of entries to match")
+            XCTAssertEqual(meter?.values[0].1, value, "expected value to match")
         }
     }
 
@@ -437,10 +438,10 @@ class MetricsTests: XCTestCase {
         let muxRecorder = Recorder(label: name)
         muxRecorder.record(value)
         factories.forEach { factory in
-            let recorder = factory.recorders.first?.1 as! TestRecorder
-            XCTAssertEqual(recorder.label, name, "expected label to match")
-            XCTAssertEqual(recorder.values.count, 1, "expected number of entries to match")
-            XCTAssertEqual(recorder.values[0].1, value, "expected value to match")
+            let recorder = factory.recorders.first
+            XCTAssertEqual(recorder?.label, name, "expected label to match")
+            XCTAssertEqual(recorder?.values.count, 1, "expected number of entries to match")
+            XCTAssertEqual(recorder?.values[0].1, value, "expected value to match")
         }
     }
 
@@ -454,12 +455,12 @@ class MetricsTests: XCTestCase {
         let muxTimer = Timer(label: name, preferredDisplayUnit: .minutes)
         muxTimer.recordSeconds(seconds)
         factories.forEach { factory in
-            let timer = factory.timers.first?.1 as! TestTimer
-            XCTAssertEqual(timer.label, name, "expected label to match")
-            XCTAssertEqual(timer.values.count, 1, "expected number of entries to match")
-            XCTAssertEqual(timer.values[0].1, Int64(seconds * 1_000_000_000), "expected value to match")
-            XCTAssertEqual(timer.displayUnit, .minutes, "expected value to match")
-            XCTAssertEqual(timer.retrieveValueInPreferredUnit(atIndex: 0), Double(seconds) / 60.0, "seconds should be returned as minutes")
+            let timer = factory.timers.first
+            XCTAssertEqual(timer?.label, name, "expected label to match")
+            XCTAssertEqual(timer?.values.count, 1, "expected number of entries to match")
+            XCTAssertEqual(timer?.values[0], Int64(seconds * 1_000_000_000), "expected value to match")
+            XCTAssertEqual(timer?.displayUnit, .minutes, "expected value to match")
+            XCTAssertEqual(timer?.retrieveValueInPreferredUnit(atIndex: 0), Double(seconds) / 60.0, "seconds should be returned as minutes")
         }
     }
 
@@ -577,7 +578,7 @@ class MetricsTests: XCTestCase {
 
         let testTimer = timer._handler as! TestTimer
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testTimer.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(testTimer.values.first, value, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
 
         let identity = ObjectIdentifier(timer)
@@ -588,7 +589,7 @@ class MetricsTests: XCTestCase {
         timerAgain.recordNanoseconds(value)
         let testTimerAgain = timerAgain._handler as! TestTimer
         XCTAssertEqual(testTimerAgain.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(testTimerAgain.values.first!.1, value, "expected value to match")
+        XCTAssertEqual(testTimerAgain.values.first, value, "expected value to match")
 
         let identityAgain = ObjectIdentifier(timerAgain)
         XCTAssertNotEqual(identity, identityAgain, "since the cached metric was released, the created a new should have a different identity")
