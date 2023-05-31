@@ -24,6 +24,7 @@ extension Timer {
     ///     - dimensions: The dimensions for the Timer.
     ///     - body: Closure to run & record.
     @inlinable
+    @available(*, deprecated, message: "Please use non-static version on an already created Timer")
     public static func measure<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
         let timer = Timer(label: label, dimensions: dimensions)
         let start = DispatchTime.now().uptimeNanoseconds
@@ -74,3 +75,88 @@ extension Timer {
         }
     }
 }
+
+#if (os(macOS) && swift(>=5.7.1)) || (!os(macOS) && swift(>=5.7))
+extension Timer {
+    /// Convenience for recording a duration based on Duration.
+    ///
+    /// - parameters:
+    ///     - duration: The duration to record.
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func record(duration: Duration) {
+        self.recordNanoseconds(duration.nanosecondsClamped)
+    }
+
+    /// Convenience for recording a duration since Instant using provided Clock
+    ///
+    /// - parameters:
+    ///     - instant: The instant to measure duration since
+    ///     - clock: The clock to measure duration with
+    @inlinable
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func recordDurationSince<C: Clock>(
+        instant: C.Instant,
+        clock: C = ContinuousClock.continuous
+    ) where C.Duration == Duration {
+        self.record(duration: instant.duration(to: clock.now))
+    }
+}
+
+@available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+internal extension Swift.Duration {
+    /// The duration represented as nanoseconds, clamped to maximum expressible value.
+    var nanosecondsClamped: Int64 {
+        let components = self.components
+
+        let secondsComponentNanos = components.seconds.multipliedReportingOverflow(by: 1_000_000_000)
+        let attosCompononentNanos = components.attoseconds / 1_000_000_000
+        let combinedNanos = secondsComponentNanos.partialValue.addingReportingOverflow(attosCompononentNanos)
+
+        guard
+            !secondsComponentNanos.overflow,
+            !combinedNanos.overflow
+        else {
+            return .max
+        }
+
+        return combinedNanos.partialValue
+    }
+}
+
+extension Timer {
+    /// Convenience for measuring duration of a closure
+    ///
+    /// - parameters:
+    ///     - body: Closure to run & record.
+    @inlinable
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func measure<T>(
+        body: @escaping () throws -> T
+    ) rethrows -> T {
+        let start = ContinuousClock.continuous.now
+        defer {
+            self.recordDurationSince(instant: start, clock: ContinuousClock.continuous)
+        }
+        return try body()
+    }
+
+    /// Convenience for measuring duration of an async closure with a provided clock
+    ///
+    /// - parameters:
+    ///     - clock: The clock to measure closure duration with
+    ///     - body: Closure to run & record.
+    @inlinable
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func measure<T, C: Clock>(
+        clock: C = ContinuousClock.continuous,
+        body: @escaping () async throws -> T
+    ) async rethrows -> T where C.Duration == Duration {
+        let start = clock.now
+        defer {
+            self.recordDurationSince(instant: start, clock: clock)
+        }
+        return try await body()
+    }
+}
+
+#endif // (os(macOS) && swift(>=5.7.1)) || (!os(macOS) && swift(>=5.7))
