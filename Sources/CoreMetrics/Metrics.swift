@@ -231,6 +231,36 @@ public final class Meter {
     public func set<DataType: BinaryFloatingPoint>(_ value: DataType) {
         self._handler.set(Double(value))
     }
+
+    /// Increment the Meter.
+    ///
+    /// - parameters:
+    ///     - by: Amount to increment by.
+    @inlinable
+    public func increment<DataType: BinaryFloatingPoint>(by amount: DataType) {
+        self._handler.increment(by: Double(amount))
+    }
+
+    /// Increment the Meter by one.
+    @inlinable
+    public func increment() {
+        self.increment(by: 1.0)
+    }
+
+    /// Decrement the Meter.
+    ///
+    /// - parameters:
+    ///     - by: Amount to decrement by.
+    @inlinable
+    public func decrement<DataType: BinaryFloatingPoint>(by amount: DataType) {
+        self._handler.decrement(by: Double(amount))
+    }
+
+    /// Decrement the Meter by one.
+    @inlinable
+    public func decrement() {
+        self.decrement(by: 1.0)
+    }
 }
 
 extension Meter {
@@ -787,6 +817,24 @@ internal final class AccumulatingMeter: MeterHandler {
     }
 
     func increment(by amount: Double) {
+        // Drop illegal values
+        // - cannot increment by NaN
+        guard !amount.isNaN else {
+            return
+        }
+        // - cannot increment by infinite quantities
+        guard !amount.isInfinite else {
+            return
+        }
+        // - cannot increment by negative values
+        guard amount.sign == .plus else {
+            return
+        }
+        // - cannot increment by zero
+        guard !amount.isZero else {
+            return
+        }
+
         let newValue: Double = self.lock.withLock {
             self.value += amount
             return self.value
@@ -795,6 +843,24 @@ internal final class AccumulatingMeter: MeterHandler {
     }
 
     func decrement(by amount: Double) {
+        // Drop illegal values
+        // - cannot decrement by NaN
+        guard !amount.isNaN else {
+            return
+        }
+        // - cannot decrement by infinite quantities
+        guard !amount.isInfinite else {
+            return
+        }
+        // - cannot decrement by negative values
+        guard amount.sign == .plus else {
+            return
+        }
+        // - cannot decrement by zero
+        guard !amount.isZero else {
+            return
+        }
+
         let newValue: Double = self.lock.withLock {
             self.value -= amount
             return self.value

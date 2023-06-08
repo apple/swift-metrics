@@ -57,7 +57,7 @@ public final class TestMetrics: MetricsFactory {
         // nothing to do
     }
 
-    /// Reset method to destroy all created ``TestCounter``, ``TestRecorder`` and ``TestTimer``.
+    /// Reset method to destroy all created ``TestCounter``, ``TestMeter``, ``TestRecorder`` and ``TestTimer``.
     /// Invoke this method in between test runs to verify that Counters are created as needed.
     public func reset() {
         self.lock.withLock {
@@ -361,7 +361,7 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
     private var _values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)]) {
-        self.id = NSUUID().uuidString
+        self.id = UUID().uuidString
         self.label = label
         self.dimensions = dimensions
     }
@@ -378,18 +378,54 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
     }
 
     public func increment(by amount: Double) {
+        // Drop illegal values
+        // - cannot increment by NaN
+        guard !amount.isNaN else {
+            return
+        }
+        // - cannot increment by infinite quantities
+        guard !amount.isInfinite else {
+            return
+        }
+        // - cannot increment by negative values
+        guard amount.sign == .plus else {
+            return
+        }
+        // - cannot increment by zero
+        guard !amount.isZero else {
+            return
+        }
+
         self.lock.withLock {
-            let lastValue = self._values.last?.1 ?? 0
-            let newValue = lastValue - amount
-            _values.append((Date(), Double(newValue)))
+            let lastValue: Double = self._values.last?.1 ?? 0
+            let newValue = lastValue + amount
+            _values.append((Date(), newValue))
         }
     }
 
     public func decrement(by amount: Double) {
+        // Drop illegal values
+        // - cannot decrement by NaN
+        guard !amount.isNaN else {
+            return
+        }
+        // - cannot decrement by infinite quantities
+        guard !amount.isInfinite else {
+            return
+        }
+        // - cannot decrement by negative values
+        guard amount.sign == .plus else {
+            return
+        }
+        // - cannot decrement by zero
+        guard !amount.isZero else {
+            return
+        }
+
         self.lock.withLock {
-            let lastValue = self._values.last?.1 ?? 0
+            let lastValue: Double = self._values.last?.1 ?? 0
             let newValue = lastValue - amount
-            _values.append((Date(), Double(newValue)))
+            _values.append((Date(), newValue))
         }
     }
 
@@ -428,7 +464,7 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     private var _values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)], aggregate: Bool) {
-        self.id = NSUUID().uuidString
+        self.id = UUID().uuidString
         self.label = label
         self.dimensions = dimensions
         self.aggregate = aggregate
