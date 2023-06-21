@@ -19,7 +19,7 @@ import XCTest
 
 class SendableTest: XCTestCase {
     #if compiler(>=5.6)
-    func testSendableMetrics() async {
+    func testSendableMetrics() async throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
@@ -31,10 +31,10 @@ class SendableTest: XCTestCase {
 
             let task = Task.detached { () -> [Int64] in
                 counter.increment(by: value)
-                let handler = counter._handler as! TestCounter
+                let handler = try metrics.expectCounter(counter)
                 return handler.values
             }
-            let values = await task.value
+            let values = try await task.value
             XCTAssertEqual(values.count, 1, "expected number of entries to match")
             XCTAssertEqual(values[0], Int64(value), "expected value to match")
         }
@@ -60,25 +60,25 @@ class SendableTest: XCTestCase {
 
             let task = Task.detached { () -> [Double] in
                 recorder.record(value)
-                let handler = recorder._handler as! TestRecorder
+                let handler = try metrics.expectRecorder(recorder)
                 return handler.values
             }
-            let values = await task.value
+            let values = try await task.value
             XCTAssertEqual(values.count, 1, "expected number of entries to match")
             XCTAssertEqual(values[0], value, "expected value to match")
         }
 
         do {
-            let name = "meter-\(NSUUID().uuidString)"
+            let name = "meter-\(UUID().uuidString)"
             let value = Double.random(in: -1000 ... 1000)
             let meter = Meter(label: name)
 
             let task = Task.detached { () -> [Double] in
                 meter.set(value)
-                let handler = meter._handler as! TestMeter
+                let handler = try metrics.expectMeter(meter)
                 return handler.values
             }
-            let values = await task.value
+            let values = try await task.value
             XCTAssertEqual(values.count, 1, "expected number of entries to match")
             XCTAssertEqual(values[0], value, "expected value to match")
         }
@@ -90,10 +90,10 @@ class SendableTest: XCTestCase {
 
             let task = Task.detached { () -> [Int64] in
                 timer.recordNanoseconds(value)
-                let handler = timer._handler as! TestTimer
+                let handler = try metrics.expectTimer(timer)
                 return handler.values
             }
-            let values = await task.value
+            let values = try await task.value
             XCTAssertEqual(values.count, 1, "expected number of entries to match")
             XCTAssertEqual(values[0], value, "expected value to match")
         }
