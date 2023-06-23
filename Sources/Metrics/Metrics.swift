@@ -16,7 +16,7 @@
 @_exported import class CoreMetrics.Timer
 import Foundation
 
-public extension Timer {
+extension Timer {
     /// Convenience for measuring duration of a closure.
     ///
     /// - parameters:
@@ -24,23 +24,33 @@ public extension Timer {
     ///     - dimensions: The dimensions for the Timer.
     ///     - body: Closure to run & record.
     @inlinable
-    static func measure<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
+    public static func measure<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
         let timer = Timer(label: label, dimensions: dimensions)
-        let start = Date()
+        let start = DispatchTime.now().uptimeNanoseconds
         defer {
-            timer.record(Date().timeIntervalSince(start))
+            let delta = DispatchTime.now().uptimeNanoseconds - start
+            timer.recordNanoseconds(delta)
         }
         return try body()
     }
+
+    /// Record the time interval (with nanosecond precision) between the passed `since` dispatch time and `end` dispatch time.
+    ///
+    /// - parameters:
+    ///   - since: Start of the interval as `DispatchTime`.
+    ///   - end: End of the interval, defaulting to `.now()`.
+    public func recordInterval(since: DispatchTime, end: DispatchTime = .now()) {
+        self.recordNanoseconds(end.uptimeNanoseconds - since.uptimeNanoseconds)
+    }
 }
 
-public extension Timer {
+extension Timer {
     /// Convenience for recording a duration based on TimeInterval.
     ///
     /// - parameters:
     ///     - duration: The duration to record.
     @inlinable
-    func record(_ duration: TimeInterval) {
+    public func record(_ duration: TimeInterval) {
         self.recordSeconds(duration)
     }
 
@@ -49,7 +59,7 @@ public extension Timer {
     /// - parameters:
     ///     - duration: The duration to record.
     @inlinable
-    func record(_ duration: DispatchTimeInterval) {
+    public func record(_ duration: DispatchTimeInterval) {
         switch duration {
         case .nanoseconds(let value):
             self.recordNanoseconds(value)

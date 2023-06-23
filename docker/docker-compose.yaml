@@ -16,12 +16,15 @@ services:
     depends_on: [runtime-setup]
     volumes:
       - ~/.ssh:/root/.ssh
-      - ..:/code
+      - ..:/code:z
     working_dir: /code
+    cap_drop:
+      - CAP_NET_RAW
+      - CAP_NET_BIND_SERVICE
 
-  sanity:
+  soundness:
     <<: *common
-    command: /bin/bash -xcl "./scripts/sanity.sh"
+    command: /bin/bash -xcl "./scripts/soundness.sh"
 
   docs:
     <<: *common
@@ -31,10 +34,10 @@ services:
 
   test:
     <<: *common
-    command: /bin/bash -xcl "swift test -v -Xswiftc -warnings-as-errors $${SANITIZER_ARG-}"
+    command: /bin/bash -xcl "swift test -Xswiftc -warnings-as-errors $${FORCE_TEST_DISCOVERY-} $${SANITIZER_ARG-}"
 
   # util
 
   shell:
     <<: *common
-    entrypoint: /bin/bash
+    entrypoint: /bin/bash -l

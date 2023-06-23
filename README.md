@@ -15,15 +15,20 @@ If you have a server-side Swift application, or maybe a cross-platform (e.g. Lin
 To add a dependency on the metrics API package, you need to declare it in your `Package.swift`:
 
 ```swift
-// As of May 5, 2019, SwiftMetrics' major stable release is 1.0.0
-// To depend on this release, you can use
-.package(url: "https://github.com/apple/swift-metrics.git", from: "1.0.0"),
+// swift-metrics 1.x and 2.x are almost API compatible, so most clients should use
+.package(url: "https://github.com/apple/swift-metrics.git", "1.0.0" ..< "3.0.0"),
 ```
 
 and to your application/library target, add "Metrics" to your dependencies:
 
 ```swift
-.target(name: "BestExampleApp", dependencies: ["Metrics"]),
+.target(
+    name: "BestExampleApp",
+    dependencies: [
+        // ... 
+        .product(name: "Metrics", package: "swift-metrics"),
+    ]
+),
 ```
 
 ###  Emitting metrics information
@@ -57,7 +62,12 @@ As the API has just launched, not many implementations exist yet. If you are int
 
 - [SwiftPrometheus](https://github.com/MrLotU/SwiftPrometheus), support for [Prometheus](https://prometheus.io)
 - [StatsD Client](https://github.com/apple/swift-statsd-client), support for StatsD
+- [OpenTelemetry Swift](https://github.com/open-telemetry/opentelemetry-swift), support for [OpenTelemetry](https://opentelemetry.io/) which also implements other metrics and tracing backends 
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
+
+### Swift Metrics Extras
+
+You may also be interested in some "extra" modules which are collected in the [Swift Metrics Extras](https://github.com/apple/swift-metrics-extras) repository.
 
 ## Detailed design
 
@@ -88,16 +98,22 @@ The API supports four metric types:
 counter.increment(by: 100)
 ```
 
+ `Gauge`: A Gauge is a metric that represents a single numerical value that can arbitrarily go up and down. Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Gauges are modeled as a `Recorder` with a sample size of 1 that does not perform any aggregation.
+
+```swift
+gauge.record(100)
+```
+
+`Meter`: A Meter is similar to `Gauge` - a metric that represents a single numerical value that can arbitrarily go up and down. Meters are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Unlike `Gauge`, `Meter` also supports atomic incerements and decerements.
+
+```swift
+meter.record(100)
+```
+
 `Recorder`: A recorder collects observations within a time window (usually things like response sizes) and *can* provide aggregated information about the data sample, for example count, sum, min, max and various quantiles.
 
 ```swift
 recorder.record(100)
-```
-
-`Gauge`: A Gauge is a metric that represents a single numerical value that can arbitrarily go up and down. Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Gauges are modeled as a `Recorder` with a sample size of 1 that does not perform any aggregation.
-
-```swift
-gauge.record(100)
 ```
 
 `Timer`: A timer collects observations within a time window (usually things like request duration) and provides aggregated information about the data sample, for example min, max and various quantiles. It is similar to a `Recorder` but specialized for values that represent durations.
@@ -110,7 +126,7 @@ timer.recordMilliseconds(100)
 
 Note: Unless you need to implement a custom metrics backend, everything in this section is likely not relevant, so please feel free to skip.
 
-As seen above, each constructor for `Counter`, `Timer`, `Recorder` and `Gauge` provides a metric object. This uncertainty obscures the selected metrics backend calling these constructors by design. _Each application_ can select and configure its desired backend. The application sets up the metrics backend it wishes to use. Configuring the metrics backend is straightforward:
+As seen above, each constructor for `Counter`, `Gauge`, `Meter`, `Recorder` and `Timer` provides a metric object. This uncertainty obscures the selected metrics backend calling these constructors by design. _Each application_ can select and configure its desired backend. The application sets up the metrics backend it wishes to use. Configuring the metrics backend is straightforward:
 
 ```swift
 let metricsImplementation = MyFavoriteMetricsImplementation()
@@ -124,10 +140,12 @@ Given the above, an implementation of a metric backend needs to conform to `prot
 ```swift
 public protocol MetricsFactory {
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
-    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
+    func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler    
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
 
     func destroyCounter(_ handler: CounterHandler)
+    func destroyMeter(_ handler: MeterHandler)
     func destroyRecorder(_ handler: RecorderHandler)
     func destroyTimer(_ handler: TimerHandler)
 }
@@ -144,11 +162,14 @@ public protocol CounterHandler: AnyObject {
 }
 ```
 
-**Timer**
+**Meter**
 
 ```swift
-public protocol TimerHandler: AnyObject {
-    func recordNanoseconds(_ duration: Int64)
+public protocol MeterHandler: AnyObject {
+    func set(_ value: Int64)
+    func set(_ value: Double)
+    func increment(by: Double)
+    func decrement(by: Double)
 }
 ```
 
@@ -161,9 +182,17 @@ public protocol RecorderHandler: AnyObject {
 }
 ```
 
+**Timer**
+
+```swift
+public protocol TimerHandler: AnyObject {
+    func recordNanoseconds(_ duration: Int64)
+}
+```
+
 #### Dealing with Overflows
 
-Implementaton of metric objects that deal with integers, like `Counter` and `Timer` should be careful with overflow. The expected behavior is to cap at `.max`, and never crash the program due to overflow . For example:
+Implementation of metric objects that deal with integers, like `Counter` and `Timer` should be careful with overflow. The expected behavior is to cap at `.max`, and never crash the program due to overflow . For example:
 
 ```swift
 class ExampleCounter: CounterHandler {
@@ -191,9 +220,12 @@ class SimpleMetricsLibrary: MetricsFactory {
         return ExampleCounter(label, dimensions)
     }
 
+    func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+        return ExampleMeter(label, dimensions)
+    }
+
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-        let maker: (String, [(String, String)]) -> RecorderHandler = aggregate ? ExampleRecorder.init : ExampleGauge.init
-        return maker(label, dimensions)
+        return ExampleRecorder(label, dimensions, aggregate)
     }
 
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
@@ -202,7 +234,8 @@ class SimpleMetricsLibrary: MetricsFactory {
 
     // implementation is stateless, so nothing to do on destroy calls
     func destroyCounter(_ handler: CounterHandler) {}
-    func destroyRecorder(_ handler: RecorderHandler) {}
+    func destroyMeter(_ handler: TimerHandler) {}
+    func destroyRecorder(_ handler: RecorderHandler) {}    
     func destroyTimer(_ handler: TimerHandler) {}
 
     private class ExampleCounter: CounterHandler {
@@ -223,8 +256,31 @@ class SimpleMetricsLibrary: MetricsFactory {
         }
     }
 
-    private class ExampleRecorder: RecorderHandler {
+    private class ExampleMeter: MeterHandler {
         init(_: String, _: [(String, String)]) {}
+
+        let lock = NSLock()
+        var _value: Double = 0
+
+        func set(_ value: Int64) {
+            self.set(Double(value))
+        }
+
+        func set(_ value: Double) {
+            self.lock.withLock { _value = value }
+        }
+
+        func increment(by value: Double) {
+            self.lock.withLock { self._value += value }
+        }
+
+        func decrement(by value: Double) {
+            self.lock.withLock { self._value -= value }
+        }
+    }
+
+    private class ExampleRecorder: RecorderHandler {
+        init(_: String, _: [(String, String)], _: Bool) {}
 
         private let lock = NSLock()
         var values = [(Int64, Double)]()
@@ -264,26 +320,23 @@ class SimpleMetricsLibrary: MetricsFactory {
         }
     }
 
-    private class ExampleGauge: RecorderHandler {
+    private class ExampleTimer: TimerHandler {
         init(_: String, _: [(String, String)]) {}
 
         let lock = NSLock()
-        var _value: Double = 0
-        func record(_ value: Int64) {
-            self.record(Double(value))
-        }
+        var _value: Int64 = 0
 
-        func record(_ value: Double) {
-            self.lock.withLock { _value = value }
-        }
-    }
-
-    private class ExampleTimer: ExampleRecorder, TimerHandler {
         func recordNanoseconds(_ duration: Int64) {
-            super.record(duration)
+            self.lock.withLock { _value = duration }
         }
     }
 }
 ```
+
+## Security
+
+Please see [SECURITY.md](SECURITY.md) for details on the security process.
+
+## Getting involved
 
 Do not hesitate to get in touch as well, over on https://forums.swift.org/c/server

@@ -1,5 +1,6 @@
 # file options
 
+--swiftversion 5.0
 --exclude .build
 
 # format options
@@ -7,6 +8,9 @@
 --self insert
 --patternlet inline
 --stripunusedargs unnamed-only
---comments ignore
+--ifdef no-indent
+
+# Configure the placement of an extension's access control keyword.
+--extensionacl on-declarations
 
 # rules

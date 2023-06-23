@@ -6,3 +6,4 @@
 .SourceKitten
 *.orig
 .swiftpm
+Package.resolved

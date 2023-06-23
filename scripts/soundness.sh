@@ -32,7 +32,7 @@ here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 function replace_acceptable_years() {
     # this needs to replace all acceptable forms with 'YEARS'
-    sed -e 's/2018-2019/YEARS/' -e 's/2019/YEARS/'
+    sed -e 's/20[12][789012]-20[12][89012]/YEARS/' -e 's/20[12][89012]/YEARS/'
 }
 
 printf "=> Checking linux tests... "
@@ -47,6 +47,22 @@ else
   printf "\033[0;32mokay.\033[0m\n"
 fi
 
+printf "=> Checking for unacceptable language... "
+# This greps for unacceptable terminology. The square bracket[s] are so that
+# "git grep" doesn't find the lines that greps :).
+unacceptable_terms=(
+    -e blacklis[t]
+    -e whitelis[t]
+    -e slav[e]
+    -e sanit[y]
+)
+if git grep --color=never -i "${unacceptable_terms[@]}" > /dev/null; then
+    printf "\033[0;31mUnacceptable language found.\033[0m\n"
+    git grep -i "${unacceptable_terms[@]}"
+    exit 1
+fi
+printf "\033[0;32mokay.\033[0m\n"
+
 printf "=> Checking format... "
 FIRST_OUT="$(git status --porcelain)"
 swiftformat . > /dev/null 2>&1
@@ -60,7 +76,7 @@ else
 fi
 
 printf "=> Checking license headers\n"
-tmp=$(mktemp /tmp/.swift-metrics-sanity_XXXXXX)
+tmp=$(mktemp /tmp/.swift-metrics-soundness_XXXXXX)
 
 for language in swift-or-c bash dtrace; do
   printf "   * $language... "
@@ -70,7 +86,7 @@ for language in swift-or-c bash dtrace; do
   matching_files=( -name '*' )
   case "$language" in
       swift-or-c)
-        exceptions=( -name c_nio_http_parser.c -o -name c_nio_http_parser.h -o -name cpp_magic.h -o -name Package.swift -o -name CNIOSHA1.h -o -name c_nio_sha1.c -o -name ifaddrs-android.c -o -name ifaddrs-android.h)
+        exceptions=( -name Package.swift -o -name "Package@swift-*.swift" )
         matching_files=( -name '*.swift' -o -name '*.c' -o -name '*.h' )
         cat > "$tmp" <<"EOF"
 //===----------------------------------------------------------------------===//
