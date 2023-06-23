@@ -64,6 +64,12 @@ fi
 printf "\033[0;32mokay.\033[0m\n"
 
 printf "=> Checking format... "
+
+if [[ ! -x $(which swiftformat) ]]; then
+    printf "\033[0;31mswiftformat not found!\033[0m\n"
+    exit 1
+fi
+
 FIRST_OUT="$(git status --porcelain)"
 swiftformat . > /dev/null 2>&1
 SECOND_OUT="$(git status --porcelain)"
