@@ -152,6 +152,74 @@ class MetricsExtensionsTests: XCTestCase {
         testTimer.preferDisplayUnit(.days)
         XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value / (60 * 60 * 24), accuracy: 0.000000001, "expected value to match")
     }
+
+    #if (os(macOS) && swift(>=5.7.1)) || (!os(macOS) && swift(>=5.7))
+    func testTimerBlock() async throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "timer-\(UUID().uuidString)"
+        let delay = Duration.milliseconds(5)
+        let timer = Timer(label: name)
+        try await timer.measure {
+            try await Task.sleep(for: delay)
+        }
+        let expectedTimer = try metrics.expectTimer(name)
+        XCTAssertEqual(1, expectedTimer.values.count, "expected number of entries to match")
+        XCTAssertGreaterThan(expectedTimer.values[0], delay.nanosecondsClamped, "expected delay to match")
+    }
+
+    func testTimerWithDuration() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "test-timer"
+        let timer = Timer(label: name)
+        let duration = Duration.milliseconds(5)
+        timer.record(duration: duration)
+
+        let expectedTimer = try metrics.expectTimer(name)
+        XCTAssertEqual(1, expectedTimer.values.count, "expected number of entries to match")
+        XCTAssertEqual(expectedTimer.values[0], duration.nanosecondsClamped, "expected delay to match")
+    }
+
+    func testTimerWithDurationOnContinuousClock() async throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "test-timer"
+        let timer = Timer(label: name)
+        let clock = ContinuousClock()
+        let start = clock.now
+        let duration = Duration.milliseconds(5)
+        try await Task.sleep(for: duration)
+        timer.recordDurationSince(instant: start, clock: clock)
+
+        let expectedTimer = try metrics.expectTimer(name)
+        XCTAssertEqual(1, expectedTimer.values.count, "expected number of entries to match")
+        XCTAssertGreaterThan(expectedTimer.values[0], duration.nanosecondsClamped, "expected delay to match")
+    }
+
+    func testTimerWithDurationOnDefaultContinuousClock() async throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "test-timer"
+        let timer = Timer(label: name)
+        let start = ContinuousClock.now
+        let duration = Duration.milliseconds(5)
+        try await Task.sleep(for: duration)
+        timer.recordDurationSince(instant: start)
+
+        let expectedTimer = try metrics.expectTimer(name)
+        XCTAssertEqual(1, expectedTimer.values.count, "expected number of entries to match")
+        XCTAssertGreaterThan(expectedTimer.values[0], duration.nanosecondsClamped, "expected delay to match")
+    }
+    #endif
 }
 
 // https://bugs.swift.org/browse/SR-6310
