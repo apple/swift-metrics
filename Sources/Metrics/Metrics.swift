@@ -74,3 +74,16 @@ extension Timer {
         }
     }
 }
+
+extension Timer {
+    /// Convenience for recording a duration based on ``Duration``.
+    ///
+    /// - parameters:
+    ///     - duration: The duration to record.
+    @available(macOS 13, iOS 16, tvOS 15, watchOS 8, *)
+    @inlinable
+    public func record(_ duration: Duration) {
+        let durationSeconds = Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
+        self.recordSeconds(durationSeconds)
+    }
+}

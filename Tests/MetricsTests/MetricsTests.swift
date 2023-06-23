@@ -95,6 +95,28 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(UInt64(testTimer.values.first!), end.uptimeNanoseconds - start.uptimeNanoseconds, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
     }
+    
+    func testTimerDuration() throws {
+        guard #available(iOS 16, macOS 13, tvOS 15, watchOS 8, *) else {
+            return
+        }
+        
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        
+        let name = "timer-\(UUID().uuidString)"
+        let duration = Duration(secondsComponent: 3, attosecondsComponent: 123000000000000000)
+        let durationInNanoseconds = duration.components.seconds * 1_000_000_000 + duration.components.attoseconds / 1_000_000_000
+        
+        let timer = Timer(label: name)
+        timer.record(duration)
+        
+        let testTimer = try metrics.expectTimer(timer)
+        XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values.first, durationInNanoseconds, "expected value to match")
+        XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
+    }
+    
 
     func testTimerUnits() throws {
         let metrics = TestMetrics()
