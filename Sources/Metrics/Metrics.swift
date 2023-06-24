@@ -78,16 +78,18 @@ extension Timer {
 #if swift(>=5.7)
 extension Timer {
     /// Convenience for recording a duration based on ``Duration``.
+    /// Duration will be recorded in nanoseconds.
     ///
     /// - parameters:
     ///     - duration: The duration to record.
     @available(macOS 13, iOS 16, tvOS 15, watchOS 8, *)
     @inlinable
     public func record(_ duration: Duration) {
-        // `Duration` doesn't have a nice way to convert it back to `Double` of seconds,
-        // so instead we can multiply attoseconds by 1e18 and add the number of seconds to it.
-        let durationSeconds = Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
-        self.recordSeconds(durationSeconds)
+        // `Duration` doesn't have a nice way to convert it nanoseconds or seconds,
+        // so we'll do the multiplication manually.
+        // nanoseconds are the smallest unit Timer can track, so we'll record in that.
+        let durationNanoseconds = duration.components.seconds * 1_000_000_000 + duration.components.attoseconds / 1_000_000_000
+        self.recordNanoseconds(durationNanoseconds)
     }
 }
 #endif

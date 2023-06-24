@@ -97,6 +97,8 @@ class MetricsExtensionsTests: XCTestCase {
     }
 
     func testTimerDuration() throws {
+        // Wrapping only the insides of the test case so that the generated
+        // tests on Linux in MetricsTests+XCTest don't complain that the func does not exist.
         #if swift(>=5.7)
         guard #available(iOS 16, macOS 13, tvOS 15, watchOS 8, *) else {
             return
