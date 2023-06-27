@@ -108,16 +108,20 @@ class MetricsExtensionsTests: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
 
         let name = "timer-\(UUID().uuidString)"
+        let timer = Timer(label: name)
+
         let duration = Duration(secondsComponent: 3, attosecondsComponent: 123_000_000_000_000_000)
         let durationInNanoseconds = duration.components.seconds * 1_000_000_000 + duration.components.attoseconds / 1_000_000_000
 
-        let timer = Timer(label: name)
-        timer.record(duration)
+        XCTAssertNoThrow(try timer.record(duration))
 
         let testTimer = try metrics.expectTimer(timer)
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(testTimer.values.first, durationInNanoseconds, "expected value to match")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
+
+        let overflowDuration = Duration(secondsComponent: 10_000_000_000, attosecondsComponent: 123)
+        XCTAssertThrowsError(try timer.record(overflowDuration))
         #endif
     }
 
