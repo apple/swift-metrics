@@ -123,7 +123,7 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(testTimer.values.first, nanoseconds, "expected value to match")
         XCTAssertEqual(testTimer.values[1], Int64.max, "expected to record Int64.max if Durataion overflows")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
-        #else
+        #elseif swift(>=5.2)
         throw XCTSkip("Timer.record(_ duration: Duration) is only available on Swift >=5.7")
         #endif
     }
