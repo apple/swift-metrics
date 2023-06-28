@@ -92,21 +92,16 @@ extension Timer {
     /// - Throws: `TimerError.durationToIntOverflow` if conversion from `Duration` to `Int64` of Nanoseconds overflowed.
     @available(macOS 13, iOS 16, tvOS 15, watchOS 8, *)
     @inlinable
-    public func record(_ duration: Duration) throws {
+    public func record(_ duration: Duration) {
         // `Duration` doesn't have a nice way to convert it nanoseconds or seconds,
-        // so we'll do the multiplication manually.
-        // Nanoseconds are the smallest unit Timer can track, so we'll record in that.
-        let (seconds, overflow) = duration.components.seconds.multipliedReportingOverflow(by: 1_000_000_000)
-        guard !overflow else {
-            throw TimerError.durationToIntOverflow
-        }
+        // and manual conversion can overflow.
+        let seconds = duration.components.seconds.multipliedReportingOverflow(by: 1_000_000_000)
+        guard !seconds.overflow else { return self.recordNanoseconds(Int64.max) }
 
-        let (nanoseconds, attosecondsOverflow) = seconds.addingReportingOverflow(duration.components.attoseconds / 1_000_000_000)
-        guard !attosecondsOverflow else {
-            throw TimerError.durationToIntOverflow
-        }
+        let nanoseconds = seconds.partialValue.addingReportingOverflow(duration.components.attoseconds / 1_000_000_000)
+        guard !nanoseconds.overflow else { return self.recordNanoseconds(Int64.max) }
 
-        self.recordNanoseconds(nanoseconds)
+        self.recordNanoseconds(nanoseconds.partialValue)
     }
 }
 #endif
