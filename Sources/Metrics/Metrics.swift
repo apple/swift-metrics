@@ -76,11 +76,6 @@ extension Timer {
 }
 
 #if swift(>=5.7)
-
-public enum TimerError: Error {
-    case durationToIntOverflow
-}
-
 extension Timer {
     /// Convenience for recording a duration based on ``Duration``.
     ///
