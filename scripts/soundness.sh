@@ -27,7 +27,7 @@
 ##
 ##===----------------------------------------------------------------------===##
 
-set -eu
+set -euo pipefail
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 function replace_acceptable_years() {
@@ -67,7 +67,7 @@ printf "=> Checking format... "
 
 if [[ ! -x $(which swiftformat) ]]; then
     printf "\033[0;31mswiftformat not found!\033[0m\n"
-    exit 1
+    exit 127
 fi
 
 FIRST_OUT="$(git status --porcelain)"
