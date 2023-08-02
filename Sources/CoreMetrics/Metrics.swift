@@ -1208,6 +1208,182 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     }
 }
 
+/// Represents a Metric label with dimensions
+public struct MetricWithDimensions: Hashable, _SwiftMetricsSendableProtocol {
+    public var label: String
+    public var dimensions: [(String, String)]
+
+    public init(label: String, dimensions: [(String, String)] = []) {
+        self.label = label
+        self.dimensions = dimensions
+    }
+
+    public func getDimensionValue(_ key: String) -> String? {
+        return self.dimensions.first(where: { $0.0 == key })?.1
+    }
+
+    public static func == (lhs: MetricWithDimensions, rhs: MetricWithDimensions) -> Bool {
+        return lhs.label == rhs.label
+            && lhs.dimensions.count == rhs.dimensions.count
+            && rhs.dimensions.indices.allSatisfy { lhs.dimensions[$0] == rhs.dimensions[$0] }
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self.label)
+        for dimension in self.dimensions {
+            hasher.combine(dimension.0)
+            hasher.combine(dimension.1)
+        }
+    }
+}
+
+/// Implement this protocol to use with `RewritingMetricsHandler`
+public protocol MetricsRewriter {
+    ///
+    /// - Parameter metric: Original name and dimensions
+    /// - Returns: New name and dimensions. This is an array so you can map 1:many
+    func rewrite(metric: MetricWithDimensions) -> [MetricWithDimensions]
+}
+
+/// A Timer which writes out to multiple labels and dimensions
+final class MultiWritingTimer: TimerHandler {
+    let timers: [TimerHandler]
+
+    init<Factory: MetricsFactory>(factory: Factory, labelAndDimensions: [MetricWithDimensions]) {
+        self.timers = labelAndDimensions.map { labelAndDimensions in
+            factory.makeTimer(label: labelAndDimensions.label, dimensions: labelAndDimensions.dimensions)
+        }
+    }
+
+    func recordNanoseconds(_ duration: Int64) {
+        self.timers.forEach { $0.recordNanoseconds(duration) }
+    }
+}
+
+/// A Recorder which writes out to multiple labels and dimensions
+final class MultiWritingRecorder: RecorderHandler {
+    let recorders: [RecorderHandler]
+
+    init<Factory: MetricsFactory>(factory: Factory, labelAndDimensions: [MetricWithDimensions], aggregate: Bool) {
+        self.recorders = labelAndDimensions.map { labelAndDimensions in
+            factory.makeRecorder(label: labelAndDimensions.label, dimensions: labelAndDimensions.dimensions, aggregate: aggregate)
+        }
+    }
+
+    func record(_ value: Int64) {
+        self.recorders.forEach { $0.record(value) }
+    }
+
+    func record(_ value: Double) {
+        self.recorders.forEach { $0.record(value) }
+    }
+}
+
+/// A Counter which writes out to multiple labels and dimensions
+final class MultiWritingCounter: CounterHandler {
+    let counters: [CounterHandler]
+
+    init<Factory: MetricsFactory>(factory: Factory, labelAndDimensions: [MetricWithDimensions]) {
+        self.counters = labelAndDimensions.map { labelAndDimensions in
+            factory.makeCounter(label: labelAndDimensions.label, dimensions: labelAndDimensions.dimensions)
+        }
+    }
+
+    func increment(by amount: Int64) {
+        self.counters.forEach { $0.increment(by: amount) }
+    }
+
+    func reset() {
+        self.counters.forEach { $0.reset() }
+    }
+}
+
+/// A pseudo-metrics handler that can be used to convert label and dimension names before passing through to an underlying ``MetricsFactory``
+/// Example usage:
+/// ```swift
+///
+/// struct MyRewriter: MetricsRewriter {
+///     // In this example case, our rewriter will add a 'abc' prefix to every metric
+///     func rewrite(metric: MetricWithDimensions) -> [MetricWithDimensions]? {
+///         var newMetric = metric
+///         newMetric.label = "abc_\(metric.label)"
+///         return [newMetric]
+///     }
+/// }
+///
+/// let factory = MyMetricsFactory()
+/// let rewriter = MyRewriter()
+/// let rewritten = RewritingMetricsHandler(underlying: factory, rewriter: rewriter)
+/// MetricsSystem.bootstrap(rewritten) // All metrics will go through the rewriter first, then to the underlying factory
+/// ```
+public struct RewritingMetricsHandler<Underlying: MetricsFactory, Rewriter: MetricsRewriter>: MetricsFactory {
+    let underlying: Underlying
+    let rewriter: Rewriter
+
+    /// - Parameters:
+    ///   - underlying: The underlying ``MetricsFactory`` which will receive metrics
+    ///   - rewriter: A ``MetricsRewriter`` for converting label and dimension names before they are passed to the
+    ///     underlying factory. The convertor may return multiple label+dimension pairs for one label+dimension
+    public init(underlying: Underlying, rewriter: Rewriter) {
+        self.underlying = underlying
+        self.rewriter = rewriter
+    }
+
+    public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+        let rewritten = self.rewriter.rewrite(metric: MetricWithDimensions(label: label, dimensions: dimensions))
+        if rewritten.count == 1, let labelAndDimensions = rewritten.first {
+            return self.underlying.makeCounter(label: labelAndDimensions.label, dimensions: labelAndDimensions.dimensions)
+        } else {
+            return MultiWritingCounter(factory: self.underlying, labelAndDimensions: rewritten)
+        }
+    }
+
+    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+        let rewritten = self.rewriter.rewrite(metric: MetricWithDimensions(label: label, dimensions: dimensions))
+        if rewritten.count == 1, let labelAndDimensions = rewritten.first {
+            return self.underlying.makeRecorder(label: labelAndDimensions.label, dimensions: labelAndDimensions.dimensions, aggregate: aggregate)
+        } else {
+            return MultiWritingRecorder(factory: self.underlying, labelAndDimensions: rewritten, aggregate: aggregate)
+        }
+    }
+
+    public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+        let rewritten = self.rewriter.rewrite(metric: MetricWithDimensions(label: label, dimensions: dimensions))
+        if rewritten.count == 1, let labelAndDimensions = rewritten.first {
+            return self.underlying.makeTimer(label: labelAndDimensions.label, dimensions: labelAndDimensions.dimensions)
+        } else {
+            return MultiWritingTimer(factory: self.underlying, labelAndDimensions: rewritten)
+        }
+    }
+
+    public func destroyCounter(_ handler: CounterHandler) {
+        // When using one of our multiWriting handlers, the underlying is only aware of the handlers within it, not the multiWritingHandler itself
+        if let multiWritingHandler = handler as? MultiWritingCounter {
+            multiWritingHandler.counters.forEach(self.underlying.destroyCounter)
+        } else {
+            self.underlying.destroyCounter(handler)
+        }
+    }
+
+    public func destroyRecorder(_ handler: RecorderHandler) {
+        // When using one of our multiWriting handlers, the underlying is only aware of the handlers within it, not the multiWritingHandler itself
+        if let multiWritingHandler = handler as? MultiWritingRecorder {
+            multiWritingHandler.recorders.forEach(self.underlying.destroyRecorder)
+        } else {
+            self.underlying.destroyRecorder(handler)
+        }
+    }
+
+    public func destroyTimer(_ handler: TimerHandler) {
+        // When using one of our multiWriting handlers, the underlying is only aware of the handlers within it, not the multiWritingHandler itself
+        if let multiWritingHandler = handler as? MultiWritingTimer {
+            multiWritingHandler.timers.forEach(self.underlying.destroyTimer)
+        } else {
+            self.underlying.destroyTimer(handler)
+        }
+    }
+}
+
 /// Ships with the metrics module, used for initial bootstrapping.
 public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingPointCounterHandler, MeterHandler, RecorderHandler, TimerHandler {
     public static let instance = NOOPMetricsHandler()
