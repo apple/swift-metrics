@@ -196,6 +196,8 @@ extension DispatchTimeInterval {
             return value * 1_000_000_000
         case .never:
             return 0
+        @unknown default:
+            return 0
         }
     }
 }
