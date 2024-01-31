@@ -71,6 +71,8 @@ extension Timer {
             self.recordSeconds(value)
         case .never:
             self.record(0)
+        @unknown default:
+            self.record(0)
         }
     }
 }
