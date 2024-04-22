@@ -220,6 +220,43 @@ class MetricsExtensionsTests: XCTestCase {
             "expected value to match"
         )
     }
+
+    #if compiler(>=6.0)
+    func testTimerMeasure() async throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "timer-\(UUID().uuidString)"
+        let delay = Duration.milliseconds(5)
+        let timer = Timer(label: name)
+        try await timer.measure {
+            try await Task.sleep(for: delay)
+        }
+
+        let expectedTimer = try metrics.expectTimer(name)
+        XCTAssertEqual(1, expectedTimer.values.count, "expected number of entries to match")
+        XCTAssertGreaterThan(expectedTimer.values[0], delay.nanosecondsClamped, "expected delay to match")
+    }
+
+    @MainActor
+    func testTimerMeasureFromMainActor() async throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "timer-\(UUID().uuidString)"
+        let delay = Duration.milliseconds(5)
+        let timer = Timer(label: name)
+        try await timer.measure {
+            try await Task.sleep(for: delay)
+        }
+
+        let expectedTimer = try metrics.expectTimer(name)
+        XCTAssertEqual(1, expectedTimer.values.count, "expected number of entries to match")
+        XCTAssertGreaterThan(expectedTimer.values[0], delay.nanosecondsClamped, "expected delay to match")
+    }
+    #endif
 }
 
 // https://bugs.swift.org/browse/SR-6310
@@ -251,3 +288,25 @@ extension DispatchTimeInterval {
         }
     }
 }
+
+#if swift(>=5.7)
+@available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+extension Swift.Duration {
+    fileprivate var nanosecondsClamped: Int64 {
+        let components = self.components
+
+        let secondsComponentNanos = components.seconds.multipliedReportingOverflow(by: 1_000_000_000)
+        let attosCompononentNanos = components.attoseconds / 1_000_000_000
+        let combinedNanos = secondsComponentNanos.partialValue.addingReportingOverflow(attosCompononentNanos)
+
+        guard
+            !secondsComponentNanos.overflow,
+            !combinedNanos.overflow
+        else {
+            return .max
+        }
+
+        return combinedNanos.partialValue
+    }
+}
+#endif

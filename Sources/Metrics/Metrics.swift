@@ -112,4 +112,44 @@ extension Timer {
 
         self.recordNanoseconds(nanoseconds.partialValue)
     }
+
+    #if compiler(>=6.0)
+    /// Convenience for measuring duration of a closure.
+    ///
+    /// - Parameters:
+    ///    - clock: The clock used for measuring the duration. Defaults to the continuous clock.
+    ///    - body: The closure to record the duration of.
+    @inlinable
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
+        clock: Clock = .continuous,
+        body: () throws(Failure) -> Result
+    ) throws(Failure) -> Result where Clock.Duration == Duration {
+        let start = clock.now
+        defer {
+            self.record(duration: start.duration(to: clock.now))
+        }
+        return try body()
+    }
+
+    /// Convenience for measuring duration of a closure.
+    ///
+    /// - Parameters:
+    ///    - clock: The clock used for measuring the duration. Defaults to the continuous clock.
+    ///    - isolation: The isolation of the method. Defaults to the isolation of the caller.
+    ///    - body: The closure to record the duration of.
+    @inlinable
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
+        clock: Clock = .continuous,
+        isolation: isolated (any Actor)? = #isolation,
+        body: () async throws(Failure) -> sending Result
+    ) async throws(Failure) -> sending Result where Clock.Duration == Duration {
+        let start = clock.now
+        defer {
+            self.record(duration: start.duration(to: clock.now))
+        }
+        return try await body()
+    }
+    #endif
 }
