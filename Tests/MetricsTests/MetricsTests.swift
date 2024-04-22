@@ -99,7 +99,6 @@ class MetricsExtensionsTests: XCTestCase {
     func testTimerDuration() throws {
         // Wrapping only the insides of the test case so that the generated
         // tests on Linux in MetricsTests+XCTest don't complain that the func does not exist.
-        #if swift(>=5.7)
         guard #available(iOS 16, macOS 13, tvOS 15, watchOS 8, *) else {
             throw XCTSkip("Timer.record(_ duration: Duration) is not available on this platform")
         }
@@ -123,9 +122,6 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(testTimer.values.first, nanoseconds, "expected value to match")
         XCTAssertEqual(testTimer.values[1], Int64.max, "expected to record Int64.max if Durataion overflows")
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
-        #elseif swift(>=5.2)
-        throw XCTSkip("Timer.record(_ duration: Duration) is only available on Swift >=5.7")
-        #endif
     }
 
     func testTimerUnits() throws {

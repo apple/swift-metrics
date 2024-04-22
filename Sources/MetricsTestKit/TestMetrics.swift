@@ -576,26 +576,16 @@ extension NSLock {
 
 // MARK: - Errors
 
-#if compiler(>=5.6)
 public enum TestMetricsError: Error {
     case missingMetric(label: String, dimensions: [(String, String)])
     case illegalMetricType(metric: Sendable, expected: String)
 }
 
-#else
-public enum TestMetricsError: Error {
-    case missingMetric(label: String, dimensions: [(String, String)])
-    case illegalMetricType(metric: Any, expected: String)
-}
-#endif
-
 // MARK: - Sendable support
 
-#if compiler(>=5.6)
 // ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
 extension TestMetrics: @unchecked Sendable {}
 extension TestCounter: @unchecked Sendable {}
 extension TestMeter: @unchecked Sendable {}
 extension TestRecorder: @unchecked Sendable {}
 extension TestTimer: @unchecked Sendable {}
-#endif

@@ -1253,7 +1253,6 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
 
 // MARK: - Sendable support helpers
 
-#if compiler(>=5.6)
 extension MetricsSystem: Sendable {}
 extension Counter: Sendable {}
 extension FloatingPointCounter: Sendable {}
@@ -1263,10 +1262,5 @@ extension Timer: Sendable {}
 extension Meter: Sendable {}
 // ideally we would not be using @unchecked here, but concurrency-safety checks do not recognize locks
 extension AccumulatingRoundingFloatingPointCounter: @unchecked Sendable {}
-#endif
 
-#if compiler(>=5.6)
 @preconcurrency public protocol _SwiftMetricsSendableProtocol: Sendable {}
-#else
-public protocol _SwiftMetricsSendableProtocol {}
-#endif

@@ -75,7 +75,6 @@ extension Timer {
     }
 }
 
-#if swift(>=5.7)
 extension Timer {
     /// Convenience for recording a duration based on ``Duration``.
     ///
@@ -99,4 +98,3 @@ extension Timer {
         self.recordNanoseconds(nanoseconds.partialValue)
     }
 }
-#endif
