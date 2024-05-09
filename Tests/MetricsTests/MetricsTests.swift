@@ -96,6 +96,34 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
     }
 
+    func testTimerDuration() throws {
+        // Wrapping only the insides of the test case so that the generated
+        // tests on Linux in MetricsTests+XCTest don't complain that the func does not exist.
+        guard #available(iOS 16, macOS 13, tvOS 15, watchOS 8, *) else {
+            throw XCTSkip("Timer.record(_ duration: Duration) is not available on this platform")
+        }
+
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let name = "timer-\(UUID().uuidString)"
+        let timer = Timer(label: name)
+
+        let duration = Duration(secondsComponent: 3, attosecondsComponent: 123_000_000_000_000_000)
+        let nanoseconds = duration.components.seconds * 1_000_000_000 + duration.components.attoseconds / 1_000_000_000
+        timer.record(duration)
+
+        // Record a Duration that would overflow,
+        // expect Int64.max to be recorded.
+        timer.record(Duration(secondsComponent: 10_000_000_000, attosecondsComponent: 123))
+
+        let testTimer = try metrics.expectTimer(timer)
+        XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
+        XCTAssertEqual(testTimer.values.first, nanoseconds, "expected value to match")
+        XCTAssertEqual(testTimer.values[1], Int64.max, "expected to record Int64.max if Durataion overflows")
+        XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
+    }
+
     func testTimerUnits() throws {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
