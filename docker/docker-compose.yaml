@@ -26,15 +26,9 @@ services:
     <<: *common
     command: /bin/bash -xcl "./scripts/soundness.sh"
 
-  docs:
-    <<: *common
-    environment:
-      - CI
-    command: /bin/bash -xcl "./scripts/generate_docs.sh"
-
   test:
     <<: *common
-    command: /bin/bash -xcl "swift test -Xswiftc -warnings-as-errors $${FORCE_TEST_DISCOVERY-} $${SANITIZER_ARG-}"
+    command: /bin/bash -xcl "swift test -Xswiftc -warnings-as-errors --enable-test-discovery $${SANITIZER_ARG-}"
 
   # util
 

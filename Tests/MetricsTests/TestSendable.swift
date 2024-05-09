@@ -18,7 +18,6 @@ import MetricsTestKit
 import XCTest
 
 class SendableTest: XCTestCase {
-    #if compiler(>=5.6)
     func testSendableMetrics() async throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -98,5 +97,4 @@ class SendableTest: XCTestCase {
             XCTAssertEqual(values[0], value, "expected value to match")
         }
     }
-    #endif
 }
