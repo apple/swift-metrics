@@ -176,7 +176,7 @@ extension FloatingPointCounter: CustomStringConvertible {
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
 /// Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
-public final class Gauge: Recorder {
+public final class Gauge: Recorder, @unchecked Sendable {
     /// Create a new `Gauge`.
     ///
     /// - parameters:
