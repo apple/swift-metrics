@@ -111,11 +111,11 @@ class MetricsExtensionsTests: XCTestCase {
 
         let duration = Duration(secondsComponent: 3, attosecondsComponent: 123_000_000_000_000_000)
         let nanoseconds = duration.components.seconds * 1_000_000_000 + duration.components.attoseconds / 1_000_000_000
-        timer.record(duration)
+        timer.record(duration: duration)
 
         // Record a Duration that would overflow,
         // expect Int64.max to be recorded.
-        timer.record(Duration(secondsComponent: 10_000_000_000, attosecondsComponent: 123))
+        timer.record(duration: Duration(secondsComponent: 10_000_000_000, attosecondsComponent: 123))
 
         let testTimer = try metrics.expectTimer(timer)
         XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
