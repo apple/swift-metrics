@@ -82,7 +82,7 @@ extension Timer {
     ///
     /// - Parameters:
     ///     - duration: The `Duration` to record.
-    @available(macOS 13, iOS 16, tvOS 15, watchOS 8, *)
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
     @inlinable
     public func record(duration: Duration) {
         // `Duration` doesn't have a nice way to convert it nanoseconds or seconds,
