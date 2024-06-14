@@ -17,7 +17,8 @@
 import MetricsTestKit
 import XCTest
 
-class MetricsExtensionsTests: XCTestCase {
+final class MetricsExtensionsTests: XCTestCase {
+    @available(*, deprecated)
     func testTimerBlock() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -180,6 +181,39 @@ class MetricsExtensionsTests: XCTestCase {
         testTimer.preferDisplayUnit(.days)
         XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value / (60 * 60 * 24), accuracy: 0.000000001, "expected value to match")
     }
+
+    #if swift(>=5.7)
+    func testTimerMeasure() async throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "timer-\(UUID().uuidString)"
+        let delay = Duration.milliseconds(5)
+        let timer = Timer(label: name)
+        try await timer.measure {
+            try await Task.sleep(for: delay)
+        }
+        let expectedTimer = try metrics.expectTimer(name)
+        XCTAssertEqual(1, expectedTimer.values.count, "expected number of entries to match")
+        XCTAssertGreaterThan(expectedTimer.values[0], delay.nanosecondsClamped, "expected delay to match")
+    }
+
+    func testTimerRecordDuration() throws {
+        // bootstrap with our test metrics
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        // run the test
+        let name = "test-timer"
+        let timer = Timer(label: name)
+        let duration = Duration.milliseconds(5)
+        timer.record(duration)
+
+        let expectedTimer = try metrics.expectTimer(name)
+        XCTAssertEqual(1, expectedTimer.values.count, "expected number of entries to match")
+        XCTAssertEqual(expectedTimer.values[0], duration.nanosecondsClamped, "expected delay to match")
+    }
+    #endif
 }
 
 // https://bugs.swift.org/browse/SR-6310
@@ -199,3 +233,25 @@ extension DispatchTimeInterval {
         }
     }
 }
+
+#if swift(>=5.7)
+@available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+extension Swift.Duration {
+    fileprivate var nanosecondsClamped: Int64 {
+        let components = self.components
+
+        let secondsComponentNanos = components.seconds.multipliedReportingOverflow(by: 1_000_000_000)
+        let attosCompononentNanos = components.attoseconds / 1_000_000_000
+        let combinedNanos = secondsComponentNanos.partialValue.addingReportingOverflow(attosCompononentNanos)
+
+        guard
+            !secondsComponentNanos.overflow,
+            !combinedNanos.overflow
+        else {
+            return .max
+        }
+
+        return combinedNanos.partialValue
+    }
+}
+#endif
