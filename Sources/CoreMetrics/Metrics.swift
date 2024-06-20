@@ -374,8 +374,8 @@ extension Recorder: CustomStringConvertible {
 
 // MARK: - Timer
 
-public struct TimeUnit: Equatable {
-    private enum Code: Equatable {
+public struct TimeUnit: Equatable, Sendable {
+    private enum Code: Equatable, Sendable {
         case nanoseconds
         case microseconds
         case milliseconds
