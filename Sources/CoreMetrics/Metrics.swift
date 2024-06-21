@@ -600,7 +600,8 @@ public enum MetricsSystem {
         return try self._factory.withWriterLock(body)
     }
 
-    private final class FactoryBox {
+    // This can be `@unchecked Sendable` because we're manually gating access to mutable state with a lock.
+    private final class FactoryBox: @unchecked Sendable {
         private let lock = ReadWriteLock()
         fileprivate var _underlying: MetricsFactory
         private var initialized = false
@@ -797,9 +798,10 @@ internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCoun
 }
 
 /// Wraps a RecorderHandler, adding support for incrementing values by storing an accumulated  value and recording increments to the underlying CounterHandler after crossing integer boundaries.
-internal final class AccumulatingMeter: MeterHandler {
+/// - Note: we can annotate this class as `@unchecked Sendable` because we are manually gating access to mutable state (i.e., the `value` property) via a Lock.
+internal final class AccumulatingMeter: MeterHandler, @unchecked Sendable {
     private let recorderHandler: RecorderHandler
-    // FIXME: use atomics when available
+    // FIXME: use swift-atomics when floating point support is available
     private var value: Double = 0
     private let lock = Lock()
 

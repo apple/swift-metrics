@@ -131,6 +131,8 @@ extension Lock {
     }
 }
 
+extension Lock: @unchecked Sendable {}
+
 /// A reader/writer threading lock based on `libpthread` instead of `libdispatch`.
 ///
 /// This object provides a lock on top of a single `pthread_rwlock_t`. This kind
@@ -273,3 +275,5 @@ extension ReadWriteLock {
         try self.withWriterLock(body)
     }
 }
+
+extension ReadWriteLock: @unchecked Sendable {}
