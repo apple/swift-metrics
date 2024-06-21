@@ -801,7 +801,7 @@ internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCoun
 internal final class AccumulatingMeter: MeterHandler, @unchecked Sendable {
     private let recorderHandler: RecorderHandler
     // FIXME: use swift-atomics when floating point support is available
-    private var value: Double =  0
+    private var value: Double = 0
     private let lock = Lock()
 
     init(label: String, dimensions: [(String, String)]) {
