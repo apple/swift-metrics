@@ -185,7 +185,17 @@ class MetricsExtensionsTests: XCTestCase {
 // https://bugs.swift.org/browse/SR-6310
 extension DispatchTimeInterval {
     func nano() -> Int {
-        switch self {
+        // This wrapping in a optional is a workaround because DispatchTimeInterval
+        // is a non-frozen public enum and Dispatch is built with library evolution
+        // mode turned on.
+        // This means we should have an `@unknown default` case, but this breaks
+        // on non-Darwin platforms.
+        // Switching over an optional means that the `.none` case will map to
+        // `default` (which means we'll always have a valid case to go into
+        // the default case), but in reality this case will never exist as this
+        // optional will never be nil.
+        let interval = Optional(self)
+        switch interval {
         case .nanoseconds(let value):
             return value
         case .microseconds(let value):
@@ -196,7 +206,7 @@ extension DispatchTimeInterval {
             return value * 1_000_000_000
         case .never:
             return 0
-        @unknown default:
+        default:
             return 0
         }
     }

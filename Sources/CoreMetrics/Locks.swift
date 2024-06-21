@@ -46,7 +46,7 @@ import Musl
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO. On Windows, the lock is based on the substantially similar
 /// `SRWLOCK` type.
-internal final class Lock: Sendable {
+internal final class Lock {
     #if os(Windows)
     fileprivate let mutex: UnsafeMutablePointer<SRWLOCK> =
         UnsafeMutablePointer.allocate(capacity: 1)
@@ -130,6 +130,8 @@ extension Lock {
         try self.withLock(body)
     }
 }
+
+extension Lock: @unchecked Sendable {}
 
 /// A reader/writer threading lock based on `libpthread` instead of `libdispatch`.
 ///
@@ -273,3 +275,5 @@ extension ReadWriteLock {
         try self.withWriterLock(body)
     }
 }
+
+extension ReadWriteLock: @unchecked Sendable {}

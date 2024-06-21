@@ -600,7 +600,8 @@ public enum MetricsSystem {
         return try self._factory.withWriterLock(body)
     }
 
-    private final class FactoryBox {
+    // This can be `@unchecked Sendable` because we're manually gating access to mutable state with a lock.
+    private final class FactoryBox: @unchecked Sendable {
         private let lock = ReadWriteLock()
         fileprivate var _underlying: MetricsFactory
         private var initialized = false

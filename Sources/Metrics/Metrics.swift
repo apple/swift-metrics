@@ -60,6 +60,16 @@ extension Timer {
     ///     - duration: The duration to record.
     @inlinable
     public func record(_ duration: DispatchTimeInterval) {
+        // This wrapping in a optional is a workaround because DispatchTimeInterval
+        // is a non-frozen public enum and Dispatch is built with library evolution
+        // mode turned on.
+        // This means we should have an `@unknown default` case, but this breaks
+        // on non-Darwin platforms.
+        // Switching over an optional means that the `.none` case will map to
+        // `default` (which means we'll always have a valid case to go into
+        // the default case), but in reality this case will never exist as this
+        // optional will never be nil.
+        let duration = Optional(duration)
         switch duration {
         case .nanoseconds(let value):
             self.recordNanoseconds(value)
@@ -71,7 +81,7 @@ extension Timer {
             self.recordSeconds(value)
         case .never:
             self.record(0)
-        @unknown default:
+        default:
             self.record(0)
         }
     }
