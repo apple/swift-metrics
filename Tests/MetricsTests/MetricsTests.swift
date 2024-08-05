@@ -112,11 +112,11 @@ final class MetricsExtensionsTests: XCTestCase {
 
         let duration = Duration(secondsComponent: 3, attosecondsComponent: 123_000_000_000_000_000)
         let nanoseconds = duration.components.seconds * 1_000_000_000 + duration.components.attoseconds / 1_000_000_000
-        timer.record(duration)
+        timer.record(duration: duration)
 
         // Record a Duration that would overflow,
         // expect Int64.max to be recorded.
-        timer.record(Duration(secondsComponent: 10_000_000_000, attosecondsComponent: 123))
+        timer.record(duration: Duration(secondsComponent: 10_000_000_000, attosecondsComponent: 123))
 
         let testTimer = try metrics.expectTimer(timer)
         XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
@@ -219,7 +219,17 @@ final class MetricsExtensionsTests: XCTestCase {
 // https://bugs.swift.org/browse/SR-6310
 extension DispatchTimeInterval {
     func nano() -> Int {
-        switch self {
+        // This wrapping in a optional is a workaround because DispatchTimeInterval
+        // is a non-frozen public enum and Dispatch is built with library evolution
+        // mode turned on.
+        // This means we should have an `@unknown default` case, but this breaks
+        // on non-Darwin platforms.
+        // Switching over an optional means that the `.none` case will map to
+        // `default` (which means we'll always have a valid case to go into
+        // the default case), but in reality this case will never exist as this
+        // optional will never be nil.
+        let interval = Optional(self)
+        switch interval {
         case .nanoseconds(let value):
             return value
         case .microseconds(let value):
@@ -229,6 +239,8 @@ extension DispatchTimeInterval {
         case .seconds(let value):
             return value * 1_000_000_000
         case .never:
+            return 0
+        default:
             return 0
         }
     }

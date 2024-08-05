@@ -61,6 +61,16 @@ extension Timer {
     ///     - duration: The duration to record.
     @inlinable
     public func record(_ duration: DispatchTimeInterval) {
+        // This wrapping in a optional is a workaround because DispatchTimeInterval
+        // is a non-frozen public enum and Dispatch is built with library evolution
+        // mode turned on.
+        // This means we should have an `@unknown default` case, but this breaks
+        // on non-Darwin platforms.
+        // Switching over an optional means that the `.none` case will map to
+        // `default` (which means we'll always have a valid case to go into
+        // the default case), but in reality this case will never exist as this
+        // optional will never be nil.
+        let duration = Optional(duration)
         switch duration {
         case .nanoseconds(let value):
             self.recordNanoseconds(value)
@@ -71,6 +81,8 @@ extension Timer {
         case .seconds(let value):
             self.recordSeconds(value)
         case .never:
+            self.record(0)
+        default:
             self.record(0)
         }
     }
@@ -83,11 +95,9 @@ extension Timer {
     ///
     /// - Parameters:
     ///     - duration: The `Duration` to record.
-    ///
-    /// - Throws: `TimerError.durationToIntOverflow` if conversion from `Duration` to `Int64` of Nanoseconds overflowed.
-    @available(macOS 13, iOS 16, tvOS 15, watchOS 8, *)
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
     @inlinable
-    public func record(_ duration: Duration) {
+    public func record(duration: Duration) {
         // `Duration` doesn't have a nice way to convert it nanoseconds or seconds,
         // and manual conversion can overflow.
         let seconds = duration.components.seconds.multipliedReportingOverflow(by: 1_000_000_000)

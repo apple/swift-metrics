@@ -43,7 +43,7 @@ public final class TestMetrics: MetricsFactory {
     public typealias Label = String
     public typealias Dimensions = String
 
-    public struct FullKey {
+    public struct FullKey: Sendable {
         let label: Label
         let dimensions: [(String, String)]
     }

@@ -176,7 +176,7 @@ extension FloatingPointCounter: CustomStringConvertible {
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
 /// Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
-public final class Gauge: Recorder {
+public final class Gauge: Recorder, @unchecked Sendable {
     /// Create a new `Gauge`.
     ///
     /// - parameters:
@@ -374,8 +374,8 @@ extension Recorder: CustomStringConvertible {
 
 // MARK: - Timer
 
-public struct TimeUnit: Equatable {
-    private enum Code: Equatable {
+public struct TimeUnit: Equatable, Sendable {
+    private enum Code: Equatable, Sendable {
         case nanoseconds
         case microseconds
         case milliseconds
@@ -600,7 +600,8 @@ public enum MetricsSystem {
         return try self._factory.withWriterLock(body)
     }
 
-    private final class FactoryBox {
+    // This can be `@unchecked Sendable` because we're manually gating access to mutable state with a lock.
+    private final class FactoryBox: @unchecked Sendable {
         private let lock = ReadWriteLock()
         fileprivate var _underlying: MetricsFactory
         private var initialized = false
@@ -797,9 +798,10 @@ internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCoun
 }
 
 /// Wraps a RecorderHandler, adding support for incrementing values by storing an accumulated  value and recording increments to the underlying CounterHandler after crossing integer boundaries.
-internal final class AccumulatingMeter: MeterHandler {
+/// - Note: we can annotate this class as `@unchecked Sendable` because we are manually gating access to mutable state (i.e., the `value` property) via a Lock.
+internal final class AccumulatingMeter: MeterHandler, @unchecked Sendable {
     private let recorderHandler: RecorderHandler
-    // FIXME: use atomics when available
+    // FIXME: use swift-atomics when floating point support is available
     private var value: Double = 0
     private let lock = Lock()
 

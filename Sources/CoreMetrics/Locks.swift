@@ -34,6 +34,8 @@ import Darwin
 import WinSDK
 #elseif canImport(Glibc)
 import Glibc
+#elseif canImport(Musl)
+import Musl
 #else
 #error("Unsupported runtime")
 #endif
@@ -128,6 +130,8 @@ extension Lock {
         try self.withLock(body)
     }
 }
+
+extension Lock: @unchecked Sendable {}
 
 /// A reader/writer threading lock based on `libpthread` instead of `libdispatch`.
 ///
@@ -271,3 +275,5 @@ extension ReadWriteLock {
         try self.withWriterLock(body)
     }
 }
+
+extension ReadWriteLock: @unchecked Sendable {}
