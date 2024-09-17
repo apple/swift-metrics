@@ -24,6 +24,7 @@ extension Timer {
     ///     - dimensions: The dimensions for the Timer.
     ///     - body: Closure to run & record.
     @inlinable
+    @available(*, deprecated, message: "Please use non-static version on an already created Timer")
     public static func measure<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
         let timer = Timer(label: label, dimensions: dimensions)
         let start = DispatchTime.now().uptimeNanoseconds
@@ -106,5 +107,41 @@ extension Timer {
         guard !nanoseconds.overflow else { return self.recordNanoseconds(Int64.max) }
 
         self.recordNanoseconds(nanoseconds.partialValue)
+    }
+
+    /// Convenience for measuring duration of a closure.
+    ///
+    /// - Parameters:
+    ///    - clock: The clock used for measuring the duration. Defaults to the continuous clock.
+    ///    - body: The closure to record the duration of.
+    @inlinable
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func measure<Result, Clock: _Concurrency.Clock>(
+        clock: Clock = .continuous,
+        body: () throws -> Result
+    ) rethrows -> Result where Clock.Duration == Duration {
+        let start = clock.now
+        defer {
+            self.record(start.duration(to: clock.now))
+        }
+        return try body()
+    }
+
+    /// Convenience for measuring duration of a closure with a provided clock.
+    ///
+    /// - Parameters:
+    ///    - clock: The clock used for measuring the duration. Defaults to the continuous clock.
+    ///    - body: The closure to record the duration of.
+    @inlinable
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func measure<Result, Clock: _Concurrency.Clock>(
+        clock: Clock = .continuous,
+        body: () async throws -> Result
+    ) async rethrows -> Result where Clock.Duration == Duration {
+        let start = clock.now
+        defer {
+            self.record(start.duration(to: clock.now))
+        }
+        return try await body()
     }
 }
