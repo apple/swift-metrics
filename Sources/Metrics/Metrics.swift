@@ -13,8 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 @_exported import CoreMetrics
-@_exported import class CoreMetrics.Timer
 import Foundation
+
+@_exported import class CoreMetrics.Timer
 
 extension Timer {
     /// Convenience for measuring duration of a closure.
@@ -24,7 +25,11 @@ extension Timer {
     ///     - dimensions: The dimensions for the Timer.
     ///     - body: Closure to run & record.
     @inlinable
-    public static func measure<T>(label: String, dimensions: [(String, String)] = [], body: @escaping () throws -> T) rethrows -> T {
+    public static func measure<T>(
+        label: String,
+        dimensions: [(String, String)] = [],
+        body: @escaping () throws -> T
+    ) rethrows -> T {
         let timer = Timer(label: label, dimensions: dimensions)
         let start = DispatchTime.now().uptimeNanoseconds
         defer {
@@ -88,7 +93,7 @@ extension Timer {
 }
 
 extension Timer {
-    /// Convenience for recording a duration based on ``Duration``.
+    /// Convenience for recording a duration based on `Duration`.
     ///
     /// `Duration` will be converted to an `Int64` number of nanoseconds, and then recorded with nanosecond precision.
     ///

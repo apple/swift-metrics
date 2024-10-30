@@ -12,10 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import CoreMetrics
-@testable import Metrics
 import MetricsTestKit
 import XCTest
+
+@testable import CoreMetrics
+@testable import Metrics
 
 class MetricsExtensionsTests: XCTestCase {
     func testTimerBlock() throws {
@@ -40,7 +41,7 @@ class MetricsExtensionsTests: XCTestCase {
         // run the test
         let timer = Timer(label: "test-timer")
         let testTimer = try metrics.expectTimer(timer)
-        let timeInterval = TimeInterval(Double.random(in: 1 ... 500))
+        let timeInterval = TimeInterval(Double.random(in: 1...500))
         timer.record(timeInterval)
         XCTAssertEqual(1, testTimer.values.count, "expected number of entries to match")
         XCTAssertEqual(testTimer.values[0], Int64(timeInterval * 1_000_000_000), "expected value to match")
@@ -54,22 +55,22 @@ class MetricsExtensionsTests: XCTestCase {
         let timer = Timer(label: "test-timer")
         let testTimer = try metrics.expectTimer(timer)
         // nano
-        let nano = DispatchTimeInterval.nanoseconds(Int.random(in: 1 ... 500))
+        let nano = DispatchTimeInterval.nanoseconds(Int.random(in: 1...500))
         timer.record(nano)
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
         XCTAssertEqual(Int(testTimer.values[0]), nano.nano(), "expected value to match")
         // micro
-        let micro = DispatchTimeInterval.microseconds(Int.random(in: 1 ... 500))
+        let micro = DispatchTimeInterval.microseconds(Int.random(in: 1...500))
         timer.record(micro)
         XCTAssertEqual(testTimer.values.count, 2, "expected number of entries to match")
         XCTAssertEqual(Int(testTimer.values[1]), micro.nano(), "expected value to match")
         // milli
-        let milli = DispatchTimeInterval.milliseconds(Int.random(in: 1 ... 500))
+        let milli = DispatchTimeInterval.milliseconds(Int.random(in: 1...500))
         timer.record(milli)
         XCTAssertEqual(testTimer.values.count, 3, "expected number of entries to match")
         XCTAssertEqual(Int(testTimer.values[2]), milli.nano(), "expected value to match")
         // seconds
-        let sec = DispatchTimeInterval.seconds(Int.random(in: 1 ... 500))
+        let sec = DispatchTimeInterval.seconds(Int.random(in: 1...500))
         timer.record(sec)
         XCTAssertEqual(testTimer.values.count, 4, "expected number of entries to match")
         XCTAssertEqual(Int(testTimer.values[3]), sec.nano(), "expected value to match")
@@ -92,7 +93,11 @@ class MetricsExtensionsTests: XCTestCase {
 
         let testTimer = try metrics.expectTimer(timer)
         XCTAssertEqual(testTimer.values.count, 1, "expected number of entries to match")
-        XCTAssertEqual(UInt64(testTimer.values.first!), end.uptimeNanoseconds - start.uptimeNanoseconds, "expected value to match")
+        XCTAssertEqual(
+            UInt64(testTimer.values.first!),
+            end.uptimeNanoseconds - start.uptimeNanoseconds,
+            "expected value to match"
+        )
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
     }
 
@@ -129,7 +134,7 @@ class MetricsExtensionsTests: XCTestCase {
         MetricsSystem.bootstrapInternal(metrics)
 
         let name = "timer-\(UUID().uuidString)"
-        let value = Int64.random(in: 0 ... 1000)
+        let value = Int64.random(in: 0...1000)
 
         let timer = Timer(label: name)
         timer.recordNanoseconds(value)
@@ -140,7 +145,7 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
 
         let secondsName = "timer-seconds-\(UUID().uuidString)"
-        let secondsValue = Int64.random(in: 0 ... 1000)
+        let secondsValue = Int64.random(in: 0...1000)
         let secondsTimer = Timer(label: secondsName, preferredDisplayUnit: .seconds)
         secondsTimer.recordSeconds(secondsValue)
 
@@ -153,32 +158,67 @@ class MetricsExtensionsTests: XCTestCase {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
 
-        let value = Double.random(in: 0 ... 1000)
+        let value = Double.random(in: 0...1000)
         let timer = Timer(label: "test", preferredDisplayUnit: .seconds)
         timer.recordSeconds(value)
 
         let testTimer = try metrics.expectTimer(timer)
 
         testTimer.preferDisplayUnit(.nanoseconds)
-        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value * 1000 * 1000 * 1000, accuracy: 1.0, "expected value to match")
+        XCTAssertEqual(
+            testTimer.valueInPreferredUnit(atIndex: 0),
+            value * 1000 * 1000 * 1000,
+            accuracy: 1.0,
+            "expected value to match"
+        )
 
         testTimer.preferDisplayUnit(.microseconds)
-        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value * 1000 * 1000, accuracy: 0.001, "expected value to match")
+        XCTAssertEqual(
+            testTimer.valueInPreferredUnit(atIndex: 0),
+            value * 1000 * 1000,
+            accuracy: 0.001,
+            "expected value to match"
+        )
 
         testTimer.preferDisplayUnit(.milliseconds)
-        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value * 1000, accuracy: 0.000001, "expected value to match")
+        XCTAssertEqual(
+            testTimer.valueInPreferredUnit(atIndex: 0),
+            value * 1000,
+            accuracy: 0.000001,
+            "expected value to match"
+        )
 
         testTimer.preferDisplayUnit(.seconds)
-        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value, accuracy: 0.000000001, "expected value to match")
+        XCTAssertEqual(
+            testTimer.valueInPreferredUnit(atIndex: 0),
+            value,
+            accuracy: 0.000000001,
+            "expected value to match"
+        )
 
         testTimer.preferDisplayUnit(.minutes)
-        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value / 60, accuracy: 0.000000001, "expected value to match")
+        XCTAssertEqual(
+            testTimer.valueInPreferredUnit(atIndex: 0),
+            value / 60,
+            accuracy: 0.000000001,
+            "expected value to match"
+        )
 
         testTimer.preferDisplayUnit(.hours)
-        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value / (60 * 60), accuracy: 0.000000001, "expected value to match")
+        XCTAssertEqual(
+            testTimer.valueInPreferredUnit(atIndex: 0),
+            value / (60 * 60),
+            accuracy: 0.000000001,
+            "expected value to match"
+        )
 
         testTimer.preferDisplayUnit(.days)
-        XCTAssertEqual(testTimer.valueInPreferredUnit(atIndex: 0), value / (60 * 60 * 24), accuracy: 0.000000001, "expected value to match")
+        XCTAssertEqual(
+            testTimer.valueInPreferredUnit(atIndex: 0),
+            value / (60 * 60 * 24),
+            accuracy: 0.000000001,
+            "expected value to match"
+        )
     }
 }
 
