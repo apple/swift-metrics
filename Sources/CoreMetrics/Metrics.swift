@@ -48,7 +48,7 @@ public final class Counter {
     /// Increment the counter.
     ///
     /// - parameters:
-    ///     - by: Amount to increment by.
+    ///     - amount: Amount to increment by.
     @inlinable
     public func increment<DataType: BinaryInteger>(by amount: DataType) {
         self._handler.increment(by: Int64(amount))
@@ -88,7 +88,7 @@ extension Counter {
 
 extension Counter: CustomStringConvertible {
     public var description: String {
-        return "Counter(\(self.label), dimensions: \(self.dimensions))"
+        "Counter(\(self.label), dimensions: \(self.dimensions))"
     }
 }
 
@@ -127,7 +127,7 @@ public final class FloatingPointCounter {
     /// Increment the FloatingPointCounter.
     ///
     /// - parameters:
-    ///     - by: Amount to increment by.
+    ///     - amount: Amount to increment by.
     @inlinable
     public func increment<DataType: BinaryFloatingPoint>(by amount: DataType) {
         self._handler.increment(by: Double(amount))
@@ -167,7 +167,7 @@ extension FloatingPointCounter {
 
 extension FloatingPointCounter: CustomStringConvertible {
     public var description: String {
-        return "FloatingPointCounter(\(self.label), dimensions: \(self.dimensions))"
+        "FloatingPointCounter(\(self.label), dimensions: \(self.dimensions))"
     }
 }
 
@@ -235,7 +235,7 @@ public final class Meter {
     /// Increment the Meter.
     ///
     /// - parameters:
-    ///     - by: Amount to increment by.
+    ///     - amount: Amount to increment by.
     @inlinable
     public func increment<DataType: BinaryFloatingPoint>(by amount: DataType) {
         self._handler.increment(by: Double(amount))
@@ -250,7 +250,7 @@ public final class Meter {
     /// Decrement the Meter.
     ///
     /// - parameters:
-    ///     - by: Amount to decrement by.
+    ///     - amount: Amount to decrement by.
     @inlinable
     public func decrement<DataType: BinaryFloatingPoint>(by amount: DataType) {
         self._handler.decrement(by: Double(amount))
@@ -284,7 +284,7 @@ extension Meter {
 
 extension Meter: CustomStringConvertible {
     public var description: String {
-        return "\(type(of: self))(\(self.label), dimensions: \(self.dimensions))"
+        "\(type(of: self))(\(self.label), dimensions: \(self.dimensions))"
     }
 }
 
@@ -368,7 +368,7 @@ extension Recorder {
 
 extension Recorder: CustomStringConvertible {
     public var description: String {
-        return "\(type(of: self))(\(self.label), dimensions: \(self.dimensions), aggregate: \(self.aggregate))"
+        "\(type(of: self))(\(self.label), dimensions: \(self.dimensions), aggregate: \(self.aggregate))"
     }
 }
 
@@ -397,9 +397,18 @@ public struct TimeUnit: Equatable, Sendable {
 
     public static let nanoseconds = TimeUnit(code: .nanoseconds, scaleFromNanoseconds: 1)
     public static let microseconds = TimeUnit(code: .microseconds, scaleFromNanoseconds: 1000)
-    public static let milliseconds = TimeUnit(code: .milliseconds, scaleFromNanoseconds: 1000 * TimeUnit.microseconds.scaleFromNanoseconds)
-    public static let seconds = TimeUnit(code: .seconds, scaleFromNanoseconds: 1000 * TimeUnit.milliseconds.scaleFromNanoseconds)
-    public static let minutes = TimeUnit(code: .minutes, scaleFromNanoseconds: 60 * TimeUnit.seconds.scaleFromNanoseconds)
+    public static let milliseconds = TimeUnit(
+        code: .milliseconds,
+        scaleFromNanoseconds: 1000 * TimeUnit.microseconds.scaleFromNanoseconds
+    )
+    public static let seconds = TimeUnit(
+        code: .seconds,
+        scaleFromNanoseconds: 1000 * TimeUnit.milliseconds.scaleFromNanoseconds
+    )
+    public static let minutes = TimeUnit(
+        code: .minutes,
+        scaleFromNanoseconds: 60 * TimeUnit.seconds.scaleFromNanoseconds
+    )
     public static let hours = TimeUnit(code: .hours, scaleFromNanoseconds: 60 * TimeUnit.minutes.scaleFromNanoseconds)
     public static let days = TimeUnit(code: .days, scaleFromNanoseconds: 24 * TimeUnit.hours.scaleFromNanoseconds)
 }
@@ -436,7 +445,7 @@ public final class Timer {
     /// Record a duration in nanoseconds.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
+    ///     - duration: Duration to record.
     @inlinable
     public func recordNanoseconds(_ duration: Int64) {
         self._handler.recordNanoseconds(duration)
@@ -445,7 +454,7 @@ public final class Timer {
     /// Record a duration in nanoseconds.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
+    ///     - duration: Duration to record.
     @inlinable
     public func recordNanoseconds<DataType: BinaryInteger>(_ duration: DataType) {
         self.recordNanoseconds(duration >= Int64.max ? Int64.max : Int64(duration))
@@ -454,7 +463,7 @@ public final class Timer {
     /// Record a duration in microseconds.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
+    ///     - duration: Duration to record.
     @inlinable
     public func recordMicroseconds<DataType: BinaryInteger>(_ duration: DataType) {
         guard duration <= Int64.max else { return self.recordNanoseconds(Int64.max) }
@@ -470,7 +479,7 @@ public final class Timer {
     /// Record a duration in microseconds.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
+    ///     - duration: Duration to record.
     @inlinable
     public func recordMicroseconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
         self.recordNanoseconds(Double(duration * 1000) < Double(Int64.max) ? Int64(duration * 1000) : Int64.max)
@@ -479,7 +488,7 @@ public final class Timer {
     /// Record a duration in milliseconds.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
+    ///     - duration: Duration to record.
     @inlinable
     public func recordMilliseconds<DataType: BinaryInteger>(_ duration: DataType) {
         guard duration <= Int64.max else { return self.recordNanoseconds(Int64.max) }
@@ -495,16 +504,18 @@ public final class Timer {
     /// Record a duration in milliseconds.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
+    ///     - duration: Duration to record.
     @inlinable
     public func recordMilliseconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
-        self.recordNanoseconds(Double(duration * 1_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000) : Int64.max)
+        self.recordNanoseconds(
+            Double(duration * 1_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000) : Int64.max
+        )
     }
 
     /// Record a duration in seconds.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
+    ///     - duration: Duration to record.
     @inlinable
     public func recordSeconds<DataType: BinaryInteger>(_ duration: DataType) {
         guard duration <= Int64.max else { return self.recordNanoseconds(Int64.max) }
@@ -520,10 +531,12 @@ public final class Timer {
     /// Record a duration in seconds.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
+    ///     - duration: Duration to record.
     @inlinable
     public func recordSeconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
-        self.recordNanoseconds(Double(duration * 1_000_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000_000) : Int64.max)
+        self.recordNanoseconds(
+            Double(duration * 1_000_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000_000) : Int64.max
+        )
     }
 }
 
@@ -544,7 +557,11 @@ extension Timer {
     ///     - label: The label for the `Timer`.
     ///     - dimensions: The dimensions for the `Timer`.
     ///     - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
-    public convenience init(label: String, dimensions: [(String, String)] = [], preferredDisplayUnit displayUnit: TimeUnit) {
+    public convenience init(
+        label: String,
+        dimensions: [(String, String)] = [],
+        preferredDisplayUnit displayUnit: TimeUnit
+    ) {
         let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
         handler.preferDisplayUnit(displayUnit)
         self.init(label: label, dimensions: dimensions, handler: handler)
@@ -560,7 +577,7 @@ extension Timer {
 
 extension Timer: CustomStringConvertible {
     public var description: String {
-        return "Timer(\(self.label), dimensions: \(self.dimensions))"
+        "Timer(\(self.label), dimensions: \(self.dimensions))"
     }
 }
 
@@ -589,7 +606,7 @@ public enum MetricsSystem {
 
     /// Returns a reference to the configured factory.
     public static var factory: MetricsFactory {
-        return self._factory.underlying
+        self._factory.underlying
     }
 
     /// Acquire a writer lock for the duration of the given block.
@@ -597,7 +614,7 @@ public enum MetricsSystem {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     public static func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
-        return try self._factory.withWriterLock(body)
+        try self._factory.withWriterLock(body)
     }
 
     // This can be `@unchecked Sendable` because we're manually gating access to mutable state with a lock.
@@ -612,20 +629,23 @@ public enum MetricsSystem {
 
         func replaceFactory(_ factory: MetricsFactory, validate: Bool) {
             self.lock.withWriterLock {
-                precondition(!validate || !self.initialized, "metrics system can only be initialized once per process. currently used factory: \(self._underlying)")
+                precondition(
+                    !validate || !self.initialized,
+                    "metrics system can only be initialized once per process. currently used factory: \(self._underlying)"
+                )
                 self._underlying = factory
                 self.initialized = true
             }
         }
 
         var underlying: MetricsFactory {
-            return self.lock.withReaderLock {
-                return self._underlying
+            self.lock.withReaderLock {
+                self._underlying
             }
         }
 
         func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
-            return try self.lock.withWriterLock(body)
+            try self.lock.withWriterLock(body)
         }
     }
 }
@@ -891,7 +911,7 @@ extension MetricsFactory {
     ///     - label: The label for the `FloatingPointCounterHandler`.
     ///     - dimensions: The dimensions for the `FloatingPointCounterHandler`.
     public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
-        return AccumulatingRoundingFloatingPointCounter(label: label, dimensions: dimensions)
+        AccumulatingRoundingFloatingPointCounter(label: label, dimensions: dimensions)
     }
 
     /// Invoked when the corresponding `FloatingPointCounter`'s `destroy()` function is invoked.
@@ -915,7 +935,7 @@ extension MetricsFactory {
     ///     - label: The label for the `MeterHandler`.
     ///     - dimensions: The dimensions for the `MeterHandler`.
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
-        return AccumulatingMeter(label: label, dimensions: dimensions)
+        AccumulatingMeter(label: label, dimensions: dimensions)
     }
 
     /// Invoked when the corresponding `Meter`'s `destroy()` function is invoked.
@@ -1051,7 +1071,7 @@ public protocol TimerHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Record a duration in nanoseconds.
     ///
     /// - parameters:
-    ///     - value: Duration to record.
+    ///     - duration: Duration to record.
     func recordNanoseconds(_ duration: Int64)
 
     /// Set the preferred display unit for this TimerHandler.
@@ -1077,23 +1097,23 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     }
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
-        return MuxCounter(factories: self.factories, label: label, dimensions: dimensions)
+        MuxCounter(factories: self.factories, label: label, dimensions: dimensions)
     }
 
     public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
-        return MuxFloatingPointCounter(factories: self.factories, label: label, dimensions: dimensions)
+        MuxFloatingPointCounter(factories: self.factories, label: label, dimensions: dimensions)
     }
 
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
-        return MuxMeter(factories: self.factories, label: label, dimensions: dimensions)
+        MuxMeter(factories: self.factories, label: label, dimensions: dimensions)
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-        return MuxRecorder(factories: self.factories, label: label, dimensions: dimensions, aggregate: aggregate)
+        MuxRecorder(factories: self.factories, label: label, dimensions: dimensions, aggregate: aggregate)
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-        return MuxTimer(factories: self.factories, label: label, dimensions: dimensions)
+        MuxTimer(factories: self.factories, label: label, dimensions: dimensions)
     }
 
     public func destroyCounter(_ handler: CounterHandler) {
@@ -1133,11 +1153,11 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
 
         func increment(by amount: Int64) {
-            self.counters.forEach { $0.increment(by: amount) }
+            for counter in self.counters { counter.increment(by: amount) }
         }
 
         func reset() {
-            self.counters.forEach { $0.reset() }
+            for counter in self.counters { counter.reset() }
         }
     }
 
@@ -1148,11 +1168,11 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
 
         func increment(by amount: Double) {
-            self.counters.forEach { $0.increment(by: amount) }
+            for counter in self.counters { counter.increment(by: amount) }
         }
 
         func reset() {
-            self.counters.forEach { $0.reset() }
+            for counter in self.counters { counter.reset() }
         }
     }
 
@@ -1163,34 +1183,36 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
 
         func set(_ value: Int64) {
-            self.meters.forEach { $0.set(value) }
+            for meter in self.meters { meter.set(value) }
         }
 
         func set(_ value: Double) {
-            self.meters.forEach { $0.set(value) }
+            for meter in self.meters { meter.set(value) }
         }
 
         func increment(by amount: Double) {
-            self.meters.forEach { $0.increment(by: amount) }
+            for meter in self.meters { meter.increment(by: amount) }
         }
 
         func decrement(by amount: Double) {
-            self.meters.forEach { $0.decrement(by: amount) }
+            for meter in self.meters { meter.decrement(by: amount) }
         }
     }
 
     private final class MuxRecorder: RecorderHandler {
         let recorders: [RecorderHandler]
         public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)], aggregate: Bool) {
-            self.recorders = factories.map { $0.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate) }
+            self.recorders = factories.map {
+                $0.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+            }
         }
 
         func record(_ value: Int64) {
-            self.recorders.forEach { $0.record(value) }
+            for recorder in self.recorders { recorder.record(value) }
         }
 
         func record(_ value: Double) {
-            self.recorders.forEach { $0.record(value) }
+            for recorder in self.recorders { recorder.record(value) }
         }
     }
 
@@ -1201,39 +1223,41 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         }
 
         func recordNanoseconds(_ duration: Int64) {
-            self.timers.forEach { $0.recordNanoseconds(duration) }
+            for timer in self.timers { timer.recordNanoseconds(duration) }
         }
 
         func preferDisplayUnit(_ unit: TimeUnit) {
-            self.timers.forEach { $0.preferDisplayUnit(unit) }
+            for timer in self.timers { timer.preferDisplayUnit(unit) }
         }
     }
 }
 
 /// Ships with the metrics module, used for initial bootstrapping.
-public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingPointCounterHandler, MeterHandler, RecorderHandler, TimerHandler {
+public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingPointCounterHandler, MeterHandler,
+    RecorderHandler, TimerHandler
+{
     public static let instance = NOOPMetricsHandler()
 
     private init() {}
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
-        return self
+        self
     }
 
     public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
-        return self
+        self
     }
 
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
-        return self
+        self
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-        return self
+        self
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-        return self
+        self
     }
 
     public func destroyCounter(_: CounterHandler) {}

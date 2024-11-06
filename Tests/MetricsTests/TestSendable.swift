@@ -12,10 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import CoreMetrics
 import Dispatch
 import MetricsTestKit
 import XCTest
+
+@testable import CoreMetrics
 
 class SendableTest: XCTestCase {
     func testSendableMetrics() async throws {
@@ -25,7 +26,7 @@ class SendableTest: XCTestCase {
 
         do {
             let name = "counter-\(UUID().uuidString)"
-            let value = Int.random(in: 0 ... 1000)
+            let value = Int.random(in: 0...1000)
             let counter = Counter(label: name)
 
             let task = Task.detached { () -> [Int64] in
@@ -40,7 +41,7 @@ class SendableTest: XCTestCase {
 
         do {
             let name = "floating-point-counter-\(UUID().uuidString)"
-            let value = Double.random(in: 0 ... 0.9999)
+            let value = Double.random(in: 0...0.9999)
             let counter = FloatingPointCounter(label: name)
 
             let task = Task.detached { () -> Double in
@@ -54,7 +55,7 @@ class SendableTest: XCTestCase {
 
         do {
             let name = "recorder-\(UUID().uuidString)"
-            let value = Double.random(in: -1000 ... 1000)
+            let value = Double.random(in: -1000...1000)
             let recorder = Recorder(label: name)
 
             let task = Task.detached { () -> [Double] in
@@ -69,7 +70,7 @@ class SendableTest: XCTestCase {
 
         do {
             let name = "meter-\(UUID().uuidString)"
-            let value = Double.random(in: -1000 ... 1000)
+            let value = Double.random(in: -1000...1000)
             let meter = Meter(label: name)
 
             let task = Task.detached { () -> [Double] in
@@ -84,7 +85,7 @@ class SendableTest: XCTestCase {
 
         do {
             let name = "timer-\(UUID().uuidString)"
-            let value = Int64.random(in: 0 ... 1000)
+            let value = Int64.random(in: 0...1000)
             let timer = Timer(label: name)
 
             let task = Task.detached { () -> [Int64] in
