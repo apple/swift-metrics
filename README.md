@@ -90,12 +90,18 @@ This API was designed with the contributors to the Swift on Server community and
 
 ### Metric types
 
-The API supports four metric types:
+The API supports six metric types:
 
 `Counter`: A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero on restart. For example, you can use a counter to represent the number of requests served, tasks completed, or errors.
 
 ```swift
 counter.increment(by: 100)
+```
+
+- `FloatingPointCounter`: A variation of a `Counter` that records a floating point value, instead of an integer.
+
+```swift
+floatingPointCounter.increment(by: 10.5)
 ```
 
  `Gauge`: A Gauge is a metric that represents a single numerical value that can arbitrarily go up and down. Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Gauges are modeled as a `Recorder` with a sample size of 1 that does not perform any aggregation.

@@ -91,7 +91,9 @@ This API was designed with the contributors to the Swift on Server community and
 ### Metric types
 
 - ``Counter``
+- ``FloatingPointCounter``
 - ``Meter``
 - ``Recorder``
+- ``Gauge``
 - ``Timer``
 
