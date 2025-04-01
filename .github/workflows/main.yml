@@ -21,4 +21,5 @@ jobs:
     name: macOS tests
     uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
     with:
+      runner_pool: nightly
       build_scheme: swift-metrics-Package
