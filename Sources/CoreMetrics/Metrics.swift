@@ -374,6 +374,7 @@ extension Meter {
     /// - parameters:
     ///     - label: The label for the `Meter`.
     ///     - dimensions: The dimensions for the `Meter`.
+    ///     - factory: The custom factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         let handler = factory.makeMeter(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
@@ -509,7 +510,8 @@ extension Recorder {
     /// - parameters:
     ///     - label: The label for the `Recorder`.
     ///     - dimensions: The dimensions for the `Recorder`.
-    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
+    ///     - aggregate: aggregate recorded values to produce statistics across a sample size.
+    ///     - factory: The custom factory.
     public convenience init(
         label: String,
         dimensions: [(String, String)] = [],
