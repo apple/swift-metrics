@@ -26,7 +26,8 @@ public final class Counter {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     public let _handler: CounterHandler
-    public let _factory: MetricsFactory
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -139,7 +140,8 @@ public final class FloatingPointCounter {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     public let _handler: FloatingPointCounterHandler
-    public let _factory: MetricsFactory
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -155,7 +157,12 @@ public final class FloatingPointCounter {
     ///     - dimensions: The dimensions for the `FloatingPointCounter`.
     ///     - handler: The custom backend.
     ///     - factory: The custom factory.
-    public init(label: String, dimensions: [(String, String)], handler: FloatingPointCounterHandler, factory: MetricsFactory) {
+    public init(
+        label: String,
+        dimensions: [(String, String)],
+        handler: FloatingPointCounterHandler,
+        factory: MetricsFactory
+    ) {
         self.label = label
         self.dimensions = dimensions
         self._handler = handler
@@ -253,6 +260,16 @@ public final class Gauge: Recorder, @unchecked Sendable {
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, aggregate: false)
     }
+
+    /// Create a new `Gauge`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Gauge`.
+    ///     - dimensions: The dimensions for the `Gauge`.
+    ///     - factory: The custom factory.
+    public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
+        self.init(label: label, dimensions: dimensions, aggregate: false, factory: factory)
+    }
 }
 
 // MARK: - Meter
@@ -263,7 +280,8 @@ public final class Meter {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     public let _handler: MeterHandler
-    public let _factory: MetricsFactory
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -395,7 +413,8 @@ public class Recorder {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     public let _handler: RecorderHandler
-    public let _factory: MetricsFactory
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
     public let aggregate: Bool
@@ -413,7 +432,13 @@ public class Recorder {
     ///     - aggregate: aggregate recorded values to produce statistics across a sample size
     ///     - handler: The custom backend.
     ///     - factory: The custom factory.
-    public init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler, factory: MetricsFactory) {
+    public init(
+        label: String,
+        dimensions: [(String, String)],
+        aggregate: Bool,
+        handler: RecorderHandler,
+        factory: MetricsFactory
+    ) {
         self.label = label
         self.dimensions = dimensions
         self.aggregate = aggregate
@@ -434,7 +459,13 @@ public class Recorder {
     ///     - aggregate: aggregate recorded values to produce statistics across a sample size
     ///     - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
-        self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler, factory: MetricsSystem.factory)
+        self.init(
+            label: label,
+            dimensions: dimensions,
+            aggregate: aggregate,
+            handler: handler,
+            factory: MetricsSystem.factory
+        )
     }
 
     /// Record a value.
@@ -479,7 +510,12 @@ extension Recorder {
     ///     - label: The label for the `Recorder`.
     ///     - dimensions: The dimensions for the `Recorder`.
     ///     - aggregate: aggregate recorded values to produce statistics across a sample size
-    public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true, factory: MetricsFactory) {
+    public convenience init(
+        label: String,
+        dimensions: [(String, String)] = [],
+        aggregate: Bool = true,
+        factory: MetricsFactory
+    ) {
         let handler = factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler, factory: factory)
     }
@@ -549,7 +585,8 @@ public final class Timer {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     public let _handler: TimerHandler
-    public let _factory: MetricsFactory
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -735,7 +772,12 @@ extension Timer {
         dimensions: [(String, String)] = [],
         preferredDisplayUnit displayUnit: TimeUnit
     ) {
-        self.init(label: label, dimensions: dimensions, preferredDisplayUnit: displayUnit, factory: MetricsSystem.factory)
+        self.init(
+            label: label,
+            dimensions: dimensions,
+            preferredDisplayUnit: displayUnit,
+            factory: MetricsSystem.factory
+        )
     }
 
     /// Signal the underlying metrics library that this timer will never be updated again.

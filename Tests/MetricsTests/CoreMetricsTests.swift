@@ -610,7 +610,8 @@ class MetricsTests: XCTestCase {
     }
 
     func testCustomFactory() {
-        final class CustomFactory: MetricsFactory, @unchecked Sendable /* explicit locking */ {
+        // @unchecked Sendable is okay here - locking is done manually.
+        final class CustomFactory: MetricsFactory, @unchecked Sendable {
 
             init(handler: CustomHandler) {
                 self.handler = handler
@@ -635,7 +636,11 @@ class MetricsTests: XCTestCase {
                 handler
             }
 
-            func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any CoreMetrics.RecorderHandler {
+            func makeRecorder(
+                label: String,
+                dimensions: [(String, String)],
+                aggregate: Bool
+            ) -> any CoreMetrics.RecorderHandler {
                 fatalError("Unsupported")
             }
 
@@ -644,7 +649,10 @@ class MetricsTests: XCTestCase {
             }
 
             func destroyCounter(_ handler: any CoreMetrics.CounterHandler) {
-                XCTAssertTrue(handler === self.handler, "The handler to be destroyed doesn't match the expected handler.")
+                XCTAssertTrue(
+                    handler === self.handler,
+                    "The handler to be destroyed doesn't match the expected handler."
+                )
                 self.lock.lock()
                 defer {
                     lock.unlock()
