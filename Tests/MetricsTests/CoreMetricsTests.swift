@@ -597,7 +597,7 @@ class MetricsTests: XCTestCase {
         }
     }
 
-    func testCustomFactory() {
+    func testCustomHandler() {
         final class CustomHandler: CounterHandler {
             func increment<DataType>(by: DataType) where DataType: BinaryInteger {}
             func reset() {}
@@ -607,6 +607,79 @@ class MetricsTests: XCTestCase {
         XCTAssertFalse(counter1._handler is CustomHandler, "expected non-custom log handler")
         let counter2 = Counter(label: "foo", dimensions: [], handler: CustomHandler())
         XCTAssertTrue(counter2._handler is CustomHandler, "expected custom log handler")
+    }
+
+    func testCustomFactory() {
+        // @unchecked Sendable is okay here - locking is done manually.
+        final class CustomFactory: MetricsFactory, @unchecked Sendable {
+
+            init(handler: CustomHandler) {
+                self.handler = handler
+            }
+
+            final class CustomHandler: CounterHandler {
+                func increment<DataType>(by: DataType) where DataType: BinaryInteger {}
+                func reset() {}
+            }
+            private let handler: CustomHandler
+            private let lock: NSLock = NSLock()
+            private var locked_didCallDestroyCounter: Bool = false
+            var didCallDestroyCounter: Bool {
+                self.lock.lock()
+                defer {
+                    lock.unlock()
+                }
+                return self.locked_didCallDestroyCounter
+            }
+
+            func makeCounter(label: String, dimensions: [(String, String)]) -> any CoreMetrics.CounterHandler {
+                handler
+            }
+
+            func makeRecorder(
+                label: String,
+                dimensions: [(String, String)],
+                aggregate: Bool
+            ) -> any CoreMetrics.RecorderHandler {
+                fatalError("Unsupported")
+            }
+
+            func makeTimer(label: String, dimensions: [(String, String)]) -> any CoreMetrics.TimerHandler {
+                fatalError("Unsupported")
+            }
+
+            func destroyCounter(_ handler: any CoreMetrics.CounterHandler) {
+                XCTAssertTrue(
+                    handler === self.handler,
+                    "The handler to be destroyed doesn't match the expected handler."
+                )
+                self.lock.lock()
+                defer {
+                    lock.unlock()
+                }
+                self.locked_didCallDestroyCounter = true
+            }
+
+            func destroyRecorder(_ handler: any CoreMetrics.RecorderHandler) {
+                fatalError("Unsupported")
+            }
+
+            func destroyTimer(_ handler: any CoreMetrics.TimerHandler) {
+                fatalError("Unsupported")
+            }
+        }
+
+        let handler = CustomFactory.CustomHandler()
+        let factory = CustomFactory(handler: handler)
+
+        XCTAssertFalse(factory.didCallDestroyCounter)
+        do {
+            let counter1 = Counter(label: "foo", factory: factory)
+            XCTAssertTrue(counter1._handler is CustomFactory.CustomHandler, "expected a custom metrics handler")
+            XCTAssertTrue(counter1._factory is CustomFactory, "expected a custom metrics factory")
+            counter1.destroy()
+        }
+        XCTAssertTrue(factory.didCallDestroyCounter)
     }
 
     func testDestroyingGauge() throws {

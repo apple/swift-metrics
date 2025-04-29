@@ -23,8 +23,11 @@
 ///
 /// Its behavior depends on the `CounterHandler` implementation.
 public final class Counter {
-    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// Do not consider them part of the public API.
     public let _handler: CounterHandler
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -39,10 +42,32 @@ public final class Counter {
     ///     - label: The label for the `Counter`.
     ///     - dimensions: The dimensions for the `Counter`.
     ///     - handler: The custom backend.
-    public init(label: String, dimensions: [(String, String)], handler: CounterHandler) {
+    ///     - factory: The custom factory.
+    public init(label: String, dimensions: [(String, String)], handler: CounterHandler, factory: MetricsFactory) {
         self.label = label
         self.dimensions = dimensions
         self._handler = handler
+        self._factory = factory
+    }
+
+    /// Alternative way to create a new `Counter`, while providing an explicit `CounterHandler`.
+    ///
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    ///
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `Counter` instances using the configured metrics backend.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Counter`.
+    ///     - dimensions: The dimensions for the `Counter`.
+    ///     - handler: The custom backend, created by the global metrics factory.
+    public convenience init(label: String, dimensions: [(String, String)], handler: CounterHandler) {
+        self.init(
+            label: label,
+            dimensions: dimensions,
+            handler: handler,
+            factory: MetricsSystem.factory
+        )
     }
 
     /// Increment the counter.
@@ -74,15 +99,25 @@ extension Counter {
     ///     - label: The label for the `Counter`.
     ///     - dimensions: The dimensions for the `Counter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        let handler = MetricsSystem.factory.makeCounter(label: label, dimensions: dimensions)
-        self.init(label: label, dimensions: dimensions, handler: handler)
+        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+    }
+
+    /// Create a new `Counter`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Counter`.
+    ///     - dimensions: The dimensions for the `Counter`.
+    ///     - factory: The custom factory.
+    public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
+        let handler = factory.makeCounter(label: label, dimensions: dimensions)
+        self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
     }
 
     /// Signal the underlying metrics library that this counter will never be updated again.
     /// In response the library MAY decide to eagerly release any resources held by this `Counter`.
     @inlinable
     public func destroy() {
-        MetricsSystem.factory.destroyCounter(self._handler)
+        self._factory.destroyCounter(self._handler)
     }
 }
 
@@ -102,8 +137,11 @@ extension Counter: CustomStringConvertible {
 ///
 /// Its behavior depends on the `FloatingCounterHandler` implementation.
 public final class FloatingPointCounter {
-    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// Do not consider them part of the public API.
     public let _handler: FloatingPointCounterHandler
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -118,10 +156,37 @@ public final class FloatingPointCounter {
     ///     - label: The label for the `FloatingPointCounter`.
     ///     - dimensions: The dimensions for the `FloatingPointCounter`.
     ///     - handler: The custom backend.
-    public init(label: String, dimensions: [(String, String)], handler: FloatingPointCounterHandler) {
+    ///     - factory: The custom factory.
+    public init(
+        label: String,
+        dimensions: [(String, String)],
+        handler: FloatingPointCounterHandler,
+        factory: MetricsFactory
+    ) {
         self.label = label
         self.dimensions = dimensions
         self._handler = handler
+        self._factory = factory
+    }
+
+    /// Alternative way to create a new `FloatingPointCounter`, while providing an explicit `FloatingPointCounterHandler`.
+    ///
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    ///
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `FloatingPointCounter` instances using the configured metrics backend.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `FloatingPointCounter`.
+    ///     - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///     - handler: The custom backend.
+    public convenience init(label: String, dimensions: [(String, String)], handler: FloatingPointCounterHandler) {
+        self.init(
+            label: label,
+            dimensions: dimensions,
+            handler: handler,
+            factory: MetricsSystem.factory
+        )
     }
 
     /// Increment the FloatingPointCounter.
@@ -153,15 +218,25 @@ extension FloatingPointCounter {
     ///     - label: The label for the `FloatingPointCounter`.
     ///     - dimensions: The dimensions for the `FloatingPointCounter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        let handler = MetricsSystem.factory.makeFloatingPointCounter(label: label, dimensions: dimensions)
-        self.init(label: label, dimensions: dimensions, handler: handler)
+        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+    }
+
+    /// Create a new `FloatingPointCounter`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `FloatingPointCounter`.
+    ///     - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///     - factory: The custom factory.
+    public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
+        let handler = factory.makeFloatingPointCounter(label: label, dimensions: dimensions)
+        self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
     }
 
     /// Signal the underlying metrics library that this FloatingPointCounter will never be updated again.
     /// In response the library MAY decide to eagerly release any resources held by this `FloatingPointCounter`.
     @inlinable
     public func destroy() {
-        MetricsSystem.factory.destroyFloatingPointCounter(self._handler)
+        self._factory.destroyFloatingPointCounter(self._handler)
     }
 }
 
@@ -185,6 +260,16 @@ public final class Gauge: Recorder, @unchecked Sendable {
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, aggregate: false)
     }
+
+    /// Create a new `Gauge`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Gauge`.
+    ///     - dimensions: The dimensions for the `Gauge`.
+    ///     - factory: The custom factory.
+    public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
+        self.init(label: label, dimensions: dimensions, aggregate: false, factory: factory)
+    }
 }
 
 // MARK: - Meter
@@ -192,8 +277,11 @@ public final class Gauge: Recorder, @unchecked Sendable {
 /// A meter is similar to a gauge, it is a metric that represents a single numerical value that can arbitrarily go up and down.
 /// Meters are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
 public final class Meter {
-    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// Do not consider them part of the public API.
     public let _handler: MeterHandler
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -208,10 +296,27 @@ public final class Meter {
     ///     - label: The label for the `Recorder`.
     ///     - dimensions: The dimensions for the `Recorder`.
     ///     - handler: The custom backend.
-    public init(label: String, dimensions: [(String, String)], handler: MeterHandler) {
+    ///     - factory: The custom factory.
+    public init(label: String, dimensions: [(String, String)], handler: MeterHandler, factory: MetricsFactory) {
         self.label = label
         self.dimensions = dimensions
         self._handler = handler
+        self._factory = factory
+    }
+
+    /// Alternative way to create a new `Meter`, while providing an explicit `MeterHandler`.
+    ///
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    ///
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `Meter` instances using the configured metrics backend.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Recorder`.
+    ///     - dimensions: The dimensions for the `Recorder`.
+    ///     - handler: The custom backend.
+    public convenience init(label: String, dimensions: [(String, String)], handler: MeterHandler) {
+        self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
     }
 
     /// Set a value.
@@ -269,16 +374,26 @@ extension Meter {
     /// - parameters:
     ///     - label: The label for the `Meter`.
     ///     - dimensions: The dimensions for the `Meter`.
+    ///     - factory: The custom factory.
+    public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
+        let handler = factory.makeMeter(label: label, dimensions: dimensions)
+        self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
+    }
+
+    /// Create a new `Meter`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Meter`.
+    ///     - dimensions: The dimensions for the `Meter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        let handler = MetricsSystem.factory.makeMeter(label: label, dimensions: dimensions)
-        self.init(label: label, dimensions: dimensions, handler: handler)
+        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
     }
 
     /// Signal the underlying metrics library that this recorder will never be updated again.
     /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
     @inlinable
     public func destroy() {
-        MetricsSystem.factory.destroyMeter(self._handler)
+        self._factory.destroyMeter(self._handler)
     }
 }
 
@@ -296,8 +411,11 @@ extension Meter: CustomStringConvertible {
 ///
 /// Its behavior depends on the `RecorderHandler` implementation.
 public class Recorder {
-    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// Do not consider them part of the public API.
     public let _handler: RecorderHandler
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
     public let aggregate: Bool
@@ -314,11 +432,41 @@ public class Recorder {
     ///     - dimensions: The dimensions for the `Recorder`.
     ///     - aggregate: aggregate recorded values to produce statistics across a sample size
     ///     - handler: The custom backend.
-    public init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
+    ///     - factory: The custom factory.
+    public init(
+        label: String,
+        dimensions: [(String, String)],
+        aggregate: Bool,
+        handler: RecorderHandler,
+        factory: MetricsFactory
+    ) {
         self.label = label
         self.dimensions = dimensions
         self.aggregate = aggregate
         self._handler = handler
+        self._factory = factory
+    }
+
+    /// Alternative way to create a new `Recorder`, while providing an explicit `RecorderHandler`.
+    ///
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    ///
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Recorder`.
+    ///     - dimensions: The dimensions for the `Recorder`.
+    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
+    ///     - handler: The custom backend.
+    public convenience init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
+        self.init(
+            label: label,
+            dimensions: dimensions,
+            aggregate: aggregate,
+            handler: handler,
+            factory: MetricsSystem.factory
+        )
     }
 
     /// Record a value.
@@ -354,15 +502,31 @@ extension Recorder {
     ///     - dimensions: The dimensions for the `Recorder`.
     ///     - aggregate: aggregate recorded values to produce statistics across a sample size
     public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
-        let handler = MetricsSystem.factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
-        self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler)
+        self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: MetricsSystem.factory)
+    }
+
+    /// Create a new `Recorder`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Recorder`.
+    ///     - dimensions: The dimensions for the `Recorder`.
+    ///     - aggregate: aggregate recorded values to produce statistics across a sample size.
+    ///     - factory: The custom factory.
+    public convenience init(
+        label: String,
+        dimensions: [(String, String)] = [],
+        aggregate: Bool = true,
+        factory: MetricsFactory
+    ) {
+        let handler = factory.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+        self.init(label: label, dimensions: dimensions, aggregate: aggregate, handler: handler, factory: factory)
     }
 
     /// Signal the underlying metrics library that this recorder will never be updated again.
     /// In response the library MAY decide to eagerly release any resources held by this `Recorder`.
     @inlinable
     public func destroy() {
-        MetricsSystem.factory.destroyRecorder(self._handler)
+        self._factory.destroyRecorder(self._handler)
     }
 }
 
@@ -420,8 +584,11 @@ public struct TimeUnit: Equatable, Sendable {
 ///
 /// Its behavior depends on the `TimerHandler` implementation.
 public final class Timer {
-    /// ``_handler`` is only public to allow access from `MetricsTestKit`. Do not consider it part of the public API.
+    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// Do not consider them part of the public API.
     public let _handler: TimerHandler
+    @usableFromInline
+    package let _factory: MetricsFactory
     public let label: String
     public let dimensions: [(String, String)]
 
@@ -436,10 +603,27 @@ public final class Timer {
     ///     - label: The label for the `Timer`.
     ///     - dimensions: The dimensions for the `Timer`.
     ///     - handler: The custom backend.
-    public init(label: String, dimensions: [(String, String)], handler: TimerHandler) {
+    ///     - factory: The custom factory.
+    public init(label: String, dimensions: [(String, String)], handler: TimerHandler, factory: MetricsFactory) {
         self.label = label
         self.dimensions = dimensions
         self._handler = handler
+        self._factory = factory
+    }
+
+    /// Alternative way to create a new `Timer`, while providing an explicit `TimerHandler`.
+    ///
+    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
+    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
+    ///
+    /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Timer`.
+    ///     - dimensions: The dimensions for the `Timer`.
+    ///     - handler: The custom backend.
+    public convenience init(label: String, dimensions: [(String, String)], handler: TimerHandler) {
+        self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
     }
 
     /// Record a duration in nanoseconds.
@@ -546,9 +730,37 @@ extension Timer {
     /// - parameters:
     ///     - label: The label for the `Timer`.
     ///     - dimensions: The dimensions for the `Timer`.
+    ///     - factory: The custom factory.
+    public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
+        let handler = factory.makeTimer(label: label, dimensions: dimensions)
+        self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
+    }
+
+    /// Create a new `Timer`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Timer`.
+    ///     - dimensions: The dimensions for the `Timer`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
-        self.init(label: label, dimensions: dimensions, handler: handler)
+        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+    }
+
+    /// Create a new `Timer`.
+    ///
+    /// - parameters:
+    ///     - label: The label for the `Timer`.
+    ///     - dimensions: The dimensions for the `Timer`.
+    ///     - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
+    ///     - factory: The custom factory.
+    public convenience init(
+        label: String,
+        dimensions: [(String, String)] = [],
+        preferredDisplayUnit displayUnit: TimeUnit,
+        factory: MetricsFactory
+    ) {
+        let handler = factory.makeTimer(label: label, dimensions: dimensions)
+        handler.preferDisplayUnit(displayUnit)
+        self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
     }
 
     /// Create a new `Timer`.
@@ -562,16 +774,19 @@ extension Timer {
         dimensions: [(String, String)] = [],
         preferredDisplayUnit displayUnit: TimeUnit
     ) {
-        let handler = MetricsSystem.factory.makeTimer(label: label, dimensions: dimensions)
-        handler.preferDisplayUnit(displayUnit)
-        self.init(label: label, dimensions: dimensions, handler: handler)
+        self.init(
+            label: label,
+            dimensions: dimensions,
+            preferredDisplayUnit: displayUnit,
+            factory: MetricsSystem.factory
+        )
     }
 
     /// Signal the underlying metrics library that this timer will never be updated again.
     /// In response the library MAY decide to eagerly release any resources held by this `Timer`.
     @inlinable
     public func destroy() {
-        MetricsSystem.factory.destroyTimer(self._handler)
+        self._factory.destroyTimer(self._handler)
     }
 }
 
@@ -756,11 +971,12 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
 internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCounterHandler {
     private let lock = Lock()
     private let counterHandler: CounterHandler
+    private let factory: MetricsFactory
     internal var fraction: Double = 0
 
-    init(label: String, dimensions: [(String, String)]) {
-        self.counterHandler = MetricsSystem
-            .factory.makeCounter(label: label, dimensions: dimensions)
+    init(label: String, dimensions: [(String, String)], factory: MetricsFactory) {
+        self.counterHandler = factory.makeCounter(label: label, dimensions: dimensions)
+        self.factory = factory
     }
 
     func increment(by amount: Double) {
@@ -813,7 +1029,7 @@ internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCoun
     }
 
     func destroy() {
-        MetricsSystem.factory.destroyCounter(self.counterHandler)
+        self.factory.destroyCounter(self.counterHandler)
     }
 }
 
@@ -824,10 +1040,11 @@ internal final class AccumulatingMeter: MeterHandler, @unchecked Sendable {
     // FIXME: use swift-atomics when floating point support is available
     private var value: Double = 0
     private let lock = Lock()
+    private let factory: MetricsFactory
 
-    init(label: String, dimensions: [(String, String)]) {
-        self.recorderHandler = MetricsSystem
-            .factory.makeRecorder(label: label, dimensions: dimensions, aggregate: true)
+    init(label: String, dimensions: [(String, String)], factory: MetricsFactory) {
+        self.recorderHandler = factory.makeRecorder(label: label, dimensions: dimensions, aggregate: true)
+        self.factory = factory
     }
 
     func set(_ value: Int64) {
@@ -898,7 +1115,7 @@ internal final class AccumulatingMeter: MeterHandler, @unchecked Sendable {
     }
 
     func destroy() {
-        MetricsSystem.factory.destroyRecorder(self.recorderHandler)
+        self.factory.destroyRecorder(self.recorderHandler)
     }
 }
 
@@ -911,7 +1128,7 @@ extension MetricsFactory {
     ///     - label: The label for the `FloatingPointCounterHandler`.
     ///     - dimensions: The dimensions for the `FloatingPointCounterHandler`.
     public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
-        AccumulatingRoundingFloatingPointCounter(label: label, dimensions: dimensions)
+        AccumulatingRoundingFloatingPointCounter(label: label, dimensions: dimensions, factory: self)
     }
 
     /// Invoked when the corresponding `FloatingPointCounter`'s `destroy()` function is invoked.
@@ -935,7 +1152,7 @@ extension MetricsFactory {
     ///     - label: The label for the `MeterHandler`.
     ///     - dimensions: The dimensions for the `MeterHandler`.
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
-        AccumulatingMeter(label: label, dimensions: dimensions)
+        AccumulatingMeter(label: label, dimensions: dimensions, factory: self)
     }
 
     /// Invoked when the corresponding `Meter`'s `destroy()` function is invoked.
