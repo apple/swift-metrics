@@ -33,9 +33,6 @@ public final class Counter {
 
     /// Alternative way to create a new `Counter`, while providing an explicit `CounterHandler`.
     ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
-    ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Counter` instances using the configured metrics backend.
     ///
     /// - parameters:
@@ -51,9 +48,6 @@ public final class Counter {
     }
 
     /// Alternative way to create a new `Counter`, while providing an explicit `CounterHandler`.
-    ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Counter` instances using the configured metrics backend.
     ///
@@ -147,9 +141,6 @@ public final class FloatingPointCounter {
 
     /// Alternative way to create a new `FloatingPointCounter`, while providing an explicit `FloatingPointCounterHandler`.
     ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
-    ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `FloatingPointCounter` instances using the configured metrics backend.
     ///
     /// - parameters:
@@ -170,9 +161,6 @@ public final class FloatingPointCounter {
     }
 
     /// Alternative way to create a new `FloatingPointCounter`, while providing an explicit `FloatingPointCounterHandler`.
-    ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `FloatingPointCounter` instances using the configured metrics backend.
     ///
@@ -287,9 +275,6 @@ public final class Meter {
 
     /// Alternative way to create a new `Meter`, while providing an explicit `MeterHandler`.
     ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
-    ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Meter` instances using the configured metrics backend.
     ///
     /// - parameters:
@@ -305,9 +290,6 @@ public final class Meter {
     }
 
     /// Alternative way to create a new `Meter`, while providing an explicit `MeterHandler`.
-    ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Meter` instances using the configured metrics backend.
     ///
@@ -422,9 +404,6 @@ public class Recorder {
 
     /// Alternative way to create a new `Recorder`, while providing an explicit `RecorderHandler`.
     ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
-    ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
     ///
     /// - parameters:
@@ -448,9 +427,6 @@ public class Recorder {
     }
 
     /// Alternative way to create a new `Recorder`, while providing an explicit `RecorderHandler`.
-    ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
     ///
@@ -594,9 +570,6 @@ public final class Timer {
 
     /// Alternative way to create a new `Timer`, while providing an explicit `TimerHandler`.
     ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
-    ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
     ///
     /// - parameters:
@@ -612,9 +585,6 @@ public final class Timer {
     }
 
     /// Alternative way to create a new `Timer`, while providing an explicit `TimerHandler`.
-    ///
-    /// - warning: This initializer provides an escape hatch for situations where one must use a custom factory instead of the global one.
-    ///            We do not expect this API to be used in normal circumstances, so if you find yourself using it make sure it's for a good reason.
     ///
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
     ///
@@ -876,8 +846,7 @@ public enum MetricsSystem {
 /// * `Recorder` -> `RecorderHandler`
 /// * `Timer` -> `TimerHandler`
 ///
-/// - warning: This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
-///            To use the SwiftMetrics API, please refer to the documentation of `MetricsSystem`.
+/// To use the SwiftMetrics API, please refer to the documentation of `MetricsSystem`.
 ///
 /// # Destroying metrics
 ///
