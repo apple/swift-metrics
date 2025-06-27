@@ -11,6 +11,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
+// swift-format-ignore-file
+// Note: Whitespace changes are used to workaround compiler bug
+// https://github.com/swiftlang/swift/issues/79285
 
 @_exported import CoreMetrics
 import Foundation
@@ -123,8 +126,9 @@ extension Timer {
     @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
     public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
         clock: Clock = .continuous,
-        body: () throws(Failure) -> Result
-    ) throws(Failure) -> Result where Clock.Duration == Duration {
+        // DO NOT FIX THE WHITESPACE IN THE NEXT LINE UNTIL 5.10 IS UNSUPPORTED
+        // https://github.com/swiftlang/swift/issues/79285
+        body: () throws(Failure) -> Result) throws(Failure) -> Result where Clock.Duration == Duration {
         let start = clock.now
         defer {
             self.record(duration: start.duration(to: clock.now))
@@ -143,8 +147,9 @@ extension Timer {
     public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
         clock: Clock = .continuous,
         isolation: isolated (any Actor)? = #isolation,
-        body: () async throws(Failure) -> sending Result
-    ) async throws(Failure) -> sending Result where Clock.Duration == Duration {
+        // DO NOT FIX THE WHITESPACE IN THE NEXT LINE UNTIL 5.10 IS UNSUPPORTED
+        // https://github.com/swiftlang/swift/issues/79285
+        body: () async throws(Failure) -> sending Result) async throws(Failure) -> sending Result where Clock.Duration == Duration {
         let start = clock.now
         defer {
             self.record(duration: start.duration(to: clock.now))
