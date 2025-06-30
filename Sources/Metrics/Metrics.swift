@@ -16,9 +16,13 @@
 // https://github.com/swiftlang/swift/issues/79285
 
 @_exported import CoreMetrics
-import Foundation
+import typealias Foundation.TimeInterval
 
 @_exported import class CoreMetrics.Timer
+
+#if canImport(Dispatch)
+import Dispatch
+#endif
 
 extension Timer {
     /// Convenience for measuring duration of a closure.
