@@ -22,6 +22,19 @@
 ///
 /// This is the user-facing counter API.
 /// Its behavior is defined by the ``CounterHandler`` implementation.
+///
+/// Increment a counter:
+///
+/// ```swift
+/// counter.increment(by: 5)
+/// counter.increment() // increments counter by 1
+/// ```
+///
+/// Reset a counter:
+///
+/// ```swift
+/// counter.reset()
+/// ````
 public final class Counter {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
@@ -133,6 +146,19 @@ extension Counter: CustomStringConvertible {
 ///
 /// This is the user-facing floating-point counter API.
 /// Its behavior depends on the ``FloatingPointCounterHandler`` implementation.
+///
+/// Increment a counter:
+///
+/// ```swift
+/// counter.increment(by: 5.1)
+/// counter.increment() // increments counter by 1
+/// ```
+///
+/// Reset a counter:
+///
+/// ```swift
+/// counter.reset()
+/// ````
 public final class FloatingPointCounter {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
@@ -244,8 +270,14 @@ extension FloatingPointCounter: CustomStringConvertible {
 
 /// A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 ///
-/// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
+/// Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, such as the number of active threads.
 /// Gauges are modeled as `Recorder` with a sample size of 1 and that does not perform any aggregation.
+///
+/// Recording a value with a gauge:
+///
+/// ```swift
+/// guage.record(100)
+/// ```
 public final class Gauge: Recorder, @unchecked Sendable {
     /// Create a new gauge.
     ///
@@ -271,7 +303,12 @@ public final class Gauge: Recorder, @unchecked Sendable {
 
 /// A meter is similar to a gauge, it is a metric that represents a single numerical value that can arbitrarily go up and down.
 ///
-/// Meters are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads.
+/// Meters are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, such as the number of active threads.
+///
+/// Recording a value with a meter:
+/// ```swift
+/// meter.record(100)
+/// ```
 public final class Meter {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
@@ -405,6 +442,12 @@ extension Meter: CustomStringConvertible {
 ///
 /// This is the user-facing Recorder API.
 /// Its behavior depends on the ``RecorderHandler`` implementation.
+///
+/// Recording a value:
+///
+/// ```swift
+/// recorder.record(101)
+/// ```
 public class Recorder {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
@@ -585,6 +628,13 @@ public struct TimeUnit: Equatable, Sendable {
 ///
 /// This is the user-facing Timer API.
 /// Its behavior depends on the ``TimerHandler`` implementation.
+///
+/// Recording a value:
+///
+/// ```swift
+/// timer.recordMilliseconds(52)
+/// ```
+
 public final class Timer {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
