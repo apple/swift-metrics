@@ -6,7 +6,7 @@ A set of tools for testing Metrics emitting libraries.
 
 This module offers a ``TestMetrics`` type which you use to bootstrap the metrics system and assert metric values on it.
 
-## Example
+### Example
 
 ```swift
 import XCTest
