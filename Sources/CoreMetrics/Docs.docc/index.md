@@ -10,7 +10,7 @@ This is a community-driven open-source project that actively seeks contributions
 Apart from contributing to SwiftMetrics itself, the project needs metrics-compatible libraries which send the metrics over to backend systems such as the ones mentioned above.
 What SwiftMetrics provides today is covered in the [API docs](https://apple.github.io/swift-metrics/), and evolves with community input.
 
-## Getting started
+### Getting started
 
 If you have a server-side Swift application, or maybe a cross-platform (for example, Linux and macOS) application or library, and you would like to emit metrics, targeting this metrics API package is a great idea.
 Below you'll find all you need to know to get started.
@@ -70,7 +70,7 @@ This instructs the `MetricsSystem` to install `SelectedMetricsImplementation` (t
 You may also be interested in some "extra" modules which are collected in the [Swift Metrics Extras](https://github.com/apple/swift-metrics-extras) repository.
 It provides additional helpers for recording, aggregating, and exporting metrics, including gathering common system metrics.
 
-## API Architecture
+### API Architecture
 
 For the Swift on Server ecosystem, it's crucial to have a metrics API that can be adopted by anybody so a multitude of libraries from different parties can provide metrics information. More concretely, all the metrics events from all libraries should end up in the same place: one of the backends mentioned above or wherever the application owner chooses.
 
