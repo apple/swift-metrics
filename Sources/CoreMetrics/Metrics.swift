@@ -552,7 +552,7 @@ public struct TimeUnit: Equatable, Sendable {
         self.code = code
         self.scaleFromNanoseconds = scaleFromNanoseconds
     }
-    
+
     /// A nanosecond.
     public static let nanoseconds = TimeUnit(code: .nanoseconds, scaleFromNanoseconds: 1)
     /// A microsecond.
@@ -1294,7 +1294,7 @@ public protocol MeterHandler: AnyObject, _SwiftMetricsSendableProtocol {
 ///
 /// - The `TimerHandler` must be a `class`.
 public protocol TimerHandler: AnyObject, _SwiftMetricsSendableProtocol {
-    
+
     /// Record a duration in nanoseconds.
     ///
     /// - parameters:
