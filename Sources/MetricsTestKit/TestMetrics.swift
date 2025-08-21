@@ -148,7 +148,7 @@ public final class TestMetrics: MetricsFactory {
 extension TestMetrics.FullKey: Hashable {
     public func hash(into hasher: inout Hasher) {
         self.label.hash(into: &hasher)
-        for dim in self.dimensions {
+        for dim in self.dimensions.sorted(by: { $0.0 < $1.0 }) {
             dim.0.hash(into: &hasher)
             dim.1.hash(into: &hasher)
         }
