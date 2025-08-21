@@ -132,7 +132,7 @@ extension Counter: CustomStringConvertible {
 /// floating-point counter is not supported by all metrics backends, however a default implementation is provided which accumulates floating point values and records increments to a standard counter after crossing integer boundaries.
 ///
 /// This is the user-facing floating-point counter API.
-/// Its behavior depends on the ``FloatingCounterHandler`` implementation.
+/// Its behavior depends on the ``FloatingPointCounterHandler`` implementation.
 public final class FloatingPointCounter {
     /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
