@@ -29,14 +29,14 @@ import CoreMetrics
 import Metrics
 import XCTest
 
+/// A metrics factory which allows you to inspect recorded metrics programmatically.
+///
+/// This instance is only intended for tests of the Metrics API itself.
+///
 /// Taken directly from `swift-cluster-memberships`'s own test target package, which
 /// adopts the `TestMetrics` from `swift-metrics`.
 ///
-/// Metrics factory which allows inspecting recorded metrics programmatically.
-/// Only intended for tests of the Metrics API itself.
-///
 /// Created Handlers will store Metrics until they are explicitly destroyed.
-///
 public final class TestMetrics: MetricsFactory {
     private let lock = NSLock()
 
@@ -284,6 +284,7 @@ extension TestMetrics {
 
 // MARK: - Metric type implementations
 
+/// A type that represents a test metric key and value.
 public protocol TestMetric {
     associatedtype Value
 
@@ -293,6 +294,7 @@ public protocol TestMetric {
     var last: (Date, Value)? { get }
 }
 
+/// A test counter that you can inspect.
 public final class TestCounter: TestMetric, CounterHandler, Equatable {
     public let id: String
     public let label: String
@@ -348,6 +350,7 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
     }
 }
 
+/// A test meter that you can inspect.
 public final class TestMeter: TestMetric, MeterHandler, Equatable {
     public let id: String
     public let label: String
@@ -450,6 +453,7 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
     }
 }
 
+/// A test recorder that you can inspect.
 public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     public let id: String
     public let label: String
@@ -502,6 +506,7 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     }
 }
 
+/// A test timer that you can inspect.
 public final class TestTimer: TestMetric, TimerHandler, Equatable {
     public let id: String
     public let label: String
@@ -576,6 +581,7 @@ extension NSLock {
 
 // MARK: - Errors
 
+/// Metric testing errors
 public enum TestMetricsError: Error {
     case missingMetric(label: String, dimensions: [(String, String)])
     case illegalMetricType(metric: Sendable, expected: String)
