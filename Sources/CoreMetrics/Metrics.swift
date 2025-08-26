@@ -43,7 +43,9 @@ public final class Counter {
     @_documentation(visibility: internal)
     @usableFromInline
     package let _factory: MetricsFactory
+    /// The label for the counter.
     public let label: String
+    /// The dimensions for the counter.
     public let dimensions: [(String, String)]
 
     /// Alternative way to create a new counter with an explicit counter handler.
@@ -167,7 +169,9 @@ public final class FloatingPointCounter {
     @_documentation(visibility: internal)
     @usableFromInline
     package let _factory: MetricsFactory
+    /// The label for the floating point counter.
     public let label: String
+    /// The dimensions for the floating point counter.
     public let dimensions: [(String, String)]
 
     /// Alternative way to create a new floating-point counter, while providing an explicit floating-point counter handler.
@@ -317,7 +321,9 @@ public final class Meter {
     @usableFromInline
     @_documentation(visibility: internal)
     package let _factory: MetricsFactory
+    /// The label for the meter.
     public let label: String
+    /// The dimensions for the meter.
     public let dimensions: [(String, String)]
 
     /// Alternative way to create a new meter, while providing an explicit meter handler.
@@ -646,7 +652,9 @@ public final class Timer {
     @_documentation(visibility: internal)
     @usableFromInline
     package let _factory: MetricsFactory
+    /// The label for the timer.
     public let label: String
+    /// The dimensions for the timer.
     public let dimensions: [(String, String)]
 
     /// Alternative way to create a new timer, while providing an explicit timer handler.
@@ -1362,6 +1370,8 @@ public protocol TimerHandler: AnyObject, _SwiftMetricsSendableProtocol {
 }
 
 extension TimerHandler {
+    /// Set the preferred display unit for this timer handler.
+    /// - Parameter _: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     public func preferDisplayUnit(_: TimeUnit) {
         // NOOP
     }
@@ -1419,30 +1429,40 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         MuxTimer(factories: self.factories, label: label, dimensions: dimensions)
     }
 
+    /// Signal the underlying metrics library that this counter will never be updated again.
+    /// - Parameter handler: The counter handler to signal.
     public func destroyCounter(_ handler: CounterHandler) {
         for factory in self.factories {
             factory.destroyCounter(handler)
         }
     }
 
+    /// Signal the underlying metrics library that this floating point counter will never be updated again.
+    /// - Parameter handler: The floating point counter handler to signal.
     public func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler) {
         for factory in self.factories {
             factory.destroyFloatingPointCounter(handler)
         }
     }
 
+    /// Signal the underlying metrics library that this meter will never be updated again.
+    /// - Parameter handler: The meter handler to signal.
     public func destroyMeter(_ handler: MeterHandler) {
         for factory in self.factories {
             factory.destroyMeter(handler)
         }
     }
 
+    /// Signal the underlying metrics library that this recorder will never be updated again.
+    /// - Parameter handler: The recorder handler to signal.
     public func destroyRecorder(_ handler: RecorderHandler) {
         for factory in self.factories {
             factory.destroyRecorder(handler)
         }
     }
 
+    /// Signal the underlying metrics library that this timer will never be updated again.
+    /// - Parameter handler: The timer handler to signal.
     public func destroyTimer(_ handler: TimerHandler) {
         for factory in self.factories {
             factory.destroyTimer(handler)
