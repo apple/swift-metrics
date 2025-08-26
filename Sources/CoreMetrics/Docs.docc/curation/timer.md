@@ -13,8 +13,8 @@
 
 ### Updating a timer
 
-- ``recordNanoseconds(_:)-(Int64)``
-- ``recordNanoseconds(_:)-(DataType)``
+- ``recordNanoseconds(_:)-59nis``
+- ``recordNanoseconds(_:)-232ir``
 - ``recordMicroseconds(_:)-3qrc6``
 - ``recordMicroseconds(_:)-35aca``
 - ``recordMilliseconds(_:)-6kuy8``

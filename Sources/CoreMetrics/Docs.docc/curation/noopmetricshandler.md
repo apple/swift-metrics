@@ -16,14 +16,14 @@
 
 ### No-op operatings
 
-- ``increment(by:)-(Int64)``
-- ``increment(by:)-(Double)``
+- ``increment(by:)-3li5k``
+- ``increment(by:)-7bah6``
 - ``decrement(by:)``
-- ``record(_:)-(Int64)``
-- ``record(_:)-(Double)``
+- ``record(_:)-33tjf``
+- ``record(_:)-2jh2w``
 - ``recordNanoseconds(_:)``
-- ``set(_:)-(Int64)``
-- ``set(_:)-(Double)``
+- ``set(_:)-9r6pn``
+- ``set(_:)-11de``
 - ``reset()``
 
 ### Cleaning up handlers
