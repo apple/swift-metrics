@@ -888,7 +888,7 @@ public enum MetricsSystem {
     }
 
     /// Acquire a writer lock for the duration of the given block.
-    /// 
+    ///
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     public static func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
@@ -1387,7 +1387,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     public init(factories: [MetricsFactory]) {
         self.factories = factories
     }
-    
+
     /// Creates a new counter handler.
     /// - Parameters:
     ///   - label: The label for the `CounterHandler`.
@@ -1565,7 +1565,7 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
     public static let instance = NOOPMetricsHandler()
 
     private init() {}
-    
+
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         self
     }
