@@ -20,6 +20,6 @@
 - ``dimensions``
 - ``label``
 
-### Finalizing a counter
+### Destroying a counter
 
 - ``destroy()``

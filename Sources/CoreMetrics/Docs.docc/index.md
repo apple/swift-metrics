@@ -94,19 +94,19 @@ This API was designed with the contributors to the Swift on Server community and
 ### Metric types
 
 - ``Counter``
-- ``CounterHandler``
 - ``FloatingPointCounter``
-- ``FloatingPointCounterHandler``
 - ``Meter``
-- ``MeterHandler``
 - ``Gauge``
 - ``Recorder``
-- ``RecorderHandler``
 - ``Timer``
-- ``TimerHandler``
 
 ### Metrics Handlers
 
+- ``CounterHandler``
+- ``FloatingPointCounterHandler``
+- ``MeterHandler``
+- ``RecorderHandler``
+- ``TimerHandler``
 - ``MultiplexMetricsHandler``
 - ``NOOPMetricsHandler``
 

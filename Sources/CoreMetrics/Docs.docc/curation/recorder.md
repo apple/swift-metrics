@@ -20,6 +20,6 @@
 - ``aggregate``
 - ``label``
 
-### Finalizing a recorder
+### Destroying a recorder
 
 - ``destroy()``

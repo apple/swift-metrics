@@ -27,7 +27,7 @@
 - ``dimensions``
 - ``label``
 
-### Finalizing a timer
+### Destroying a timer
 
 - ``destroy()``
 

@@ -51,10 +51,10 @@ public final class Counter {
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Counter` instances using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `Counter`.
-    ///     - dimensions: The dimensions for the `Counter`.
-    ///     - handler: The custom backend.
-    ///     - factory: The custom metrics factory.
+    ///   - label: The label for the `Counter`.
+    ///   - dimensions: The dimensions for the `Counter`.
+    ///   - handler: The custom backend.
+    ///   - factory: The custom metrics factory.
     public init(label: String, dimensions: [(String, String)], handler: CounterHandler, factory: MetricsFactory) {
         self.label = label
         self.dimensions = dimensions
@@ -67,9 +67,9 @@ public final class Counter {
     /// - SeeAlso: Use `init(label:dimensions:)` to create instances of ``Counter`` using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `Counter`.
-    ///     - dimensions: The dimensions for the `Counter`.
-    ///     - handler: The custom backend, created by the global metrics factory.
+    ///   - label: The label for the `Counter`.
+    ///   - dimensions: The dimensions for the `Counter`.
+    ///   - handler: The custom backend, created by the global metrics factory.
     public convenience init(label: String, dimensions: [(String, String)], handler: CounterHandler) {
         self.init(
             label: label,
@@ -82,7 +82,7 @@ public final class Counter {
     /// Increment the counter.
     ///
     /// - parameters:
-    ///     - amount: Amount to increment by.
+    ///   - amount: Amount to increment by.
     @inlinable
     public func increment<DataType: BinaryInteger>(by amount: DataType) {
         self._handler.increment(by: Int64(amount))
@@ -105,8 +105,8 @@ extension Counter {
     /// Create a new counter.
     ///
     /// - parameters:
-    ///     - label: The label for the `Counter`.
-    ///     - dimensions: The dimensions for the `Counter`.
+    ///   - label: The label for the `Counter`.
+    ///   - dimensions: The dimensions for the `Counter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
     }
@@ -114,9 +114,9 @@ extension Counter {
     /// Create a new counter using a custom metrics factory that you provide.
     ///
     /// - parameters:
-    ///     - label: The label for the `Counter`.
-    ///     - dimensions: The dimensions for the `Counter`.
-    ///     - factory: The custom metrics factory.
+    ///   - label: The label for the `Counter`.
+    ///   - dimensions: The dimensions for the `Counter`.
+    ///   - factory: The custom metrics factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         let handler = factory.makeCounter(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
@@ -175,10 +175,10 @@ public final class FloatingPointCounter {
     /// - SeeAlso: Use `init(label:dimensions:)` to create instances of ``FloatingPointCounter``using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `FloatingPointCounter`.
-    ///     - dimensions: The dimensions for the `FloatingPointCounter`.
-    ///     - handler: The custom backend.
-    ///     - factory: The custom metrics factory.
+    ///  - label: The label for the `FloatingPointCounter`.
+    ///  - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///  - handler: The custom backend.
+    ///  - factory: The custom metrics factory.
     public init(
         label: String,
         dimensions: [(String, String)],
@@ -196,9 +196,9 @@ public final class FloatingPointCounter {
     /// - SeeAlso: Use `init(label:dimensions:)` to create instances of ``FloatingPointCounter`` using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `FloatingPointCounter`.
-    ///     - dimensions: The dimensions for the `FloatingPointCounter`.
-    ///     - handler: The custom backend.
+    ///   - label: The label for the `FloatingPointCounter`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: FloatingPointCounterHandler) {
         self.init(
             label: label,
@@ -211,7 +211,7 @@ public final class FloatingPointCounter {
     /// Increment the floating-point counter.
     ///
     /// - parameters:
-    ///     - amount: Amount to increment by.
+    ///   - amount: Amount to increment by.
     @inlinable
     public func increment<DataType: BinaryFloatingPoint>(by amount: DataType) {
         self._handler.increment(by: Double(amount))
@@ -234,8 +234,8 @@ extension FloatingPointCounter {
     /// Create a new floating-point counter.
     ///
     /// - parameters:
-    ///     - label: The label for the `FloatingPointCounter`.
-    ///     - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///   - label: The label for the `FloatingPointCounter`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
     }
@@ -243,9 +243,9 @@ extension FloatingPointCounter {
     /// Create a new floating-point counter using a custom metrics factory that you provide.
     ///
     /// - parameters:
-    ///     - label: The label for the `FloatingPointCounter`.
-    ///     - dimensions: The dimensions for the `FloatingPointCounter`.
-    ///     - factory: The custom metrics factory.
+    ///   - label: The label for the `FloatingPointCounter`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///   - factory: The custom metrics factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         let handler = factory.makeFloatingPointCounter(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
@@ -282,8 +282,8 @@ public final class Gauge: Recorder, @unchecked Sendable {
     /// Create a new gauge.
     ///
     /// - parameters:
-    ///     - label: The label for the `Gauge`.
-    ///     - dimensions: The dimensions for the `Gauge`.
+    ///   - label: The label for the `Gauge`.
+    ///   - dimensions: The dimensions for the `Gauge`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, aggregate: false)
     }
@@ -291,9 +291,9 @@ public final class Gauge: Recorder, @unchecked Sendable {
     /// Create a new gauge using a custom metrics factory that you provide.
     ///
     /// - parameters:
-    ///     - label: The label for the `Gauge`.
-    ///     - dimensions: The dimensions for the `Gauge`.
-    ///     - factory: The custom metrics factory.
+    ///   - label: The label for the `Gauge`.
+    ///   - dimensions: The dimensions for the `Gauge`.
+    ///   - factory: The custom metrics factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         self.init(label: label, dimensions: dimensions, aggregate: false, factory: factory)
     }
@@ -325,10 +325,10 @@ public final class Meter {
     /// - SeeAlso: Use `init(label:dimensions:)` to create instances of ``Meter`` using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `Recorder`.
-    ///     - dimensions: The dimensions for the `Recorder`.
-    ///     - handler: The custom backend.
-    ///     - factory: The custom metrics factory.
+    ///   - label: The label for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - handler: The custom backend.
+    ///   - factory: The custom metrics factory.
     public init(label: String, dimensions: [(String, String)], handler: MeterHandler, factory: MetricsFactory) {
         self.label = label
         self.dimensions = dimensions
@@ -341,9 +341,9 @@ public final class Meter {
     /// - SeeAlso: Use `init(label:dimensions:)` to create instances of ``Meter`` using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `Recorder`.
-    ///     - dimensions: The dimensions for the `Recorder`.
-    ///     - handler: The custom backend.
+    ///   - label: The label for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: MeterHandler) {
         self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
     }
@@ -351,7 +351,7 @@ public final class Meter {
     /// Set an integer value.
     ///
     /// - parameters:
-    ///     - value: Value to set.
+    ///   - value: Value to set.
     @inlinable
     public func set<DataType: BinaryInteger>(_ value: DataType) {
         self._handler.set(Int64(value))
@@ -360,7 +360,7 @@ public final class Meter {
     /// Set a floating-point value.
     ///
     /// - parameters:
-    ///     - value: Value to est.
+    ///   - value: Value to est.
     @inlinable
     public func set<DataType: BinaryFloatingPoint>(_ value: DataType) {
         self._handler.set(Double(value))
@@ -369,7 +369,7 @@ public final class Meter {
     /// Increment the meter.
     ///
     /// - parameters:
-    ///     - amount: Amount to increment by.
+    ///   - amount: Amount to increment by.
     @inlinable
     public func increment<DataType: BinaryFloatingPoint>(by amount: DataType) {
         self._handler.increment(by: Double(amount))
@@ -384,7 +384,7 @@ public final class Meter {
     /// Decrement the meter.
     ///
     /// - parameters:
-    ///     - amount: Amount to decrement by.
+    ///    - amount: Amount to decrement by.
     @inlinable
     public func decrement<DataType: BinaryFloatingPoint>(by amount: DataType) {
         self._handler.decrement(by: Double(amount))
@@ -401,9 +401,9 @@ extension Meter {
     /// Create a new meter.
     ///
     /// - parameters:
-    ///     - label: The label for the `Meter`.
-    ///     - dimensions: The dimensions for the `Meter`.
-    ///     - factory: The custom metrics factory.
+    ///   - label: The label for the `Meter`.
+    ///   - dimensions: The dimensions for the `Meter`.
+    ///   - factory: The custom metrics factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         let handler = factory.makeMeter(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
@@ -412,8 +412,8 @@ extension Meter {
     /// Create a new meter.
     ///
     /// - parameters:
-    ///     - label: The label for the `Meter`.
-    ///     - dimensions: The dimensions for the `Meter`.
+    ///   - label: The label for the `Meter`.
+    ///   - dimensions: The dimensions for the `Meter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
     }
@@ -465,11 +465,11 @@ public class Recorder {
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `Recorder`.
-    ///     - dimensions: The dimensions for the `Recorder`.
-    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
-    ///     - handler: The custom backend.
-    ///     - factory: The custom metrics factory.
+    ///   - label: The label for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - aggregate: aggregate recorded values to produce statistics across a sample size
+    ///   - handler: The custom backend.
+    ///   - factory: The custom metrics factory.
     public init(
         label: String,
         dimensions: [(String, String)],
@@ -489,10 +489,10 @@ public class Recorder {
     /// - SeeAlso: Use `init(label:dimensions:)` to create `Recorder` instances using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `Recorder`.
-    ///     - dimensions: The dimensions for the `Recorder`.
-    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
-    ///     - handler: The custom backend.
+    ///   - label: The label for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - aggregate: aggregate recorded values to produce statistics across a sample size
+    ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
         self.init(
             label: label,
@@ -509,7 +509,7 @@ public class Recorder {
     /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
     ///
     /// - parameters:
-    ///     - value: Value to record.
+    ///   - value: Value to record.
     @inlinable
     public func record<DataType: BinaryInteger>(_ value: DataType) {
         self._handler.record(Int64(value))
@@ -521,7 +521,7 @@ public class Recorder {
     /// This means that the value of this `Recorder` will match the passed in value, rather than accumulate and sum the values up.
     ///
     /// - parameters:
-    ///     - value: Value to record.
+    ///   - value: Value to record.
     @inlinable
     public func record<DataType: BinaryFloatingPoint>(_ value: DataType) {
         self._handler.record(Double(value))
@@ -532,9 +532,9 @@ extension Recorder {
     /// Create a new recorder.
     ///
     /// - parameters:
-    ///     - label: The label for the `Recorder`.
-    ///     - dimensions: The dimensions for the `Recorder`.
-    ///     - aggregate: aggregate recorded values to produce statistics across a sample size
+    ///   - label: The label for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - aggregate: aggregate recorded values to produce statistics across a sample size
     public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
         self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: MetricsSystem.factory)
     }
@@ -542,10 +542,10 @@ extension Recorder {
     /// Create a new recorder using a custom metrics factory that you provide..
     ///
     /// - parameters:
-    ///     - label: The label for the `Recorder`.
-    ///     - dimensions: The dimensions for the `Recorder`.
-    ///     - aggregate: aggregate recorded values to produce statistics across a sample size.
-    ///     - factory: The custom metrics factory.
+    ///   - label: The label for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - aggregate: aggregate recorded values to produce statistics across a sample size.
+    ///   - factory: The custom metrics factory.
     public convenience init(
         label: String,
         dimensions: [(String, String)] = [],
@@ -651,10 +651,10 @@ public final class Timer {
     /// - SeeAlso: Use `init(label:dimensions:)` to create instances of ``Timer`` using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `Timer`.
-    ///     - dimensions: The dimensions for the `Timer`.
-    ///     - handler: The custom backend.
-    ///     - factory: The custom factory.
+    ///   - label: The label for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - handler: The custom backend.
+    ///   - factory: The custom factory.
     public init(label: String, dimensions: [(String, String)], handler: TimerHandler, factory: MetricsFactory) {
         self.label = label
         self.dimensions = dimensions
@@ -667,9 +667,9 @@ public final class Timer {
     /// - SeeAlso: Use `init(label:dimensions:)` to create instances of ``Timer`` using the configured metrics backend.
     ///
     /// - parameters:
-    ///     - label: The label for the `Timer`.
-    ///     - dimensions: The dimensions for the `Timer`.
-    ///     - handler: The custom backend.
+    ///   - label: The label for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: TimerHandler) {
         self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
     }
@@ -677,7 +677,7 @@ public final class Timer {
     /// Record a duration in nanoseconds.
     ///
     /// - parameters:
-    ///     - duration: Duration to record.
+    ///   - duration: Duration to record.
     @inlinable
     public func recordNanoseconds(_ duration: Int64) {
         self._handler.recordNanoseconds(duration)
@@ -686,7 +686,7 @@ public final class Timer {
     /// Record a duration in nanoseconds.
     ///
     /// - parameters:
-    ///     - duration: Duration to record.
+    ///   - duration: Duration to record.
     @inlinable
     public func recordNanoseconds<DataType: BinaryInteger>(_ duration: DataType) {
         self.recordNanoseconds(duration >= Int64.max ? Int64.max : Int64(duration))
@@ -695,7 +695,7 @@ public final class Timer {
     /// Record a duration in microseconds.
     ///
     /// - parameters:
-    ///     - duration: Duration to record.
+    ///   - duration: Duration to record.
     @inlinable
     public func recordMicroseconds<DataType: BinaryInteger>(_ duration: DataType) {
         guard duration <= Int64.max else { return self.recordNanoseconds(Int64.max) }
@@ -711,7 +711,7 @@ public final class Timer {
     /// Record a duration in microseconds.
     ///
     /// - parameters:
-    ///     - duration: Duration to record.
+    ///   - duration: Duration to record.
     @inlinable
     public func recordMicroseconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
         self.recordNanoseconds(Double(duration * 1000) < Double(Int64.max) ? Int64(duration * 1000) : Int64.max)
@@ -720,7 +720,7 @@ public final class Timer {
     /// Record a duration in milliseconds.
     ///
     /// - parameters:
-    ///     - duration: Duration to record.
+    ///   - duration: Duration to record.
     @inlinable
     public func recordMilliseconds<DataType: BinaryInteger>(_ duration: DataType) {
         guard duration <= Int64.max else { return self.recordNanoseconds(Int64.max) }
@@ -736,7 +736,7 @@ public final class Timer {
     /// Record a duration in milliseconds.
     ///
     /// - parameters:
-    ///     - duration: Duration to record.
+    ///   - duration: Duration to record.
     @inlinable
     public func recordMilliseconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
         self.recordNanoseconds(
@@ -747,7 +747,7 @@ public final class Timer {
     /// Record a duration in seconds.
     ///
     /// - parameters:
-    ///     - duration: Duration to record.
+    ///   - duration: Duration to record.
     @inlinable
     public func recordSeconds<DataType: BinaryInteger>(_ duration: DataType) {
         guard duration <= Int64.max else { return self.recordNanoseconds(Int64.max) }
@@ -763,7 +763,7 @@ public final class Timer {
     /// Record a duration in seconds.
     ///
     /// - parameters:
-    ///     - duration: Duration to record.
+    ///   - duration: Duration to record.
     @inlinable
     public func recordSeconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
         self.recordNanoseconds(
@@ -776,9 +776,9 @@ extension Timer {
     /// Create a new timer.
     ///
     /// - parameters:
-    ///     - label: The label for the `Timer`.
-    ///     - dimensions: The dimensions for the `Timer`.
-    ///     - factory: The custom factory.
+    ///   - label: The label for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - factory: The custom factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         let handler = factory.makeTimer(label: label, dimensions: dimensions)
         self.init(label: label, dimensions: dimensions, handler: handler, factory: factory)
@@ -787,8 +787,8 @@ extension Timer {
     /// Create a new timer using a custom metrics factory that you provide..
     ///
     /// - parameters:
-    ///     - label: The label for the `Timer`.
-    ///     - dimensions: The dimensions for the `Timer`.
+    ///   - label: The label for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
     }
@@ -796,10 +796,10 @@ extension Timer {
     /// Create a new timer.
     ///
     /// - parameters:
-    ///     - label: The label for the `Timer`.
-    ///     - dimensions: The dimensions for the `Timer`.
-    ///     - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
-    ///     - factory: The custom factory.
+    ///   - label: The label for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
+    ///   - factory: The custom factory.
     public convenience init(
         label: String,
         dimensions: [(String, String)] = [],
@@ -814,9 +814,9 @@ extension Timer {
     /// Create a new timer.
     ///
     /// - parameters:
-    ///     - label: The label for the `Timer`.
-    ///     - dimensions: The dimensions for the `Timer`.
-    ///     - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
+    ///   - label: The label for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     public convenience init(
         label: String,
         dimensions: [(String, String)] = [],
@@ -861,7 +861,7 @@ public enum MetricsSystem {
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
-    ///     - factory: A factory that given an identifier produces instances of metrics handlers such as ``CounterHandler``, ``RecorderHandler``, or  ``TimerHandler``.
+    ///   - factory: A factory that given an identifier produces instances of metrics handlers such as ``CounterHandler``, ``RecorderHandler``, or  ``TimerHandler``.
     public static func bootstrap(_ factory: MetricsFactory) {
         self._factory.replaceFactory(factory, validate: true)
     }
@@ -877,7 +877,7 @@ public enum MetricsSystem {
     }
 
     /// Acquire a writer lock for the duration of the given block.
-    ///
+    /// 
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     public static func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
@@ -950,37 +950,37 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// Create a backing counter handler.
     ///
     /// - parameters:
-    ///     - label: The label for the `CounterHandler`.
-    ///     - dimensions: The dimensions for the `CounterHandler`.
+    ///   - label: The label for the `CounterHandler`.
+    ///   - dimensions: The dimensions for the `CounterHandler`.
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
 
     /// Create a backing floating-point handler.
     ///
     /// - parameters:
-    ///     - label: The label for the `FloatingPointCounterHandler`.
-    ///     - dimensions: The dimensions for the `FloatingPointCounterHandler`.
+    ///   - label: The label for the `FloatingPointCounterHandler`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`.
     func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler
 
     /// Create a backing meter handler.
     ///
     /// - parameters:
-    ///     - label: The label for the `MeterHandler`.
-    ///     - dimensions: The dimensions for the `MeterHandler`.
+    ///   - label: The label for the `MeterHandler`.
+    ///   - dimensions: The dimensions for the `MeterHandler`.
     func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler
 
     /// Create a backing recorder handler.
     ///
     /// - parameters:
-    ///     - label: The label for the `RecorderHandler`.
-    ///     - dimensions: The dimensions for the `RecorderHandler`.
-    ///     - aggregate: Is data aggregation expected.
+    ///   - label: The label for the `RecorderHandler`.
+    ///   - dimensions: The dimensions for the `RecorderHandler`.
+    ///   - aggregate: Is data aggregation expected.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
 
     /// Create a backing timer handler.
     ///
     /// - parameters:
-    ///     - label: The label for the `TimerHandler`.
-    ///     - dimensions: The dimensions for the `TimerHandler`.
+    ///   - label: The label for the `TimerHandler`.
+    ///   - dimensions: The dimensions for the `TimerHandler`.
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
 
     /// Invoked when the corresponding counter's `destroy()` function is invoked.
@@ -988,7 +988,7 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
     ///
     /// - parameters:
-    ///     - handler: The handler to be destroyed.
+    ///   - handler: The handler to be destroyed.
     func destroyCounter(_ handler: CounterHandler)
 
     /// Invoked when the corresponding meter's `destroy()` function is invoked.
@@ -996,7 +996,7 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// Upon receiving this signal the factory may eagerly release any resources related to this recorder.
     ///
     /// - parameters:
-    ///     - handler: The handler to be destroyed.
+    ///   - handler: The handler to be destroyed.
     func destroyMeter(_ handler: MeterHandler)
 
     /// Invoked when the corresponding floating-point counter's `destroy()` function is invoked.
@@ -1004,7 +1004,7 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
     ///
     /// - parameters:
-    ///     - handler: The handler to be destroyed.
+    ///   - handler: The handler to be destroyed.
     func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler)
 
     /// Invoked when the corresponding recorder's `destroy()` function is invoked.
@@ -1012,7 +1012,7 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// Upon receiving this signal the factory may eagerly release any resources related to this recorder.
     ///
     /// - parameters:
-    ///     - handler: The handler to be destroyed.
+    ///   - handler: The handler to be destroyed.
     func destroyRecorder(_ handler: RecorderHandler)
 
     /// Invoked when the corresponding Timer's `destroy()` function is invoked.
@@ -1020,7 +1020,7 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// Upon receiving this signal the factory may eagerly release any resources related to this timer.
     ///
     /// - parameters:
-    ///     - handler: The handler to be destroyed.
+    ///   - handler: The handler to be destroyed.
     func destroyTimer(_ handler: TimerHandler)
 }
 
@@ -1182,8 +1182,8 @@ extension MetricsFactory {
     /// The created floating-point counter handler is a wrapper around a backend's counter handler which accumulates floating point values and records increments to an underlying counter handler after crossing integer boundaries.
     ///
     /// - parameters:
-    ///     - label: The label for the `FloatingPointCounterHandler`.
-    ///     - dimensions: The dimensions for the `FloatingPointCounterHandler`.
+    ///   - label: The label for the `FloatingPointCounterHandler`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`.
     public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
         AccumulatingRoundingFloatingPointCounter(label: label, dimensions: dimensions, factory: self)
     }
@@ -1195,7 +1195,7 @@ extension MetricsFactory {
     /// `destroyFloatingPointCounter` must be implemented if `makeFloatingPointCounter` is implemented.
     ///
     /// - parameters:
-    ///     - handler: The handler to be destroyed.
+    ///   - handler: The handler to be destroyed.
     public func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler) {
         (handler as? AccumulatingRoundingFloatingPointCounter)?.destroy()
     }
@@ -1207,8 +1207,8 @@ extension MetricsFactory {
     /// The created MeterHandler is a wrapper around a backend's RecorderHandler which records current values.
     ///
     /// - parameters:
-    ///     - label: The label for the `MeterHandler`.
-    ///     - dimensions: The dimensions for the `MeterHandler`.
+    ///   - label: The label for the `MeterHandler`.
+    ///   - dimensions: The dimensions for the `MeterHandler`.
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
         AccumulatingMeter(label: label, dimensions: dimensions, factory: self)
     }
@@ -1220,7 +1220,7 @@ extension MetricsFactory {
     /// `destroyMeter` must be implemented if `makeMeter` is implemented.
     ///
     /// - parameters:
-    ///     - handler: The handler to be destroyed.
+    ///   - handler: The handler to be destroyed.
     public func destroyMeter(_ handler: MeterHandler) {
         (handler as? AccumulatingMeter)?.destroy()
     }
@@ -1243,7 +1243,7 @@ public protocol CounterHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Increment the counter.
     ///
     /// - parameters:
-    ///     - by: Amount to increment by.
+    ///   - by: Amount to increment by.
     func increment(by: Int64)
 
     /// Reset the counter back to zero.
@@ -1265,7 +1265,7 @@ public protocol FloatingPointCounterHandler: AnyObject, _SwiftMetricsSendablePro
     /// Increment the counter.
     ///
     /// - parameters:
-    ///     - by: Amount to increment by.
+    ///   - by: Amount to increment by.
     func increment(by: Double)
 
     /// Reset the counter back to zero.
@@ -1287,12 +1287,12 @@ public protocol RecorderHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Record an integer value.
     ///
     /// - parameters:
-    ///     - value: Value to record.
+    ///   - value: Value to record.
     func record(_ value: Int64)
     /// Record a floating-point value.
     ///
     /// - parameters:
-    ///     - value: Value to record.
+    ///   - value: Value to record.
     func record(_ value: Double)
 }
 
@@ -1311,24 +1311,24 @@ public protocol MeterHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Set an integer value.
     ///
     /// - parameters:
-    ///     - value: Value to set.
+    ///   - value: Value to set.
     func set(_ value: Int64)
     /// Set a floating-point value.
     ///
     /// - parameters:
-    ///     - value: Value to set.
+    ///   - value: Value to set.
     func set(_ value: Double)
 
     /// Increment the value.
     ///
     /// - parameters:
-    ///     - by: Amount to increment by.
+    ///   - by: Amount to increment by.
     func increment(by: Double)
 
     /// Decrement the value.
     ///
     /// - parameters:
-    ///     - by: Amount to increment by.
+    ///   - by: Amount to increment by.
     func decrement(by: Double)
 }
 
@@ -1348,13 +1348,13 @@ public protocol TimerHandler: AnyObject, _SwiftMetricsSendableProtocol {
     /// Record a duration in nanoseconds.
     ///
     /// - parameters:
-    ///     - duration: Duration to record.
+    ///   - duration: Duration to record.
     func recordNanoseconds(_ duration: Int64)
 
     /// Set the preferred display unit for this timer handler.
     ///
     /// - parameters:
-    ///     - unit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
+    ///   - unit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     func preferDisplayUnit(_ unit: TimeUnit)
 }
 
@@ -1369,10 +1369,16 @@ extension TimerHandler {
 /// A pseudo-metrics handler that can be used to send messages to multiple other metrics handlers.
 public final class MultiplexMetricsHandler: MetricsFactory {
     private let factories: [MetricsFactory]
+    /// Creates a new multiplex metrics handler from the metric factories you provide.
+    /// - Parameter factories: The metric factories to multiplex together.
     public init(factories: [MetricsFactory]) {
         self.factories = factories
     }
-
+    
+    /// Creates a new counter.
+    /// - Parameters:
+    ///   - label: The label for the `Counter`.
+    ///   - dimensions: The dimensions for the `Counter`.
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         MuxCounter(factories: self.factories, label: label, dimensions: dimensions)
     }

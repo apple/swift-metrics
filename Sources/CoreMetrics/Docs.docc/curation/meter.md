@@ -23,6 +23,6 @@
 - ``dimensions``
 - ``label``
 
-### Finalizing a meter
+### Destroying a meter
 
 - ``destroy()``

@@ -26,7 +26,7 @@
 - ``set(_:)-11de``
 - ``reset()``
 
-### Cleaning up handlers
+### Destroying handlers
 
 - ``destroyCounter(_:)``
 - ``destroyFloatingPointCounter(_:)``

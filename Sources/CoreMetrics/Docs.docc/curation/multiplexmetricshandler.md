@@ -14,7 +14,7 @@
 - ``makeTimer(label:dimensions:)``
 - ``makeRecorder(label:dimensions:aggregate:)``
 
-### Cleaning up handlers
+### Destroying handlers
 
 - ``destroyCounter(_:)``
 - ``destroyFloatingPointCounter(_:)``
