@@ -456,8 +456,11 @@ public class Recorder {
     @_documentation(visibility: internal)
     @usableFromInline
     package let _factory: MetricsFactory
+    /// The label for the recorder.
     public let label: String
+    /// The dimensions for the recorder.
     public let dimensions: [(String, String)]
+    /// A Boolean value that indicates whether to aggregate values.
     public let aggregate: Bool
 
     /// Alternative way to create a new recorder, while providing an explicit recorder handler.
@@ -467,7 +470,7 @@ public class Recorder {
     /// - parameters:
     ///   - label: The label for the `Recorder`.
     ///   - dimensions: The dimensions for the `Recorder`.
-    ///   - aggregate: aggregate recorded values to produce statistics across a sample size
+    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     ///   - handler: The custom backend.
     ///   - factory: The custom metrics factory.
     public init(
@@ -491,7 +494,7 @@ public class Recorder {
     /// - parameters:
     ///   - label: The label for the `Recorder`.
     ///   - dimensions: The dimensions for the `Recorder`.
-    ///   - aggregate: aggregate recorded values to produce statistics across a sample size
+    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
         self.init(
@@ -534,7 +537,7 @@ extension Recorder {
     /// - parameters:
     ///   - label: The label for the `Recorder`.
     ///   - dimensions: The dimensions for the `Recorder`.
-    ///   - aggregate: aggregate recorded values to produce statistics across a sample size
+    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
         self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: MetricsSystem.factory)
     }
@@ -544,7 +547,7 @@ extension Recorder {
     /// - parameters:
     ///   - label: The label for the `Recorder`.
     ///   - dimensions: The dimensions for the `Recorder`.
-    ///   - aggregate: aggregate recorded values to produce statistics across a sample size.
+    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     ///   - factory: The custom metrics factory.
     public convenience init(
         label: String,
@@ -973,7 +976,7 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// - parameters:
     ///   - label: The label for the `RecorderHandler`.
     ///   - dimensions: The dimensions for the `RecorderHandler`.
-    ///   - aggregate: Is data aggregation expected.
+    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
 
     /// Create a backing timer handler.
@@ -1375,26 +1378,43 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         self.factories = factories
     }
     
-    /// Creates a new counter.
+    /// Creates a new counter handler.
     /// - Parameters:
-    ///   - label: The label for the `Counter`.
-    ///   - dimensions: The dimensions for the `Counter`.
+    ///   - label: The label for the `CounterHandler`.
+    ///   - dimensions: The dimensions for the `CounterHandler`.
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         MuxCounter(factories: self.factories, label: label, dimensions: dimensions)
     }
 
+    /// Creates a new floating point counter handler.
+    /// - Parameters:
+    ///   - label: The label for the `FloatingPointCounterHandler`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`.
     public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
         MuxFloatingPointCounter(factories: self.factories, label: label, dimensions: dimensions)
     }
 
+    /// Creates a new meter handler.
+    /// - Parameters:
+    ///   - label: The label for the `MeterHandler`.
+    ///   - dimensions: The dimensions for the `MeterHandler`.
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
         MuxMeter(factories: self.factories, label: label, dimensions: dimensions)
     }
 
+    /// Creates a new recorder handler.
+    /// - Parameters:
+    ///   - label: The label for the `RecorderHandler`.
+    ///   - dimensions: The dimensions for the `RecorderHandler`.
+    ///   - aggregate: A Boolean value that indicates whether to aggregate values..
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         MuxRecorder(factories: self.factories, label: label, dimensions: dimensions, aggregate: aggregate)
     }
 
+    /// Creates a new timer handler.
+    /// - Parameters:
+    ///   - label: The label for the `TimerHandler`.
+    ///   - dimensions: The dimensions for the `TimerHandler`.
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         MuxTimer(factories: self.factories, label: label, dimensions: dimensions)
     }
@@ -1521,10 +1541,11 @@ public final class MultiplexMetricsHandler: MetricsFactory {
 public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingPointCounterHandler, MeterHandler,
     RecorderHandler, TimerHandler
 {
+    /// A sharable instance of a No-op metrics handler.
     public static let instance = NOOPMetricsHandler()
 
     private init() {}
-
+    
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         self
     }
