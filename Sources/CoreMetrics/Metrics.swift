@@ -1371,8 +1371,8 @@ public protocol TimerHandler: AnyObject, _SwiftMetricsSendableProtocol {
 
 extension TimerHandler {
     /// Set the preferred display unit for this timer handler.
-    /// - Parameter _: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
-    public func preferDisplayUnit(_: TimeUnit) {
+    /// - Parameter unit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
+    public func preferDisplayUnit(_ unit: TimeUnit) {
         // NOOP
     }
 }
