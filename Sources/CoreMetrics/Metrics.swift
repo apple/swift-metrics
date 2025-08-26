@@ -1517,7 +1517,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
 
 /// A metrics handler that implements the protocols but does nothing.
 ///
-/// The no-op metrics handler ships with the metrics module, and is used for initial bootstrapping.
+/// The no-op metrics handler ships with the metrics module, and is used by default unless a different metrics backend is bootstrapped.
 public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingPointCounterHandler, MeterHandler,
     RecorderHandler, TimerHandler
 {
