@@ -110,7 +110,7 @@ floatingPointCounter.increment(by: 10.5)
 gauge.record(100)
 ```
 
-`Meter`: A Meter is similar to `Gauge` - a metric that represents a single numerical value that can arbitrarily go up and down. Meters are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Unlike `Gauge`, `Meter` also supports atomic incerements and decerements.
+`Meter`: A Meter is similar to `Gauge` - a metric that represents a single numerical value that can arbitrarily go up and down. Meters are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Unlike `Gauge`, `Meter` also supports atomic increments and decrements.
 
 ```swift
 meter.record(100)
