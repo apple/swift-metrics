@@ -4,9 +4,9 @@ A set of tools for testing Metrics emitting libraries.
 
 ## Overview
 
-This module offers a ``TestMetrics`` type which can be used to bootstrap the metrics system and then assert metric values on it.
+This module offers a ``TestMetrics`` type which you use to bootstrap the metrics system and assert metric values on it.
 
-## Example
+### Example
 
 ```swift
 import XCTest
@@ -29,7 +29,7 @@ final class ExampleTests: XCTestCase {
         // Create a metric using the bootstrapped test metrics backend:
         Recorder(label: "example").record(100)
         
-        // extract the `TestRecorder` out of the 
+        // Extract the `TestRecorder` from the test metrics system 
         let recorder = try self.metrics.expectRecorder("example")
         recorder.lastValue?.shouldEqual(6)
     }
