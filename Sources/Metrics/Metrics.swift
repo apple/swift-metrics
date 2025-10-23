@@ -116,7 +116,6 @@ extension Timer {
         self.recordNanoseconds(nanoseconds.partialValue)
     }
 
-    #if compiler(>=6.0)
     /// Convenience for measuring duration of a closure.
     ///
     /// - Parameters:
@@ -156,5 +155,4 @@ extension Timer {
         }
         return try await body()
     }
-    #endif
 }
