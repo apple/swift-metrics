@@ -18,7 +18,7 @@ import XCTest
 @testable import CoreMetrics
 @testable import Metrics
 
-class MetricsExtensionsTests: XCTestCase {
+final class MetricsExtensionsTests: XCTestCase {
     func testTimerBlock() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()

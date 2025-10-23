@@ -18,7 +18,7 @@ import XCTest
 
 @testable import CoreMetrics
 
-class SendableTest: XCTestCase {
+final class SendableTest: XCTestCase {
     func testSendableMetrics() async throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
