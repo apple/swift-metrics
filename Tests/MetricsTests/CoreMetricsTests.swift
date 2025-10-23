@@ -17,7 +17,13 @@ import XCTest
 
 @testable import CoreMetrics
 
+#if canImport(Dispatch)
+import Dispatch
+#endif
+
 class MetricsTests: XCTestCase {
+
+    #if canImport(Dispatch)
     func testCounters() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -39,6 +45,7 @@ class MetricsTests: XCTestCase {
         testCounter.reset()
         XCTAssertEqual(testCounter.values.count, 0, "expected number of entries to match")
     }
+    #endif
 
     func testCounterBlock() throws {
         // bootstrap with our test metrics
@@ -147,6 +154,7 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(rawFpCounter.fraction, 0.010009765625, "expected fractional accumulated value")
     }
 
+    #if canImport(Dispatch)
     func testRecorders() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -166,6 +174,7 @@ class MetricsTests: XCTestCase {
         group.wait()
         XCTAssertEqual(testRecorder.values.count, total, "expected number of entries to match")
     }
+    #endif
 
     func testRecordersInt() throws {
         // bootstrap with our test metrics
@@ -212,6 +221,7 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(recorder.lastValue, value, "expected value to match")
     }
 
+    #if canImport(Dispatch)
     func testTimers() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -231,6 +241,7 @@ class MetricsTests: XCTestCase {
         group.wait()
         XCTAssertEqual(testTimer.values.count, total, "expected number of entries to match")
     }
+    #endif
 
     func testTimerBlock() throws {
         // bootstrap with our test metrics
@@ -422,6 +433,7 @@ class MetricsTests: XCTestCase {
         }
     }
 
+    #if canImport(Dispatch)
     func testMeterIncrement() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -466,6 +478,7 @@ class MetricsTests: XCTestCase {
         XCTAssertEqual(testMeter.values.count, values.count, "expected number of entries to match")
         XCTAssertEqual(testMeter.values.last!, values.reduce(0.0, -), accuracy: 0.1, "expected total value to match")
     }
+    #endif
 
     func testDefaultMeterIgnoresNan() throws {
         // bootstrap with our test metrics

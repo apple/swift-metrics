@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Dispatch
 import MetricsTestKit
 import XCTest
 

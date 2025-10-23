@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift Metrics API open source project
 //
-// Copyright (c) 2018-2019 Apple Inc. and the Swift Metrics API project authors
+// Copyright (c) 2018-2025 Apple Inc. and the Swift Metrics API project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -48,8 +48,10 @@ import Musl
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO. On Windows, the lock is based on the substantially similar
 /// `SRWLOCK` type.
-internal final class Lock {
-    #if os(Windows)
+internal final class Lock: @unchecked Sendable {
+    #if canImport(WASILibc)
+    // WASILibc is single threaded, provides no locks
+    #elseif os(Windows)
     fileprivate let mutex: UnsafeMutablePointer<SRWLOCK> =
         UnsafeMutablePointer.allocate(capacity: 1)
     #else
@@ -59,7 +61,9 @@ internal final class Lock {
 
     /// Create a new lock.
     public init() {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         InitializeSRWLock(self.mutex)
         #else
         var attr = pthread_mutexattr_t()
@@ -72,13 +76,16 @@ internal final class Lock {
     }
 
     deinit {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         // SRWLOCK does not need to be free'd
+        self.mutex.deallocate()
         #else
         let err = pthread_mutex_destroy(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
-        #endif
         self.mutex.deallocate()
+        #endif
     }
 
     /// Acquire the lock.
@@ -86,7 +93,9 @@ internal final class Lock {
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `unlock`, to simplify lock handling.
     public func lock() {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         AcquireSRWLockExclusive(self.mutex)
         #else
         let err = pthread_mutex_lock(self.mutex)
@@ -99,7 +108,9 @@ internal final class Lock {
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
     public func unlock() {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         ReleaseSRWLockExclusive(self.mutex)
         #else
         let err = pthread_mutex_unlock(self.mutex)
@@ -118,7 +129,7 @@ extension Lock {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    func withLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lock()
         defer {
             self.unlock()
@@ -128,12 +139,10 @@ extension Lock {
 
     // specialise Void return (for performance)
     @inlinable
-    func withLockVoid(_ body: () throws -> Void) rethrows {
+    internal func withLockVoid(_ body: () throws -> Void) rethrows {
         try self.withLock(body)
     }
 }
-
-extension Lock: @unchecked Sendable {}
 
 /// A reader/writer threading lock based on `libpthread` instead of `libdispatch`.
 ///
@@ -141,7 +150,7 @@ extension Lock: @unchecked Sendable {}
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO. On Windows, the lock is based on the substantially similar
 /// `SRWLOCK` type.
-internal final class ReadWriteLock {
+internal final class ReadWriteLock: @unchecked Sendable {
     #if canImport(WASILibc)
     // WASILibc is single threaded, provides no locks
     #elseif os(Windows)
@@ -170,18 +179,19 @@ internal final class ReadWriteLock {
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)
         // SRWLOCK does not need to be free'd
+        self.rwlock.deallocate()
         #else
         let err = pthread_rwlock_destroy(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
-        #endif
         self.rwlock.deallocate()
+        #endif
     }
 
     /// Acquire a reader lock.
     ///
     /// Whenever possible, consider using `withReaderLock` instead of this
     /// method and `unlock`, to simplify lock handling.
-    public func lockRead() {
+    fileprivate func lockRead() {
         #if canImport(WASILibc)
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)
@@ -197,7 +207,7 @@ internal final class ReadWriteLock {
     ///
     /// Whenever possible, consider using `withWriterLock` instead of this
     /// method and `unlock`, to simplify lock handling.
-    public func lockWrite() {
+    fileprivate func lockWrite() {
         #if canImport(WASILibc)
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)
@@ -214,7 +224,7 @@ internal final class ReadWriteLock {
     /// Whenever possible, consider using `withReaderLock` and `withWriterLock`
     /// instead of this method and `lockRead` and `lockWrite`, to simplify lock
     /// handling.
-    public func unlock() {
+    fileprivate func unlock() {
         #if canImport(WASILibc)
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)
@@ -240,7 +250,7 @@ extension ReadWriteLock {
     /// - Parameter body: The block to execute while holding the reader lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lockRead()
         defer {
             self.unlock()
@@ -257,7 +267,7 @@ extension ReadWriteLock {
     /// - Parameter body: The block to execute while holding the writer lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lockWrite()
         defer {
             self.unlock()
@@ -267,15 +277,13 @@ extension ReadWriteLock {
 
     // specialise Void return (for performance)
     @inlinable
-    func withReaderLockVoid(_ body: () throws -> Void) rethrows {
+    internal func withReaderLockVoid(_ body: () throws -> Void) rethrows {
         try self.withReaderLock(body)
     }
 
     // specialise Void return (for performance)
     @inlinable
-    func withWriterLockVoid(_ body: () throws -> Void) rethrows {
+    internal func withWriterLockVoid(_ body: () throws -> Void) rethrows {
         try self.withWriterLock(body)
     }
 }
-
-extension ReadWriteLock: @unchecked Sendable {}

@@ -12,13 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import MetricsTestKit
 import XCTest
 
 @testable import CoreMetrics
 @testable import Metrics
 
+#if canImport(Dispatch)
+import Dispatch
+#endif
+
 class MetricsExtensionsTests: XCTestCase {
+
+    #if canImport(Dispatch)
     func testTimerBlock() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -33,6 +40,7 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(1, timer.values.count, "expected number of entries to match")
         XCTAssertGreaterThan(timer.values[0], Int64(delay * 1_000_000_000), "expected delay to match")
     }
+    #endif
 
     func testTimerWithTimeInterval() throws {
         // bootstrap with our test metrics
@@ -47,6 +55,7 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(testTimer.values[0], Int64(timeInterval * 1_000_000_000), "expected value to match")
     }
 
+    #if canImport(Dispatch)
     func testTimerWithDispatchTime() throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -100,6 +109,7 @@ class MetricsExtensionsTests: XCTestCase {
         )
         XCTAssertEqual(metrics.timers.count, 1, "timer should have been stored")
     }
+    #endif
 
     func testTimerDuration() throws {
         // Wrapping only the insides of the test case so that the generated
@@ -259,6 +269,7 @@ class MetricsExtensionsTests: XCTestCase {
     #endif
 }
 
+#if canImport(Dispatch)
 // https://bugs.swift.org/browse/SR-6310
 extension DispatchTimeInterval {
     func nano() -> Int {
@@ -288,6 +299,7 @@ extension DispatchTimeInterval {
         }
     }
 }
+#endif
 
 #if swift(>=5.7)
 @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
