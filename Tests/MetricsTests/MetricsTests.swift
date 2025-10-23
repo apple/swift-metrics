@@ -221,7 +221,6 @@ class MetricsExtensionsTests: XCTestCase {
         )
     }
 
-    #if compiler(>=6.0)
     func testTimerMeasure() async throws {
         // bootstrap with our test metrics
         let metrics = TestMetrics()
@@ -256,7 +255,6 @@ class MetricsExtensionsTests: XCTestCase {
         XCTAssertEqual(1, expectedTimer.values.count, "expected number of entries to match")
         XCTAssertGreaterThan(expectedTimer.values[0], delay.nanosecondsClamped, "expected delay to match")
     }
-    #endif
 }
 
 // https://bugs.swift.org/browse/SR-6310
@@ -289,7 +287,6 @@ extension DispatchTimeInterval {
     }
 }
 
-#if swift(>=5.7)
 @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
 extension Swift.Duration {
     fileprivate var nanosecondsClamped: Int64 {
@@ -309,4 +306,3 @@ extension Swift.Duration {
         return combinedNanos.partialValue
     }
 }
-#endif
