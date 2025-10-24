@@ -33,13 +33,12 @@ extension Timer {
         dimensions: [(String, String)] = [],
         body: @escaping () throws -> T
     ) rethrows -> T {
-        let timer = Timer(label: label, dimensions: dimensions)
-        let start = DispatchTime.now().uptimeNanoseconds
-        defer {
-            let delta = DispatchTime.now().uptimeNanoseconds - start
-            timer.recordNanoseconds(delta)
-        }
-        return try body()
+        return try measure(
+            label: label,
+            dimensions: dimensions,
+            factory: MetricsSystem.factory,
+            body: body
+        )
     }
 
     /// Convenience for measuring duration of a closure.
