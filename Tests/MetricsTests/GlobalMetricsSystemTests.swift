@@ -18,13 +18,15 @@ import Testing
 
 @testable import CoreMetrics
 
-@Suite(.serialized)
 struct GlobalMetricsSystemTests {
-    @Test func counters() throws {
-        // bootstrap with out test metrics
-        let metrics = TestMetrics()
-        MetricsSystem.bootstrapInternal(metrics)
+    let metrics = TestMetrics()
 
+    init() async throws {
+        // bootstrap global system with our test metrics
+        MetricsSystem.bootstrapInternal(self.metrics)
+    }
+    
+    @Test func counters() throws {
         let group = DispatchGroup()
         let name = "counter-\(UUID().uuidString)"
         let counter = Counter(label: name)
@@ -44,10 +46,6 @@ struct GlobalMetricsSystemTests {
     }
 
     @Test func recorders() throws {
-        // bootstrap with out test metrics
-        let metrics = TestMetrics()
-        MetricsSystem.bootstrapInternal(metrics)
-
         let group = DispatchGroup()
         let name = "recorder-\(UUID().uuidString)"
         let recorder = Recorder(label: name)
@@ -65,10 +63,6 @@ struct GlobalMetricsSystemTests {
     }
 
     @Test func timers() throws {
-        // bootstrap with out test metrics
-        let metrics = TestMetrics()
-        MetricsSystem.bootstrapInternal(metrics)
-
         let group = DispatchGroup()
         let name = "timer-\(UUID().uuidString)"
         let timer = Timer(label: name)
@@ -86,10 +80,6 @@ struct GlobalMetricsSystemTests {
     }
 
     @Test func gauge() throws {
-        // bootstrap with out test metrics
-        let metrics = TestMetrics()
-        MetricsSystem.bootstrapInternal(metrics)
-
         let name = "gauge-\(UUID().uuidString)"
         let value = Double.random(in: -1000...1000)
         let gauge = Gauge(label: name)
@@ -100,10 +90,6 @@ struct GlobalMetricsSystemTests {
     }
 
     @Test func meter() throws {
-        // bootstrap with out test metrics
-        let metrics = TestMetrics()
-        MetricsSystem.bootstrapInternal(metrics)
-
         let name = "meter-\(UUID().uuidString)"
         let value = Double.random(in: -1000...1000)
         let meter = Meter(label: name)
