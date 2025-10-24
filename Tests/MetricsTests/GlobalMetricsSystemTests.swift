@@ -25,7 +25,7 @@ struct GlobalMetricsSystemTests {
         // bootstrap global system with our test metrics
         MetricsSystem.bootstrapInternal(self.metrics)
     }
-    
+
     @Test func counters() throws {
         let group = DispatchGroup()
         let name = "counter-\(UUID().uuidString)"
