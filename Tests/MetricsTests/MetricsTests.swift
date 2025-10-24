@@ -215,6 +215,22 @@ struct MetricsExtensionsTests {
         #expect(expectedTimer.values[0] > delay.nanosecondsClamped, "expected delay to match")
     }
 
+    @Test func timerMeasureSync() async throws {
+        // create our test metrics, avoid bootstrapping global MetricsSystem
+        let metrics = TestMetrics()
+        // run the test
+        let name = "timer-\(UUID().uuidString)"
+        let delay = 0.5
+        let timer = Timer(label: name, factory: metrics)
+        timer.measure {
+            Thread.sleep(forTimeInterval: delay)
+        }
+
+        let expectedTimer = try metrics.expectTimer(name)
+        #expect(expectedTimer.values.count == 1, "expected number of entries to match")
+        #expect(expectedTimer.values[0] > Int64(delay * 1_000_000_000), "expected delay to match in nanoseconds")
+    }
+
     @MainActor
     @Test func timerMeasureFromMainActor() async throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem

@@ -17,6 +17,7 @@ import MetricsTestKit
 import Testing
 
 @testable import CoreMetrics
+@testable import Metrics
 
 struct GlobalMetricsSystemTests {
     let metrics = TestMetrics()
@@ -97,5 +98,16 @@ struct GlobalMetricsSystemTests {
         let testMeter = try metrics.expectMeter(meter)
         #expect(testMeter.values.count == 1, "expected number of entries to match")
         #expect(testMeter.values[0] == value, "expected value to match")
+    }
+
+    @Test func timerMeasureConvinienceMethod() throws {
+        let name = "timer-\(UUID().uuidString)"
+        let delay = 0.05
+        Timer.measure(label: name) {
+            Thread.sleep(forTimeInterval: delay)
+        }
+        let timer = try metrics.expectTimer(name)
+        #expect(timer.values.count == 1, "expected number of entries to match")
+        #expect(timer.values[0] > Int64(delay * 1_000_000_000), "expected delay to match")
     }
 }
