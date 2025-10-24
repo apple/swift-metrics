@@ -42,6 +42,29 @@ extension Timer {
         return try body()
     }
 
+    /// Convenience for measuring duration of a closure.
+    ///
+    /// - parameters:
+    ///     - label: The label for the Timer.
+    ///     - dimensions: The dimensions for the Timer.
+    ///     - factory: The custom metrics factory
+    ///     - body: Closure to run & record.
+    @inlinable
+    public static func measure<T>(
+        label: String,
+        dimensions: [(String, String)] = [],
+        factory: MetricsFactory,
+        body: @escaping () throws -> T
+    ) rethrows -> T {
+        let timer = Timer(label: label, dimensions: dimensions, factory: factory)
+        let start = DispatchTime.now().uptimeNanoseconds
+        defer {
+            let delta = DispatchTime.now().uptimeNanoseconds - start
+            timer.recordNanoseconds(delta)
+        }
+        return try body()
+    }
+    
     /// Record the time interval (with nanosecond precision) between the passed `since` dispatch time and `end` dispatch time.
     ///
     /// - parameters:

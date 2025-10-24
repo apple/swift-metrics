@@ -26,8 +26,9 @@
 //===----------------------------------------------------------------------===//
 
 import CoreMetrics
+import Foundation
 import Metrics
-import XCTest
+import Testing
 
 /// A metrics factory which allows you to inspect recorded metrics programmatically.
 ///

@@ -9,23 +9,23 @@ This module offers a ``TestMetrics`` type which you use to bootstrap the metrics
 ### Example
 
 ```swift
-import XCTest
 import Metrics
 import MetricsTestKit
+import Testing
 
-final class ExampleTests: XCTestCase {
+struct ExampleTests {
     var metrics: TestMetrics! = TestMetrics()
 
-    override func setUp() {
+    init() async throws {
         MetricsSystem.bootstrapInternal(self.metrics)
     }
 
-    override func tearDown() async throws {
+    deinit() {
         self.metrics = nil
         MetricsSystem.bootstrapInternal(NOOPMetricsHandler.instance)
     }
 
-    func test_example() async throws {
+    @Test func example() async throws {
         // Create a metric using the bootstrapped test metrics backend:
         Recorder(label: "example").record(100)
         
