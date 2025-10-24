@@ -14,24 +14,19 @@ import MetricsTestKit
 import Testing
 
 struct ExampleTests {
-    var metrics: TestMetrics! = TestMetrics()
+    let metrics: TestMetrics = TestMetrics()
 
     init() async throws {
-        MetricsSystem.bootstrapInternal(self.metrics)
-    }
-
-    deinit() {
-        self.metrics = nil
-        MetricsSystem.bootstrapInternal(NOOPMetricsHandler.instance)
+        MetricsSystem.bootstrap(self.metrics)
     }
 
     @Test func example() async throws {
         // Create a metric using the bootstrapped test metrics backend:
-        Recorder(label: "example").record(100)
-        
-        // Extract the `TestRecorder` from the test metrics system 
+        Recorder(label: "example").record(42)
+
+        // Extract the `TestRecorder` from the test metrics system
         let recorder = try self.metrics.expectRecorder("example")
-        recorder.lastValue?.shouldEqual(6)
+        #expect(recorder.lastValue! == 42)
     }
 }
 ```
