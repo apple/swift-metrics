@@ -147,9 +147,8 @@ extension Timer {
     @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
     public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
         clock: Clock = .continuous,
-        // DO NOT FIX THE WHITESPACE IN THE NEXT LINE UNTIL 5.10 IS UNSUPPORTED
-        // https://github.com/swiftlang/swift/issues/79285
-        body: () throws(Failure) -> Result) throws(Failure) -> Result where Clock.Duration == Duration {
+        body: () throws(Failure) -> Result
+    ) throws(Failure) -> Result where Clock.Duration == Duration {
         let start = clock.now
         defer {
             self.record(duration: start.duration(to: clock.now))
@@ -168,9 +167,8 @@ extension Timer {
     public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
         clock: Clock = .continuous,
         isolation: isolated (any Actor)? = #isolation,
-        // DO NOT FIX THE WHITESPACE IN THE NEXT LINE UNTIL 5.10 IS UNSUPPORTED
-        // https://github.com/swiftlang/swift/issues/79285
-        body: () async throws(Failure) -> sending Result) async throws(Failure) -> sending Result where Clock.Duration == Duration {
+        body: () async throws(Failure) -> sending Result
+    ) async throws(Failure) -> sending Result where Clock.Duration == Duration {
         let start = clock.now
         defer {
             self.record(duration: start.duration(to: clock.now))
