@@ -14,19 +14,17 @@ import MetricsTestKit
 import Testing
 
 struct ExampleTests {
-    let metrics: TestMetrics = TestMetrics()
+    @Test func recorderWithcustomMetrics() async throws {
+        // Create a local metrics object
+        let metrics: TestMetrics = TestMetrics()
 
-    init() async throws {
-        MetricsSystem.bootstrap(self.metrics)
-    }
-
-    @Test func example() async throws {
-        // Create a metric using the bootstrapped test metrics backend:
-        Recorder(label: "example").record(42)
+        // Explicitly use metrics object to create a recorder,
+        // this allows you to avoid relying on the global system
+        Recorder(label: "example", factory: metrics).record(300)
 
         // Extract the `TestRecorder` from the test metrics system
-        let recorder = try self.metrics.expectRecorder("example")
-        #expect(recorder.lastValue! == 42)
+        let localRecorder = try metrics.expectRecorder("example")
+        #expect(localRecorder.lastValue! == 300)
     }
 }
 ```
