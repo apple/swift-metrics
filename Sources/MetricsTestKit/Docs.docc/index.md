@@ -14,7 +14,7 @@ import MetricsTestKit
 import Testing
 
 struct ExampleTests {
-    @Test func recorderWithcustomMetrics() async throws {
+    @Test func recorderWithCustomMetrics() async throws {
         // Create a local metrics object
         let metrics: TestMetrics = TestMetrics()
 
