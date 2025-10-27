@@ -9,29 +9,22 @@ This module offers a ``TestMetrics`` type which you use to bootstrap the metrics
 ### Example
 
 ```swift
-import XCTest
 import Metrics
 import MetricsTestKit
+import Testing
 
-final class ExampleTests: XCTestCase {
-    var metrics: TestMetrics! = TestMetrics()
+struct ExampleTests {
+    @Test func recorderWithCustomMetrics() async throws {
+        // Create a local metrics object
+        let metrics: TestMetrics = TestMetrics()
 
-    override func setUp() {
-        MetricsSystem.bootstrapInternal(self.metrics)
-    }
+        // Explicitly use metrics object to create a recorder,
+        // this allows you to avoid relying on the global system
+        Recorder(label: "example", factory: metrics).record(300)
 
-    override func tearDown() async throws {
-        self.metrics = nil
-        MetricsSystem.bootstrapInternal(NOOPMetricsHandler.instance)
-    }
-
-    func test_example() async throws {
-        // Create a metric using the bootstrapped test metrics backend:
-        Recorder(label: "example").record(100)
-        
-        // Extract the `TestRecorder` from the test metrics system 
-        let recorder = try self.metrics.expectRecorder("example")
-        recorder.lastValue?.shouldEqual(6)
+        // Extract the `TestRecorder` from the test metrics system
+        let localRecorder = try metrics.expectRecorder("example")
+        #expect(localRecorder.lastValue! == 300)
     }
 }
 ```

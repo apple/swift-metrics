@@ -33,7 +33,29 @@ extension Timer {
         dimensions: [(String, String)] = [],
         body: @escaping () throws -> T
     ) rethrows -> T {
-        let timer = Timer(label: label, dimensions: dimensions)
+        return try measure(
+            label: label,
+            dimensions: dimensions,
+            factory: MetricsSystem.factory,
+            body: body
+        )
+    }
+
+    /// Convenience for measuring duration of a closure.
+    ///
+    /// - parameters:
+    ///     - label: The label for the Timer.
+    ///     - dimensions: The dimensions for the Timer.
+    ///     - factory: The custom metrics factory
+    ///     - body: Closure to run & record.
+    @inlinable
+    public static func measure<T>(
+        label: String,
+        dimensions: [(String, String)] = [],
+        factory: MetricsFactory,
+        body: @escaping () throws -> T
+    ) rethrows -> T {
+        let timer = Timer(label: label, dimensions: dimensions, factory: factory)
         let start = DispatchTime.now().uptimeNanoseconds
         defer {
             let delta = DispatchTime.now().uptimeNanoseconds - start
@@ -41,7 +63,7 @@ extension Timer {
         }
         return try body()
     }
-
+    
     /// Record the time interval (with nanosecond precision) between the passed `since` dispatch time and `end` dispatch time.
     ///
     /// - parameters:
@@ -125,9 +147,8 @@ extension Timer {
     @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
     public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
         clock: Clock = .continuous,
-        // DO NOT FIX THE WHITESPACE IN THE NEXT LINE UNTIL 5.10 IS UNSUPPORTED
-        // https://github.com/swiftlang/swift/issues/79285
-        body: () throws(Failure) -> Result) throws(Failure) -> Result where Clock.Duration == Duration {
+        body: () throws(Failure) -> Result
+    ) throws(Failure) -> Result where Clock.Duration == Duration {
         let start = clock.now
         defer {
             self.record(duration: start.duration(to: clock.now))
@@ -146,9 +167,8 @@ extension Timer {
     public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
         clock: Clock = .continuous,
         isolation: isolated (any Actor)? = #isolation,
-        // DO NOT FIX THE WHITESPACE IN THE NEXT LINE UNTIL 5.10 IS UNSUPPORTED
-        // https://github.com/swiftlang/swift/issues/79285
-        body: () async throws(Failure) -> sending Result) async throws(Failure) -> sending Result where Clock.Duration == Duration {
+        body: () async throws(Failure) -> sending Result
+    ) async throws(Failure) -> sending Result where Clock.Duration == Duration {
         let start = clock.now
         defer {
             self.record(duration: start.duration(to: clock.now))
