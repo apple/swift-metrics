@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
 import Foundation
 import MetricsTestKit
 import Testing
@@ -129,7 +130,7 @@ struct MetricsTests {
         var values = counter.values
         #expect(values.count == 1, "expected number of entries to match")
         #expect(values == [2], "expected entries to match")
-        #expect(rawFpCounter.fraction == 0.25, "")
+        #expect(rawFpCounter.fraction.load(ordering: .acquiring) == 0.25, "")
 
         // Increment by a large value that should leave a fraction in the accumulator
         // 1110506744053.76
@@ -137,7 +138,7 @@ struct MetricsTests {
         values = counter.values
         #expect(values.count == 2, "expected number of entries to match")
         #expect(values == [2, 1_110_506_744_054], "expected entries to match")
-        #expect(rawFpCounter.fraction == 0.010009765625, "expected fractional accumulated value")
+        #expect(rawFpCounter.fraction.load(ordering: .acquiring) == 0.010009765625, "expected fractional accumulated value")
     }
 
     @Test func recorders() throws {

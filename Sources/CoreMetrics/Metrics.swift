@@ -12,6 +12,89 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
+
+// MARK: - Atomic helpers
+
+@usableFromInline
+internal struct AtomicDouble: Sendable {
+    @usableFromInline
+    internal let storage: ManagedAtomic<UInt64>
+
+    @inlinable
+    internal init(_ initialValue: Double) {
+        self.storage = ManagedAtomic(initialValue.bitPattern)
+    }
+
+    @_semantics("atomics.requires_constant_orderings")
+    @_transparent @_alwaysEmitIntoClient
+    @inlinable
+    internal func load(ordering: AtomicLoadOrdering = AtomicLoadOrdering.acquiring) -> Double {
+        Double(bitPattern: self.storage.load(ordering: ordering))
+    }
+
+    @_semantics("atomics.requires_constant_orderings")
+    @_transparent @_alwaysEmitIntoClient
+    @inlinable
+    internal func store(_ value: Double, ordering: AtomicStoreOrdering = .releasing) {
+        self.storage.store(value.bitPattern, ordering: ordering)
+    }
+
+    @_semantics("atomics.requires_constant_orderings")
+    @_transparent @_alwaysEmitIntoClient
+    @inlinable
+    internal func compareExchange(
+        expected: inout Double,
+        desired: Double,
+        ordering: AtomicUpdateOrdering = .acquiringAndReleasing
+    ) -> Bool {
+        let expectedBits = expected.bitPattern
+        let result = self.storage.compareExchange(
+            expected: expectedBits,
+            desired: desired.bitPattern,
+            ordering: ordering
+        )
+        expected = Double(bitPattern: result.original)
+        return result.exchanged
+    }
+}
+
+@usableFromInline
+internal struct AtomicSpinLock: Sendable {
+    // 0 = unlocked, 1 = locked
+    @usableFromInline
+    internal let state = ManagedAtomic<UInt8>(0)
+
+    @inlinable
+    internal init() {}
+
+    @inlinable
+    internal func withLock<T>(_ body: () throws -> T) rethrows -> T {
+        self.lock()
+        defer { self.unlock() }
+        return try body()
+    }
+
+    @inlinable
+    internal func lock() {
+        while true {
+            let attempt = self.state.compareExchange(
+                expected: 0,
+                desired: 1,
+                ordering: .acquiringAndReleasing
+            )
+            if attempt.exchanged { return }
+            // Busy-wait
+            _ = self.state.load(ordering: .relaxed)
+        }
+    }
+
+    @inlinable
+    internal func unlock() {
+        self.state.store(0, ordering: .releasing)
+    }
+}
+
 // MARK: - User API
 
 // MARK: - Counter
@@ -858,12 +941,37 @@ extension Timer: CustomStringConvertible {
 
 // MARK: - MetricsSystem
 
+//private final class _MetricsSystemState: AtomicReference {
+//    let factory: MetricsFactory
+//    let initialized: Bool
+//
+//    init(factory: MetricsFactory, initialized: Bool) {
+//        self.factory = factory
+//        self.initialized = initialized
+//    }
+//}
+private final class _MetricsSystemState: AtomicReference, Sendable {
+    let factory: MetricsFactory
+    let initialized: Bool
+
+    init(factory: MetricsFactory, initialized: Bool) {
+        self.factory = factory
+        self.initialized = initialized
+    }
+}
+
 /// A global facility where the default metrics backend implementation is configured.
 ///
 /// `MetricsSystem` is set up just once in a given program to create the desired metrics backend
 /// implementation using ``MetricsFactory``.
 public enum MetricsSystem {
-    private static let _factory = FactoryBox(NOOPMetricsHandler.instance)
+    private static let _state = ManagedAtomic<_MetricsSystemState>(
+        _MetricsSystemState(factory: NOOPMetricsHandler.instance, initialized: false)
+    )
+
+    // Keep a real exclusion primitive for callers that used this as global serialization.
+    // (No pthreads; simple atomic spin lock.)
+    private static let _writerLock = AtomicSpinLock()
 
     /// A one-time configuration function which globally selects the desired metrics backend
     /// implementation.
@@ -874,17 +982,17 @@ public enum MetricsSystem {
     /// - parameters:
     ///   - factory: A factory that given an identifier produces instances of metrics handlers such as ``CounterHandler``, ``RecorderHandler``, or  ``TimerHandler``.
     public static func bootstrap(_ factory: MetricsFactory) {
-        self._factory.replaceFactory(factory, validate: true)
+        self._replaceFactory(factory, validate: true)
     }
 
     // for our testing we want to allow multiple bootstrapping
     internal static func bootstrapInternal(_ factory: MetricsFactory) {
-        self._factory.replaceFactory(factory, validate: false)
+        self._replaceFactory(factory, validate: false)
     }
 
     /// Returns a reference to the configured factory.
     public static var factory: MetricsFactory {
-        self._factory.underlying
+        self._state.load(ordering: .acquiring).factory
     }
 
     /// Acquire a writer lock for the duration of the given block.
@@ -892,38 +1000,21 @@ public enum MetricsSystem {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     public static func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
-        try self._factory.withWriterLock(body)
+        try self._writerLock.withLock(body)
     }
 
-    // This can be `@unchecked Sendable` because we're manually gating access to mutable state with a lock.
-    private final class FactoryBox: @unchecked Sendable {
-        private let lock = ReadWriteLock()
-        fileprivate var _underlying: MetricsFactory
-        private var initialized = false
+    private static func _replaceFactory(_ factory: MetricsFactory, validate: Bool) {
+        // Serialize factory replacement with the public writer lock to preserve previous semantics.
+        self._writerLock.withLock {
+            let current = self._state.load(ordering: .acquiring)
 
-        init(_ underlying: MetricsFactory) {
-            self._underlying = underlying
-        }
+            precondition(
+                !validate || !current.initialized,
+                "metrics system can only be initialized once per process. currently used factory: \(current.factory)"
+            )
 
-        func replaceFactory(_ factory: MetricsFactory, validate: Bool) {
-            self.lock.withWriterLock {
-                precondition(
-                    !validate || !self.initialized,
-                    "metrics system can only be initialized once per process. currently used factory: \(self._underlying)"
-                )
-                self._underlying = factory
-                self.initialized = true
-            }
-        }
-
-        var underlying: MetricsFactory {
-            self.lock.withReaderLock {
-                self._underlying
-            }
-        }
-
-        func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
-            try self.lock.withWriterLock(body)
+            let next = _MetricsSystemState(factory: factory, initialized: true)
+            self._state.store(next, ordering: .sequentiallyConsistent)
         }
     }
 }
@@ -1037,10 +1128,9 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
 
 /// Wraps a CounterHandler, adding support for incrementing by floating point values by storing an accumulated floating point value and recording increments to the underlying CounterHandler after crossing integer boundaries.
 internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCounterHandler {
-    private let lock = Lock()
     private let counterHandler: CounterHandler
     private let factory: MetricsFactory
-    internal var fraction: Double = 0
+    internal let fraction = AtomicDouble(0)
 
     init(label: String, dimensions: [(String, String)], factory: MetricsFactory) {
         self.counterHandler = factory.makeCounter(label: label, dimensions: dimensions)
@@ -1060,24 +1150,25 @@ internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCoun
 
         if amount.exponent >= 63 {
             // If amount is in Int64.max..<+Inf, ceil to Int64.max
-            self.lock.withLockVoid {
-                self.counterHandler.increment(by: .max)
-            }
-        } else {
-            // Split amount into integer and fraction components
-            var (increment, fraction) = self.integerAndFractionComponents(of: amount)
-            self.lock.withLockVoid {
-                // Add the fractional component to the accumulated fraction.
-                self.fraction += fraction
-                // self.fraction may have cross an integer boundary, Split it
-                // and add any integer component.
-                let (integer, fraction) = integerAndFractionComponents(of: self.fraction)
-                increment += integer
-                self.fraction = fraction
-                // Increment the handler by the total integer component.
-                if increment > 0 {
-                    self.counterHandler.increment(by: increment)
+            self.counterHandler.increment(by: .max)
+            return
+        }
+
+        // Split amount into integer and fraction components
+        let (baseIncrement, addFraction) = self.integerAndFractionComponents(of: amount)
+
+        while true {
+            let current = self.fraction.load(ordering: .acquiring)
+            let combined = current + addFraction
+            let (carry, newFraction) = self.integerAndFractionComponents(of: combined)
+            let totalIncrement = baseIncrement + carry
+
+            var expected = current
+            if self.fraction.compareExchange(expected: &expected, desired: newFraction, ordering: .acquiringAndReleasing) {
+                if totalIncrement > 0 {
+                    self.counterHandler.increment(by: totalIncrement)
                 }
+                return
             }
         }
     }
@@ -1090,10 +1181,8 @@ internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCoun
     }
 
     func reset() {
-        self.lock.withLockVoid {
-            self.fraction = 0
-            self.counterHandler.reset()
-        }
+        self.fraction.store(0, ordering: .releasing)
+        self.counterHandler.reset()
     }
 
     func destroy() {
@@ -1105,9 +1194,7 @@ internal final class AccumulatingRoundingFloatingPointCounter: FloatingPointCoun
 /// - Note: we can annotate this class as `@unchecked Sendable` because we are manually gating access to mutable state (i.e., the `value` property) via a Lock.
 internal final class AccumulatingMeter: MeterHandler, @unchecked Sendable {
     private let recorderHandler: RecorderHandler
-    // FIXME: use swift-atomics when floating point support is available
-    private var value: Double = 0
-    private let lock = Lock()
+    private let value = AtomicDouble(0)
     private let factory: MetricsFactory
 
     init(label: String, dimensions: [(String, String)], factory: MetricsFactory) {
@@ -1126,60 +1213,47 @@ internal final class AccumulatingMeter: MeterHandler, @unchecked Sendable {
     func increment(by amount: Double) {
         // Drop illegal values
         // - cannot increment by NaN
-        guard !amount.isNaN else {
-            return
-        }
+        guard !amount.isNaN else { return }
         // - cannot increment by infinite quantities
-        guard !amount.isInfinite else {
-            return
-        }
+        guard !amount.isInfinite else { return }
         // - cannot increment by negative values
-        guard amount.sign == .plus else {
-            return
-        }
+        guard amount.sign == .plus else { return }
         // - cannot increment by zero
-        guard !amount.isZero else {
-            return
-        }
+        guard !amount.isZero else { return }
 
-        let newValue: Double = self.lock.withLock {
-            self.value += amount
-            return self.value
-        }
+        let newValue = self.add(amount)
         self.recorderHandler.record(newValue)
     }
 
     func decrement(by amount: Double) {
         // Drop illegal values
         // - cannot decrement by NaN
-        guard !amount.isNaN else {
-            return
-        }
+        guard !amount.isNaN else { return }
         // - cannot decrement by infinite quantities
-        guard !amount.isInfinite else {
-            return
-        }
+        guard !amount.isInfinite else { return }
         // - cannot decrement by negative values
-        guard amount.sign == .plus else {
-            return
-        }
+        guard amount.sign == .plus else { return }
         // - cannot decrement by zero
-        guard !amount.isZero else {
-            return
-        }
+        guard !amount.isZero else { return }
 
-        let newValue: Double = self.lock.withLock {
-            self.value -= amount
-            return self.value
-        }
+        let newValue = self.add(-amount)
         self.recorderHandler.record(newValue)
     }
 
     private func _set(_ value: Double) {
-        self.lock.withLockVoid {
-            self.value = value
-        }
+        self.value.store(value, ordering: .releasing)
         self.recorderHandler.record(value)
+    }
+
+    private func add(_ delta: Double) -> Double {
+        while true {
+            let current = self.value.load(ordering: .acquiring)
+            let next = current + delta
+            var expected = current
+            if self.value.compareExchange(expected: &expected, desired: next, ordering: .acquiringAndReleasing) {
+                return next
+            }
+        }
     }
 
     func destroy() {
@@ -1355,7 +1429,6 @@ public protocol MeterHandler: AnyObject, _SwiftMetricsSendableProtocol {
 ///
 /// - The `TimerHandler` must be a `class`.
 public protocol TimerHandler: AnyObject, _SwiftMetricsSendableProtocol {
-
     /// Record a duration in nanoseconds.
     ///
     /// - parameters:

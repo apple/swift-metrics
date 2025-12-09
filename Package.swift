@@ -15,6 +15,8 @@
 
 import PackageDescription
 
+let swiftAtomics: PackageDescription.Target.Dependency = .product(name: "Atomics", package: "swift-atomics")
+
 let package = Package(
     name: "swift-metrics",
     products: [
@@ -24,7 +26,8 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "CoreMetrics"
+            name: "CoreMetrics",
+            dependencies: [swiftAtomics]
         ),
         .target(
             name: "Metrics",
@@ -36,10 +39,20 @@ let package = Package(
         ),
         .testTarget(
             name: "MetricsTests",
-            dependencies: ["Metrics", "MetricsTestKit"]
+            dependencies: ["Metrics", "MetricsTestKit", swiftAtomics]
         ),
     ]
 )
+
+if Context.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
+    package.dependencies += [
+        .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
+    ]
+} else {
+    package.dependencies += [
+        .package(path: "../swift-atomics"),
+    ]
+}
 
 for target in package.targets {
     var settings = target.swiftSettings ?? []

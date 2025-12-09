@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
 import Dispatch
 import Foundation
 import MetricsTestKit
@@ -47,7 +48,7 @@ struct SendableTest {
             let task = Task.detached { () -> Double in
                 counter.increment(by: value)
                 let handler = counter._handler as! AccumulatingRoundingFloatingPointCounter
-                return handler.fraction
+                return handler.fraction.load(ordering: .acquiring)
             }
             let fraction = await task.value
             #expect(fraction == value)
