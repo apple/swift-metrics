@@ -20,6 +20,9 @@ import Foundation
 
 @_exported import class CoreMetrics.Timer
 
+#if canImport(Dispatch)
+import Dispatch
+
 extension Timer {
     /// Convenience for measuring duration of a closure.
     ///
@@ -72,17 +75,6 @@ extension Timer {
     public func recordInterval(since: DispatchTime, end: DispatchTime = .now()) {
         self.recordNanoseconds(end.uptimeNanoseconds - since.uptimeNanoseconds)
     }
-}
-
-extension Timer {
-    /// Convenience for recording a duration based on TimeInterval.
-    ///
-    /// - parameters:
-    ///     - duration: The duration to record.
-    @inlinable
-    public func record(_ duration: TimeInterval) {
-        self.recordSeconds(duration)
-    }
 
     /// Convenience for recording a duration based on DispatchTimeInterval.
     ///
@@ -114,6 +106,18 @@ extension Timer {
         default:
             self.record(0)
         }
+    }
+}
+#endif
+
+extension Timer {
+    /// Convenience for recording a duration based on TimeInterval.
+    ///
+    /// - parameters:
+    ///     - duration: The duration to record.
+    @inlinable
+    public func record(_ duration: TimeInterval) {
+        self.recordSeconds(duration)
     }
 }
 
