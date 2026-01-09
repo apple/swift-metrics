@@ -19,7 +19,12 @@ import Testing
 @testable import CoreMetrics
 @testable import Metrics
 
+#if canImport(Dispatch)
+import Dispatch
+#endif
+
 struct MetricsExtensionsTests {
+    #if canImport(Dispatch)
     @Test func timerBlock() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let metrics = TestMetrics()
@@ -33,6 +38,7 @@ struct MetricsExtensionsTests {
         #expect(timer.values.count == 1, "expected number of entries to match")
         #expect(timer.values[0] > Int64(delay * 1_000_000_000), "expected delay to match")
     }
+    #endif
 
     @Test func timerWithTimeInterval() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
@@ -46,6 +52,7 @@ struct MetricsExtensionsTests {
         #expect(testTimer.values[0] == Int64(timeInterval * 1_000_000_000), "expected value to match")
     }
 
+    #if canImport(Dispatch)
     @Test func timerWithDispatchTime() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let metrics = TestMetrics()
@@ -96,6 +103,7 @@ struct MetricsExtensionsTests {
         )
         #expect(metrics.timers.count == 1, "timer should have been stored")
     }
+    #endif
 
     @Test func timerDuration() throws {
         let metrics = TestMetrics()
@@ -249,6 +257,7 @@ struct MetricsExtensionsTests {
     }
 }
 
+#if canImport(Dispatch)
 // https://bugs.swift.org/browse/SR-6310
 extension DispatchTimeInterval {
     func nano() -> Int {
@@ -278,6 +287,7 @@ extension DispatchTimeInterval {
         }
     }
 }
+#endif
 
 @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
 extension Swift.Duration {
