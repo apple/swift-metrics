@@ -65,11 +65,6 @@ This instructs the `MetricsSystem` to install `SelectedMetricsImplementation` (t
 
 > Tip: Refer to the project's [README](https://github.com/apple/swift-metrics) for an up-to-date list of backend implementations.
 
-### Swift Metrics Extras
-
-You may also be interested in some "extra" modules which are collected in the [Swift Metrics Extras](https://github.com/apple/swift-metrics-extras) repository.
-It provides additional helpers for recording, aggregating, and exporting metrics, including gathering common system metrics.
-
 ### API Architecture
 
 For the Swift on Server ecosystem, it's crucial to have a metrics API that can be adopted by anybody so a multitude of libraries from different parties can provide metrics information. More concretely, all the metrics events from all libraries should end up in the same place: one of the backends mentioned above or wherever the application owner chooses.
@@ -88,6 +83,10 @@ This API was designed with the contributors to the Swift on Server community and
 [pitch](https://forums.swift.org/t/metrics/19353) |
 [discussion](https://forums.swift.org/t/discussion-server-metrics-api/) |
 [feedback](https://forums.swift.org/t/feedback-server-metrics-api/)
+
+## Related Libraries
+
+[swift-system-metrics](https://github.com/apple/swift-system-metrics) uses the Metrics API to emit system resource metrics such as CPU, memory, and file descriptors, providing insight into your application's resource consumption.
 
 ## Topics
 
