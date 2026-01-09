@@ -65,10 +65,6 @@ As the API has just launched, not many implementations exist yet. If you are int
 - [OpenTelemetry Swift](https://github.com/open-telemetry/opentelemetry-swift), support for [OpenTelemetry](https://opentelemetry.io/) which also implements other metrics and tracing backends 
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
 
-### Swift Metrics Extras
-
-You may also be interested in some "extra" modules which are collected in the [Swift Metrics Extras](https://github.com/apple/swift-metrics-extras) repository.
-
 ## Detailed design
 
 ### Architecture
@@ -346,3 +342,7 @@ Please see [SECURITY.md](SECURITY.md) for details on the security process.
 ## Getting involved
 
 Do not hesitate to get in touch as well, over on https://forums.swift.org/c/server
+
+## Related Libraries
+
+[swift-system-metrics](https://github.com/apple/swift-system-metrics) uses the Metrics API to emit system resource metrics such as CPU, memory, and file descriptors, providing insight into your application's resource consumption.
