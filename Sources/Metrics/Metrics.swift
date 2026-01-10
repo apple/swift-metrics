@@ -16,7 +16,12 @@
 // https://github.com/swiftlang/swift/issues/79285
 
 @_exported import CoreMetrics
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+import Dispatch
+#else
 import Foundation
+#endif
 
 @_exported import class CoreMetrics.Timer
 
@@ -63,7 +68,7 @@ extension Timer {
         }
         return try body()
     }
-    
+
     /// Record the time interval (with nanosecond precision) between the passed `since` dispatch time and `end` dispatch time.
     ///
     /// - parameters:
