@@ -18,7 +18,12 @@ import Testing
 
 @testable import CoreMetrics
 
+#if canImport(Dispatch)
+import Dispatch
+#endif
+
 struct MetricsTests {
+    #if canImport(Dispatch)
     @Test func counters() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let metrics = TestMetrics()
@@ -39,6 +44,7 @@ struct MetricsTests {
         testCounter.reset()
         #expect(testCounter.values.count == 0, "expected number of entries to match")
     }
+    #endif
 
     @Test func counterBlock() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
@@ -140,6 +146,7 @@ struct MetricsTests {
         #expect(rawFpCounter.fraction == 0.010009765625, "expected fractional accumulated value")
     }
 
+    #if canImport(Dispatch)
     @Test func recorders() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let metrics = TestMetrics()
@@ -158,6 +165,7 @@ struct MetricsTests {
         group.wait()
         #expect(testRecorder.values.count == total, "expected number of entries to match")
     }
+    #endif
 
     @Test func recordersInt() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
@@ -201,6 +209,7 @@ struct MetricsTests {
         #expect(recorder.lastValue == value, "expected value to match")
     }
 
+    #if canImport(Dispatch)
     @Test func timers() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let metrics = TestMetrics()
@@ -219,6 +228,7 @@ struct MetricsTests {
         group.wait()
         #expect(testTimer.values.count == total, "expected number of entries to match")
     }
+    #endif
 
     @Test func timerBlock() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
@@ -402,6 +412,7 @@ struct MetricsTests {
         }
     }
 
+    #if canImport(Dispatch)
     @Test func meterIncrement() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let metrics = TestMetrics()
@@ -454,6 +465,7 @@ struct MetricsTests {
         // See https://developer.apple.com/documentation/testing/migratingfromxctest
         #expect(abs(testMeter.values.last! - values.reduce(0.0, -)) < 0.1, "expected total value to match")
     }
+    #endif
 
     @Test func defaultMeterIgnoresNan() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
