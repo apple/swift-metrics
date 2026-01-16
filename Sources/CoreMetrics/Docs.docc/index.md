@@ -74,8 +74,8 @@ There are so many opinions over how exactly a metrics system should behave, how 
 1. a metrics API
 2. a metrics backend implementation
 
-This package only provides the metrics API, and therefore, SwiftMetrics is a "metrics API package." 
-SwiftMetrics can be configured (using `MetricsSystem.bootstrap`) to use any compatible metrics backend implementation. 
+This package only provides the metrics API, and therefore, SwiftMetrics is a "metrics API package."
+SwiftMetrics can be configured (using `MetricsSystem.bootstrap`) to use any compatible metrics backend implementation.
 This mechanism allows libraries to adopt the API and support the application choosing a compatible backend implementation without requiring any changes to the libraries.
 
 This API was designed with the contributors to the Swift on Server community and approved by the SSWG (Swift Server Work Group) to the "sandbox level" of the SSWG's incubation process.
@@ -117,3 +117,7 @@ This API was designed with the contributors to the Swift on Server community and
 ### Supporting Types
 
 - ``TimeUnit``
+
+### Contribute to the project
+
+- <doc:Proposals>
