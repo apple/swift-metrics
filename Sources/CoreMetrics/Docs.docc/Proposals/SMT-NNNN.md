@@ -1,10 +1,10 @@
-# SM-NNNN: Feature name
+# SMT-NNNN: Feature name
 
 Feature abstract – a one sentence summary.
 
 ## Overview
 
-- Proposal: SM-NNNN
+- Proposal: SMT-NNNN
 - Author(s): [Author 1](https://github.com/swiftdev), [Author 2](https://github.com/swiftdev)
 - Status: **Awaiting Review**
 - Issue: [apple/swift-metrics#1](https://github.com/apple/swift-metrics/issues/1)

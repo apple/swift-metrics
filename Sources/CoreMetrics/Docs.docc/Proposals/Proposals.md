@@ -15,7 +15,7 @@ Get feedback early by opening a pull request with your proposal, but also consid
 ### Steps
 
 1. Make sure there's a GitHub issue for the feature or change you would like to propose.
-2. Duplicate the `SM-NNNN.md` document and replace `NNNN` with the next available proposal number.
+2. Duplicate the `SMT-NNNN.md` document and replace `NNNN` with the next available proposal number.
 3. Link the GitHub issue from your proposal, and fill in the proposal.
 4. Open a pull request with your proposal and solicit feedback from other contributors.
 5. Once a maintainer confirms that the proposal is ready for review, we update the state accordingly. The review period is 7 days, and ends when one of the maintainers marks the proposal as Ready for Implementation, or Deferred.
@@ -35,4 +35,4 @@ If you have any questions, ask in an issue on GitHub.
 
 ## Topics
 
-- <doc:SM-NNNN>
+- <doc:SMT-NNNN>
