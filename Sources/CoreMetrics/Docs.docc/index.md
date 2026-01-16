@@ -90,10 +90,6 @@ This API was designed with the contributors to the Swift on Server community and
 
 ## Topics
 
-### Proposals
-
-- <doc:Proposals/Proposals>
-
 ### Metric types
 
 - ``Counter``
@@ -121,3 +117,7 @@ This API was designed with the contributors to the Swift on Server community and
 ### Supporting Types
 
 - ``TimeUnit``
+
+### Contribute to the project
+
+- <doc:Proposals>
