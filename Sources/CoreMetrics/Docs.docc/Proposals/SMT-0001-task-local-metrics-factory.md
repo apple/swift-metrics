@@ -363,8 +363,7 @@ func test() async {
 
 ### Future directions
 
-A future proposal may add task-local dimensions for runtime context propagation. Task-local factory and task-local
-dimensions are independent mechanisms with different lifecycles (creation-time vs operation-time).
+A future proposal will add structured task-local dimensions propagation.
 
 ### Alternatives considered
 

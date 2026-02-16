@@ -110,7 +110,13 @@ extension Counter {
     ///   - label: The label for the `Counter`.
     ///   - dimensions: The dimensions for the `Counter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+        let factory: MetricsFactory
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+        } else {
+            factory = MetricsSystem.factory
+        }
+        self.init(label: label, dimensions: dimensions, factory: factory)
     }
 
     /// Create a new counter using a custom metrics factory that you provide.
@@ -241,7 +247,13 @@ extension FloatingPointCounter {
     ///   - label: The label for the `FloatingPointCounter`.
     ///   - dimensions: The dimensions for the `FloatingPointCounter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+        let factory: MetricsFactory
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+        } else {
+            factory = MetricsSystem.factory
+        }
+        self.init(label: label, dimensions: dimensions, factory: factory)
     }
 
     /// Create a new floating-point counter using a custom metrics factory that you provide.
@@ -421,7 +433,13 @@ extension Meter {
     ///   - label: The label for the `Meter`.
     ///   - dimensions: The dimensions for the `Meter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+        let factory: MetricsFactory
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+        } else {
+            factory = MetricsSystem.factory
+        }
+        self.init(label: label, dimensions: dimensions, factory: factory)
     }
 
     /// Signal the underlying metrics library that this recorder will never be updated again.
@@ -545,7 +563,13 @@ extension Recorder {
     ///   - dimensions: The dimensions for the `Recorder`.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
-        self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: MetricsSystem.factory)
+        let factory: MetricsFactory
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+        } else {
+            factory = MetricsSystem.factory
+        }
+        self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: factory)
     }
 
     /// Create a new recorder using a custom metrics factory that you provide..
@@ -801,7 +825,13 @@ extension Timer {
     ///   - label: The label for the `Timer`.
     ///   - dimensions: The dimensions for the `Timer`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+        let factory: MetricsFactory
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+        } else {
+            factory = MetricsSystem.factory
+        }
+        self.init(label: label, dimensions: dimensions, factory: factory)
     }
 
     /// Create a new timer.
@@ -885,6 +915,34 @@ public enum MetricsSystem {
     /// Returns a reference to the configured factory.
     public static var factory: MetricsFactory {
         self._factory.underlying
+    }
+
+    /// Task-local metrics factory override.
+    ///
+    /// Used internally by `MetricsSystem.with(factory:)` methods.
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @usableFromInline
+    @TaskLocal
+    internal static var _taskLocalFactory: MetricsFactory?
+
+    /// Execute a closure with a factory bound to task-local storage.
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @usableFromInline
+    internal static func withTaskLocalFactory<R>(
+        _ factory: MetricsFactory,
+        operation: () throws -> R
+    ) rethrows -> R {
+        try $_taskLocalFactory.withValue(factory, operation: operation)
+    }
+
+    /// Execute an async closure with a factory bound to task-local storage.
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @usableFromInline
+    internal static func withTaskLocalFactory<R>(
+        _ factory: MetricsFactory,
+        operation: () async throws -> R
+    ) async rethrows -> R {
+        try await $_taskLocalFactory.withValue(factory, operation: operation)
     }
 
     /// Acquire a writer lock for the duration of the given block.
@@ -1606,6 +1664,18 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
 // MARK: - Sendable support helpers
 
 extension MetricsSystem: Sendable {}
+
+/// A shorter alias for `MetricsSystem` for more ergonomic API usage.
+///
+/// This typealias allows using `Metrics.with(...)` instead of `MetricsSystem.with(...)`:
+///
+/// ```swift
+/// Metrics.with(factory: testFactory) {
+///     Counter(label: "requests")
+/// }
+/// ```
+public typealias Metrics = MetricsSystem
+
 extension Counter: Sendable {}
 extension FloatingPointCounter: Sendable {}
 // must be @unchecked since Gauge inherits Recorder :(

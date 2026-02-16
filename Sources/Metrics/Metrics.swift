@@ -36,12 +36,8 @@ extension Timer {
         dimensions: [(String, String)] = [],
         body: @escaping () throws -> T
     ) rethrows -> T {
-        return try measure(
-            label: label,
-            dimensions: dimensions,
-            factory: MetricsSystem.factory,
-            body: body
-        )
+        let timer = Timer(label: label, dimensions: dimensions)
+        return try measure(with: timer, body: body)
     }
 
     /// Convenience for measuring duration of a closure.
@@ -59,6 +55,14 @@ extension Timer {
         body: @escaping () throws -> T
     ) rethrows -> T {
         let timer = Timer(label: label, dimensions: dimensions, factory: factory)
+        return try measure(with: timer, body: body)
+    }
+
+    @inlinable
+    internal static func measure<T>(
+        with timer: Timer,
+        body: @escaping () throws -> T
+    ) rethrows -> T {
         let start = DispatchTime.now().uptimeNanoseconds
         defer {
             let delta = DispatchTime.now().uptimeNanoseconds - start
