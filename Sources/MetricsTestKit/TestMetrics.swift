@@ -28,7 +28,6 @@
 import CoreMetrics
 import Foundation
 import Metrics
-import Testing
 
 /// A metrics factory which allows you to inspect recorded metrics programmatically.
 ///
