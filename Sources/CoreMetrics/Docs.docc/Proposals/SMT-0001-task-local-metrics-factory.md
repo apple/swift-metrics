@@ -296,6 +296,33 @@ extension MetricsSystem {
         factory: MetricsFactory,
         _ operation: () async throws(Failure) -> Result
     ) async rethrows -> Result
+
+    /// Accesses the current factory for the task-local context.
+    ///
+    /// Returns the task-local factory if one is bound via `with(factory:)`, otherwise returns the global factory.
+    /// This is useful for passing the current factory to APIs that expect an explicit factory parameter.
+    ///
+    /// ## Example: Passing current factory to explicit API
+    ///
+    /// ```swift
+    /// // Library API that requires explicit factory
+    /// func createMetricWithExplicitFactory(label: String, factory: MetricsFactory) -> Counter {
+    ///     Counter(label: label, factory: factory)
+    /// }
+    ///
+    /// // Usage with task-local factory
+    /// Metrics.with(factory: testFactory) {
+    ///     // Pass current factory to API expecting explicit parameter
+    ///     let counter = createMetricWithExplicitFactory(
+    ///         label: "requests",
+    ///         factory: MetricsSystem.currentFactory
+    ///     )
+    /// }
+    /// ```
+    ///
+    /// - Returns: The task-local factory if bound, otherwise the global factory.
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    public static var currentFactory: MetricsFactory { get }
 }
 ```
 
