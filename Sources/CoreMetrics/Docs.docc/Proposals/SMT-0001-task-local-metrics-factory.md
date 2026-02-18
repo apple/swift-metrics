@@ -1,6 +1,6 @@
 # SMT-0001: Task-local metrics factory
 
-Enable task-local factory overrides for testing metrics creation in complex code and dependencies.
+Enable task-local factory overrides for constructing metrics with different factories in different contexts.
 
 ## Overview
 
@@ -15,33 +15,26 @@ Enable task-local factory overrides for testing metrics creation in complex code
 
 ### Introduction
 
-Add task-local factory override for metrics to enable testing code that creates and emits metrics without global state
-pollution. The factory is captured at metric creation time and used for the metric's entire lifetime.
+Add task-local factory override for metrics to enable constructing metrics with different factories in different
+contexts. The factory is captured at metric creation time and used for the metric's entire lifetime.
 
 ### Motivation
 
-Testing code that creates and emits metrics currently requires either:
+Applications often need to construct metrics with different factories in different contexts. While the global factory
+via `MetricsSystem.bootstrap()` works for setting up one global factory per process, there are scenarios where context-specific
+factory selection is required without polluting API boundaries with explicit factory parameters.
 
-- Bootstrapping a test factory globally, which prevents parallel test execution and pollutes test state across tests.
-- Passing factory explicitly through the API boundaries, which pollutes API of internal methods and libraries.
+Testing is a particularly important use case of context-specific factory selection. Applications have complex business
+logic spread across multiple layers. Testing this code requires verifying that it creates and reports metrics
+correctly, but testing code that creates and emits metrics currently requires adopting one of the sub-optimal approaches.
 
-#### Testing complex code with metrics
-
-Applications have complex business logic spread across multiple layers (handlers, services, repositories). Testing
-this code requires verifying that it creates and reports metrics correctly.
+1. Bootstrapping a test factory globally, which does not allow using different factories in different components of the system and prevents parallel test execution:
 
 ```swift
 struct UserService {
-    let repository: UserRepository
-
     func createUser(name: String) async throws -> User {
-        let counter = Counter(label: "users.created")
-        let timer = Timer(label: "users.create.duration")
-
-        let user = try await timer.measure {
-            try await repository.create(name: name)
-        }
-
+        let counter = Counter(label: "users.created")  // ❌ Relies on the global state 
+        let user = User()
         counter.increment()
         return user
     }
@@ -50,9 +43,9 @@ struct UserService {
 @Test
 func testUserCreation() async throws {
     let testMetrics = TestMetrics()
-    MetricsSystem.bootstrap(testMetrics)  // ❌ Affects global state
+    MetricsSystem.bootstrap(testMetrics)  // ❌ Changes the global state
 
-    let service = UserService(repository: InMemoryRepository())
+    let service = UserService()
     _ = try await service.createUser(name: "Alice")
 
     let counter = try testMetrics.expectCounter("users.created")
@@ -60,122 +53,57 @@ func testUserCreation() async throws {
 }
 ```
 
-The global bootstrap approach has critical problems:
+2. Passing factory explicitly through the API boundaries, which pollutes the API:
 
-1. **No parallel test execution**: Tests must run serially to avoid factory conflicts.
-2. **State pollution**: One test's metrics leak into another test's factory.
-3. **Test isolation**: Cannot test multiple components with different metric backends simultaneously.
-
-#### API pollution with explicit factory parameters
-
-To enable testing without global state, you might add explicit factory parameters to all APIs. This pollutes every
-method signature with testing infrastructure.
-
-```swift
-struct UserRepository {
-    func create(name: String, factory: MetricsFactory) async throws -> User {
-        let timer = Timer(label: "db.query.duration", factory: factory)
-        return try await timer.measure {
-            // Database operation
-        }
-    }
-
-    func find(id: UUID, factory: MetricsFactory) async throws -> User? {
-        let counter = Counter(label: "db.queries", factory: factory)
-        defer { counter.increment() }
-        // Database operation
-    }
-}
-
+```swift    
 struct UserService {
-    let repository: UserRepository
     let factory: MetricsFactory  // ❌ Required for dependency injection
 
     func createUser(name: String) async throws -> User {
         let counter = Counter(label: "users.created", factory: factory)
-        let user = try await repository.create(name: name, factory: factory)  // ❌ Must pass factory
+        let user = User()
         counter.increment()
         return user
     }
-
-    func getUser(id: UUID) async throws -> User? {
-        try await repository.find(id: id, factory: factory)  // ❌ Must pass factory
-    }
-}
-
-struct UserHandler {
-    let service: UserService
-
-    func handleRequest() async throws {
-        let user = try await service.createUser(name: "Alice")
-        // ...
-    }
-}
-
-// Now testing requires factory threading through every layer
-@Test
-func testUserHandler() async throws {
-    let testMetrics = TestMetrics()
-    let repository = UserRepository()
-    let service = UserService(repository: repository, factory: testMetrics)  // ❌ Constructor pollution
-    let handler = UserHandler(service: service)
-
-    try await handler.handleRequest()
-
-    let counter = try testMetrics.expectCounter("users.created")
-    #expect(counter.values == [1])
 }
 ```
-
-Problems with this approach:
-
-1. **API pollution**: Every method that creates metrics needs a factory parameter.
-2. **Constructor pollution**: Every type that creates metrics needs factory stored as property.
-3. **Threading through layers**: Factory must be passed through entire call stack.
-4. **Breaking change**: Adding metrics to existing code requires changing all method signatures.
 
 ### Proposed solution
 
 Add `MetricsSystem.with(factory:)` method that binds a factory to task-local context. Metrics created within this
-context use the task-local factory instead of the global factory.
+context use the task-local factory instead of the global factory. This enables context-specific factory selection
+without global state or API pollution.
 
-#### Usage pattern: factory override for testing
+#### Usage pattern: testing with isolated factories
 
 ```swift
+struct UserService {
+    let counter = Counter(label: "users.created")  // ✅ Gets factory from the task-local storage
+    
+    func createUser(name: String) async throws -> User {
+        let user = User()
+        counter.increment()
+        return user
+    }
+}
+    
 @Test
 func testUserCreation() async throws {
-    let testMetrics = TestMetrics()
-
-    // Factory bound to task-local context - no global state
-    let service = await Metrics.with(factory: testMetrics) {
-        UserService(repository: InMemoryRepository())
-    }
-
-    _ = try await service.createUser(name: "Alice")
-
-    let counter = try testMetrics.expectCounter("users.created")
-    #expect(counter.values == [1])
-}
-
-@Test
-func testConcurrentUserCreation() async throws {
     let testMetrics1 = TestMetrics()
     let testMetrics2 = TestMetrics()
-
-    // Two tests run in parallel with isolated factories
+    
     async let user1 = Metrics.with(factory: testMetrics1) {
-        let service = UserService(repository: InMemoryRepository())
+        let service = UserService()
         return try await service.createUser(name: "Alice")
     }
 
     async let user2 = Metrics.with(factory: testMetrics2) {
-        let service = UserService(repository: InMemoryRepository())
+        let service = UserService()
         return try await service.createUser(name: "Bob")
     }
 
     _ = try await (user1, user2)
 
-    // Each factory has isolated metrics
     #expect(try testMetrics1.expectCounter("users.created").values == [1])
     #expect(try testMetrics2.expectCounter("users.created").values == [1])
 }
@@ -189,27 +117,8 @@ When creating a metric, the factory is chosen in this order:
 2. **Task-local factory** via `with(factory:)` (if present).
 3. **Global factory** via `MetricsSystem.bootstrap()` - fallback.
 
-The factory is captured at creation time and stored in the metric for its entire lifetime.
-
-#### Factory behavior: creation time only
-
-```swift
-let testFactory = TestMetrics()
-let productionFactory = ProductionMetrics()
-
-// Factory captured at creation
-let counter = Metrics.with(factory: testFactory) {
-    Counter(label: "requests")  // Uses testFactory
-}
-
-// Task-local factory at operation time is ignored
-Metrics.with(factory: productionFactory) {
-    counter.increment()  // Still uses testFactory (captured at creation)
-}
-```
-
-This semantic ensures metrics have a stable factory reference for their lifetime, avoiding confusion about which
-backend receives metric updates.
+The factory is captured at creation time and stored in the metric for its entire lifetime. This semantic ensures
+metrics have a stable factory reference for their lifetime, avoiding confusion about which backend receives metric updates.
 
 ## Detailed design
 
@@ -369,7 +278,7 @@ the use of `@TaskLocal` property wrappers.
 `MetricsFactory` implementations.
 
 **Existing users of Metrics**: all existing `Counter`, `Timer`, `Gauge`, `Meter`, and `Recorder` APIs remain
-unchanged. Code that creates and uses metrics without task-local context continues to work with zero impact.
+unchanged. Code that creates and uses metrics without task-local context continues to work with minimal impact.
 
 Libraries can adopt task-local factory gradually:
 
