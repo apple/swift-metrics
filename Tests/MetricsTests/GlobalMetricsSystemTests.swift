@@ -19,6 +19,7 @@ import Testing
 @testable import CoreMetrics
 @testable import Metrics
 
+@Suite(.serialized)
 struct GlobalMetricsSystemTests {
     let metrics = TestMetrics()
 
