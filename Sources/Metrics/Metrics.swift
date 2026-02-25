@@ -26,7 +26,6 @@ import Foundation
 
 #if canImport(Dispatch)
 import Dispatch
-#endif
 
 extension Timer {
     /// Convenience for measuring duration of a closure.
