@@ -16,8 +16,6 @@
 // https://github.com/swiftlang/swift/issues/79285
 
 @_exported import CoreMetrics
-import Dispatch
-
 @_exported import class CoreMetrics.Timer
 
 #if canImport(FoundationEssentials)
