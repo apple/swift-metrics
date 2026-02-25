@@ -11,6 +11,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
+// swift-format-ignore-file
+// Note: Whitespace changes are used to workaround compiler bug
+// https://github.com/swiftlang/swift/issues/79285
 
 @_exported import CoreMetrics
 import Dispatch
@@ -21,6 +24,10 @@ import Dispatch
 import FoundationEssentials
 #else
 import Foundation
+#endif
+
+#if canImport(Dispatch)
+import Dispatch
 #endif
 
 extension Timer {
@@ -36,7 +43,29 @@ extension Timer {
         dimensions: [(String, String)] = [],
         body: @escaping () throws -> T
     ) rethrows -> T {
-        let timer = Timer(label: label, dimensions: dimensions)
+        return try measure(
+            label: label,
+            dimensions: dimensions,
+            factory: MetricsSystem.factory,
+            body: body
+        )
+    }
+
+    /// Convenience for measuring duration of a closure.
+    ///
+    /// - parameters:
+    ///     - label: The label for the Timer.
+    ///     - dimensions: The dimensions for the Timer.
+    ///     - factory: The custom metrics factory
+    ///     - body: Closure to run & record.
+    @inlinable
+    public static func measure<T>(
+        label: String,
+        dimensions: [(String, String)] = [],
+        factory: MetricsFactory,
+        body: @escaping () throws -> T
+    ) rethrows -> T {
+        let timer = Timer(label: label, dimensions: dimensions, factory: factory)
         let start = DispatchTime.now().uptimeNanoseconds
         defer {
             let delta = DispatchTime.now().uptimeNanoseconds - start
@@ -44,7 +73,7 @@ extension Timer {
         }
         return try body()
     }
-
+    
     /// Record the time interval (with nanosecond precision) between the passed `since` dispatch time and `end` dispatch time.
     ///
     /// - parameters:
@@ -52,17 +81,6 @@ extension Timer {
     ///   - end: End of the interval, defaulting to `.now()`.
     public func recordInterval(since: DispatchTime, end: DispatchTime = .now()) {
         self.recordNanoseconds(end.uptimeNanoseconds - since.uptimeNanoseconds)
-    }
-}
-
-extension Timer {
-    /// Convenience for recording a duration based on TimeInterval.
-    ///
-    /// - parameters:
-    ///     - duration: The duration to record.
-    @inlinable
-    public func record(_ duration: TimeInterval) {
-        self.recordSeconds(duration)
     }
 
     /// Convenience for recording a duration based on DispatchTimeInterval.
@@ -97,6 +115,18 @@ extension Timer {
         }
     }
 }
+#endif
+
+extension Timer {
+    /// Convenience for recording a duration based on TimeInterval.
+    ///
+    /// - parameters:
+    ///     - duration: The duration to record.
+    @inlinable
+    public func record(_ duration: TimeInterval) {
+        self.recordSeconds(duration)
+    }
+}
 
 extension Timer {
     /// Convenience for recording a duration based on `Duration`.
@@ -117,5 +147,43 @@ extension Timer {
         guard !nanoseconds.overflow else { return self.recordNanoseconds(Int64.max) }
 
         self.recordNanoseconds(nanoseconds.partialValue)
+    }
+
+    /// Convenience for measuring duration of a closure.
+    ///
+    /// - Parameters:
+    ///    - clock: The clock used for measuring the duration. Defaults to the continuous clock.
+    ///    - body: The closure to record the duration of.
+    @inlinable
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
+        clock: Clock = .continuous,
+        body: () throws(Failure) -> Result
+    ) throws(Failure) -> Result where Clock.Duration == Duration {
+        let start = clock.now
+        defer {
+            self.record(duration: start.duration(to: clock.now))
+        }
+        return try body()
+    }
+
+    /// Convenience for measuring duration of a closure.
+    ///
+    /// - Parameters:
+    ///    - clock: The clock used for measuring the duration. Defaults to the continuous clock.
+    ///    - isolation: The isolation of the method. Defaults to the isolation of the caller.
+    ///    - body: The closure to record the duration of.
+    @inlinable
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func measure<Result, Failure: Error, Clock: _Concurrency.Clock>(
+        clock: Clock = .continuous,
+        isolation: isolated (any Actor)? = #isolation,
+        body: () async throws(Failure) -> sending Result
+    ) async throws(Failure) -> sending Result where Clock.Duration == Duration {
+        let start = clock.now
+        defer {
+            self.record(duration: start.duration(to: clock.now))
+        }
+        return try await body()
     }
 }

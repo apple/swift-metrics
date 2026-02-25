@@ -1,5 +1,8 @@
 name: PR
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     types: [opened, reopened, synchronize]
@@ -7,20 +10,42 @@ on:
 jobs:
   soundness:
     name: Soundness
-    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
+    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@0.0.7
     with:
       license_header_check_project_name: "Swift Metrics API"
+      docs_check_container_image: "swift:6.1-noble"
 
   unit-tests:
     name: Unit tests
     uses: apple/swift-nio/.github/workflows/unit_tests.yml@main
     with:
-      linux_5_9_arguments_override: "--explicit-target-dependency-import-check error"
-      linux_5_10_arguments_override: "--explicit-target-dependency-import-check error"
       linux_6_0_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
-      linux_nightly_6_0_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      linux_6_1_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      linux_6_2_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      linux_nightly_next_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       linux_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
 
   cxx-interop:
     name: Cxx interop
     uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
+
+  macos-tests:
+    name: macOS tests
+    uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
+    with:
+      runner_pool: general
+      build_scheme: swift-metrics-Package
+
+  release-builds:
+    name: Release builds
+    uses: apple/swift-nio/.github/workflows/release_builds.yml@main
+
+  wasm-sdk:
+    name: WebAssembly Swift SDK
+    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@0.0.7
+    with:
+      enable_wasm_sdk_build: true
+      enable_linux_checks: false
+      enable_windows_checks: false
+      swift_flags: --target Metrics
+      swift_nightly_flags: --target Metrics

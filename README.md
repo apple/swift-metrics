@@ -65,10 +65,6 @@ As the API has just launched, not many implementations exist yet. If you are int
 - [OpenTelemetry Swift](https://github.com/open-telemetry/opentelemetry-swift), support for [OpenTelemetry](https://opentelemetry.io/) which also implements other metrics and tracing backends 
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
 
-### Swift Metrics Extras
-
-You may also be interested in some "extra" modules which are collected in the [Swift Metrics Extras](https://github.com/apple/swift-metrics-extras) repository.
-
 ## Detailed design
 
 ### Architecture
@@ -90,12 +86,18 @@ This API was designed with the contributors to the Swift on Server community and
 
 ### Metric types
 
-The API supports four metric types:
+The API supports six metric types:
 
 `Counter`: A counter is a cumulative metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero on restart. For example, you can use a counter to represent the number of requests served, tasks completed, or errors.
 
 ```swift
 counter.increment(by: 100)
+```
+
+- `FloatingPointCounter`: A variation of a `Counter` that records a floating point value, instead of an integer.
+
+```swift
+floatingPointCounter.increment(by: 10.5)
 ```
 
  `Gauge`: A Gauge is a metric that represents a single numerical value that can arbitrarily go up and down. Gauges are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Gauges are modeled as a `Recorder` with a sample size of 1 that does not perform any aggregation.
@@ -104,7 +106,7 @@ counter.increment(by: 100)
 gauge.record(100)
 ```
 
-`Meter`: A Meter is similar to `Gauge` - a metric that represents a single numerical value that can arbitrarily go up and down. Meters are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Unlike `Gauge`, `Meter` also supports atomic incerements and decerements.
+`Meter`: A Meter is similar to `Gauge` - a metric that represents a single numerical value that can arbitrarily go up and down. Meters are typically used for measured values like temperatures or current memory usage, but also "counts" that can go up and down, like the number of active threads. Unlike `Gauge`, `Meter` also supports atomic increments and decrements.
 
 ```swift
 meter.record(100)
@@ -340,3 +342,7 @@ Please see [SECURITY.md](SECURITY.md) for details on the security process.
 ## Getting involved
 
 Do not hesitate to get in touch as well, over on https://forums.swift.org/c/server
+
+## Related Libraries
+
+[swift-system-metrics](https://github.com/apple/swift-system-metrics) uses the Metrics API to emit system resource metrics such as CPU, memory, and file descriptors, providing insight into your application's resource consumption.
