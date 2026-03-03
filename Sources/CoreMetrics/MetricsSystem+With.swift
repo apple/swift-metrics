@@ -83,9 +83,10 @@ extension MetricsSystem {
     ///   - operation: The async closure to execute with the factory bound.
     /// - Returns: The value returned by the closure.
     @inlinable
+    nonisolated(nonsending)
     public static func with<Result, Failure: Error>(
         factory: MetricsFactory,
-        _ operation: () async throws(Failure) -> Result
+        _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
     ) async rethrows -> Result {
         try await withTaskLocalFactory(factory, operation: operation)
     }
