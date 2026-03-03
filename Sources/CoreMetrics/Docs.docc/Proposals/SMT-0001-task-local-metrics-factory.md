@@ -6,7 +6,7 @@ Enable task-local factory overrides for constructing metrics with different fact
 
 - Proposal: SMT-0001
 - Author(s): [Vladimir Kukushkin](https://github.com/kukushechkin)
-- Status: **Awaiting Review**
+- Status: **In Review**
 - Issue: [apple/swift-metrics#165](https://github.com/apple/swift-metrics/issues/165)
 - Implementation:
   - [apple/swift-metrics#196](https://github.com/apple/swift-metrics/pull/196)
