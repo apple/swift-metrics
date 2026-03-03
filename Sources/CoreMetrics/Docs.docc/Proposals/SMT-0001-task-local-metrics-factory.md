@@ -184,7 +184,6 @@ extension MetricsSystem {
     ///   - factory: The metrics factory to use for metric creation within the closure.
     ///   - operation: The closure to execute with the factory bound.
     /// - Returns: The value returned by the closure.
-    @discardableResult
     @inlinable
     public static func with<Result, Failure: Error>(
         factory: MetricsFactory,
@@ -199,7 +198,6 @@ extension MetricsSystem {
     ///   - factory: The metrics factory to use for metric creation within the closure.
     ///   - operation: The async closure to execute with the factory bound.
     /// - Returns: The value returned by the closure.
-    @discardableResult
     @inlinable
     public static func with<Result, Failure: Error>(
         factory: MetricsFactory,
