@@ -188,7 +188,7 @@ extension MetricsSystem {
     public static func withCurrent<Result, Failure: Error>(
         changingFactory factory: MetricsFactory,
         _ operation: () throws(Failure) -> Result
-    ) rethrows -> Result
+    ) throws(Failure) -> Result
 
     /// Runs the given async closure with a factory bound to the task-local context.
     ///
@@ -203,7 +203,7 @@ extension MetricsSystem {
     public static func withCurrent<Result, Failure: Error>(
         changingFactory factory: MetricsFactory,
         _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
-    ) async rethrows -> Result
+    ) async throws(Failure) -> Result
 
     /// Accesses the current factory for the task-local context.
     ///
