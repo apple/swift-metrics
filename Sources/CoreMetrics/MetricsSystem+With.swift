@@ -91,10 +91,11 @@ extension MetricsSystem {
     /// - Returns: The value returned by the closure.
     @inlinable
     nonisolated(nonsending)
-    public static func withCurrent<Result, Failure: Error>(
-        changingFactory factory: MetricsFactory,
-        _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
-    ) async throws(Failure) -> Result {
+        public static func withCurrent<Result, Failure: Error>(
+            changingFactory factory: MetricsFactory,
+            _ operation: nonisolated (nonsending)() async throws(Failure) -> Result
+        ) async throws(Failure) -> Result
+    {
         do {
             return try await withTaskLocalFactory(factory, operation: operation)
         } catch {

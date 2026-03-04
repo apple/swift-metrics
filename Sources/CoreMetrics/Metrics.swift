@@ -924,7 +924,7 @@ public enum MetricsSystem {
     @usableFromInline
     @TaskLocal
     internal static var _taskLocalFactory: MetricsFactory?
-    
+
     /// The current factory for the task-local context.
     ///
     /// Returns the task-local factory if one is bound via `withCurrent(changingFactory:)`, otherwise returns the global factory.
@@ -968,10 +968,11 @@ public enum MetricsSystem {
     @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
     @usableFromInline
     nonisolated(nonsending)
-    internal static func withTaskLocalFactory<R>(
-        _ factory: MetricsFactory,
-        operation: nonisolated(nonsending) () async throws -> R
-    ) async rethrows -> R {
+        internal static func withTaskLocalFactory<R>(
+            _ factory: MetricsFactory,
+            operation: nonisolated (nonsending)() async throws -> R
+        ) async rethrows -> R
+    {
         try await $_taskLocalFactory.withValue(factory, operation: operation)
     }
 
