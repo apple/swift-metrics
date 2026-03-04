@@ -965,16 +965,27 @@ public enum MetricsSystem {
     }
 
     /// Execute an async closure with a factory bound to task-local storage.
+    #if compiler(>=6.2)
     @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
     @usableFromInline
     nonisolated(nonsending)
         internal static func withTaskLocalFactory<R>(
             _ factory: MetricsFactory,
-            operation: nonisolated (nonsending)() async throws -> R
+            operation: nonisolated(nonsending) () async throws -> R
         ) async rethrows -> R
     {
         try await $_taskLocalFactory.withValue(factory, operation: operation)
     }
+    #else
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @usableFromInline
+    internal static func withTaskLocalFactory<R>(
+        _ factory: MetricsFactory,
+        operation: () async throws -> R
+    ) async rethrows -> R {
+        try await $_taskLocalFactory.withValue(factory, operation: operation)
+    }
+    #endif
 
     /// Acquire a writer lock for the duration of the given block.
     ///
