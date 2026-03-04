@@ -89,11 +89,12 @@ extension MetricsSystem {
     ///   - factory: The metrics factory to use for metric creation within the closure.
     ///   - operation: The async closure to execute with the factory bound.
     /// - Returns: The value returned by the closure.
+    #if compiler(>=6.2)
     @inlinable
     nonisolated(nonsending)
         public static func withCurrent<Result, Failure: Error>(
             changingFactory factory: MetricsFactory,
-            _ operation: nonisolated (nonsending)() async throws(Failure) -> Result
+            _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
         ) async throws(Failure) -> Result
     {
         do {
@@ -105,4 +106,20 @@ extension MetricsSystem {
             throw error as! Failure
         }
     }
+    #else
+    @inlinable
+    public static func withCurrent<Result, Failure: Error>(
+        changingFactory factory: MetricsFactory,
+        _ operation: () async throws(Failure) -> Result
+    ) async throws(Failure) -> Result {
+        do {
+            return try await withTaskLocalFactory(factory, operation: operation)
+        } catch {
+            // `withTaskLocalFactory` uses `rethrows`, the underlying `$_taskLocalFactory.withValue` uses `throws`,
+            // so the compiler cannot verify the error type at the boundary. However, the only errors it can propagate
+            // are those thrown by `operation`, which is declared `throws(Failure)`.
+            throw error as! Failure
+        }
+    }
+    #endif
 }
