@@ -25,7 +25,7 @@ extension MetricsSystem {
     /// @Test
     /// func testRequestHandling() async {
     ///     let testFactory = TestMetrics()
-    ///     let service = await Metrics.with(factory: testFactory) {
+    ///     let service = await Metrics.withCurrent(changingFactory: testFactory) {
     ///         RequestService()  // Creates metrics using testFactory
     ///     }
     ///
@@ -44,12 +44,12 @@ extension MetricsSystem {
     ///     let factory1 = TestMetrics()
     ///     let factory2 = TestMetrics()
     ///
-    ///     async let result1 = Metrics.with(factory: factory1) {
+    ///     async let result1 = Metrics.withCurrent(changingFactory: factory1) {
     ///         let service = RequestService()
     ///         return service.handleRequest()
     ///     }
     ///
-    ///     async let result2 = Metrics.with(factory: factory2) {
+    ///     async let result2 = Metrics.withCurrent(changingFactory: factory2) {
     ///         let service = RequestService()
     ///         return service.handleRequest()
     ///     }
@@ -67,8 +67,8 @@ extension MetricsSystem {
     ///   - operation: The closure to execute with the factory bound.
     /// - Returns: The value returned by the closure.
     @inlinable
-    public static func with<Result, Failure: Error>(
-        factory: MetricsFactory,
+    public static func withCurrent<Result, Failure: Error>(
+        changingFactory factory: MetricsFactory,
         _ operation: () throws(Failure) -> Result
     ) rethrows -> Result {
         try withTaskLocalFactory(factory, operation: operation)
@@ -76,7 +76,7 @@ extension MetricsSystem {
 
     /// Runs the given async closure with a factory bound to the task-local context.
     ///
-    /// Async variant of `with(factory:_:)`. See that method for detailed documentation.
+    /// Async variant of `withCurrent(changingFactory:_:)`. See that method for detailed documentation.
     ///
     /// - Parameters:
     ///   - factory: The metrics factory to use for metric creation within the closure.
@@ -84,8 +84,8 @@ extension MetricsSystem {
     /// - Returns: The value returned by the closure.
     @inlinable
     nonisolated(nonsending)
-    public static func with<Result, Failure: Error>(
-        factory: MetricsFactory,
+    public static func withCurrent<Result, Failure: Error>(
+        changingFactory factory: MetricsFactory,
         _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
     ) async rethrows -> Result {
         try await withTaskLocalFactory(factory, operation: operation)
