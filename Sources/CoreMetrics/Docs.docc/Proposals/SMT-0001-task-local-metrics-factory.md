@@ -70,8 +70,8 @@ struct UserService {
 
 ### Proposed solution
 
-Add `MetricsSystem.withCurrent(changingFactory:)` method that binds a factory to task-local context. Metrics created within this
-context use the task-local factory instead of the global factory. This enables context-specific factory selection
+Add `MetricsSystem.withMetricsFactory(changingFactory:)` method that binds a factory to task-local context. Metrics created within
+this context use the task-local factory instead of the global factory. This enables context-specific factory selection
 without global state or API pollution.
 
 #### Usage pattern: testing with isolated factories
@@ -92,12 +92,12 @@ func testUserCreation() async throws {
     let testMetrics1 = TestMetrics()
     let testMetrics2 = TestMetrics()
     
-    async let user1 = Metrics.withCurrent(changingFactory: testMetrics1) {
+    async let user1 = Metrics.withMetricsFactory(changingFactory: testMetrics1) {
         let service = UserService()
         return try await service.createUser(name: "Alice")
     }
 
-    async let user2 = Metrics.withCurrent(changingFactory: testMetrics2) {
+    async let user2 = Metrics.withMetricsFactory(changingFactory: testMetrics2) {
         let service = UserService()
         return try await service.createUser(name: "Bob")
     }
@@ -114,7 +114,7 @@ func testUserCreation() async throws {
 When creating a metric, the factory is chosen in this order:
 
 1. **Explicit `factory` parameter** (if provided) - highest priority.
-2. **Task-local factory** via `withCurrent(changingFactory:)` (if present).
+2. **Task-local factory** via `withMetricsFactory(changingFactory:)` (if present).
 3. **Global factory** via `MetricsSystem.bootstrap()` - fallback.
 
 The factory is captured at creation time and stored in the metric for its entire lifetime. This semantic ensures
@@ -124,7 +124,7 @@ metrics have a stable factory reference for their lifetime, avoiding confusion a
 
 ### Public API additions
 
-This proposal adds task-local factory support through `MetricsSystem.withCurrent(changingFactory:)` methods and a convenience
+This proposal adds task-local factory support through `MetricsSystem.withMetricsFactory(changingFactory:)` methods and a convenience
 typealias.
 
 #### Core methods
@@ -143,7 +143,7 @@ extension MetricsSystem {
     /// @Test
     /// func testRequestHandling() async {
     ///     let testFactory = TestMetrics()
-    ///     let service = await Metrics.withCurrent(changingFactory: testFactory) {
+    ///     let service = await Metrics.withMetricsFactory(changingFactory: testFactory) {
     ///         RequestService()  // Creates metrics using testFactory
     ///     }
     ///
@@ -162,12 +162,12 @@ extension MetricsSystem {
     ///     let factory1 = TestMetrics()
     ///     let factory2 = TestMetrics()
     ///
-    ///     async let result1 = Metrics.withCurrent(changingFactory: factory1) {
+    ///     async let result1 = Metrics.withMetricsFactory(changingFactory: factory1) {
     ///         let service = RequestService()
     ///         return service.handleRequest()
     ///     }
     ///
-    ///     async let result2 = Metrics.withCurrent(changingFactory: factory2) {
+    ///     async let result2 = Metrics.withMetricsFactory(changingFactory: factory2) {
     ///         let service = RequestService()
     ///         return service.handleRequest()
     ///     }
@@ -185,14 +185,14 @@ extension MetricsSystem {
     ///   - operation: The closure to execute with the factory bound.
     /// - Returns: The value returned by the closure.
     @inlinable
-    public static func withCurrent<Result, Failure: Error>(
+    public static func withMetricsFactory<Result, Failure: Error>(
         changingFactory factory: MetricsFactory,
         _ operation: () throws(Failure) -> Result
     ) throws(Failure) -> Result
 
     /// Runs the given async closure with a factory bound to the task-local context.
     ///
-    /// Async variant of `withCurrent(changingFactory:_:)`. See that method for detailed documentation.
+    /// Async variant of `withMetricsFactory(changingFactory:_:)`. See that method for detailed documentation.
     ///
     /// - Parameters:
     ///   - factory: The metrics factory to use for metric creation within the closure.
@@ -200,14 +200,14 @@ extension MetricsSystem {
     /// - Returns: The value returned by the closure.
     @inlinable
     nonisolated(nonsending)
-    public static func withCurrent<Result, Failure: Error>(
+    public static func withMetricsFactory<Result, Failure: Error>(
         changingFactory factory: MetricsFactory,
         _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
     ) async throws(Failure) -> Result
 
     /// Accesses the current factory for the task-local context.
     ///
-    /// Returns the task-local factory if one is bound via `withCurrent(changingFactory:)`, otherwise returns the global factory.
+    /// Returns the task-local factory if one is bound via `withMetricsFactory(changingFactory:)`, otherwise returns the global factory.
     /// This is useful for passing the current factory to APIs that expect an explicit factory parameter.
     ///
     /// ## Example: Passing current factory to explicit API
@@ -219,7 +219,7 @@ extension MetricsSystem {
     /// }
     ///
     /// // Usage with task-local factory
-    /// Metrics.withCurrent(changingFactory: testFactory) {
+    /// Metrics.withMetricsFactory(changingFactory: testFactory) {
     ///     // Pass current factory to API expecting explicit parameter
     ///     let counter = createMetricWithExplicitFactory(
     ///         label: "requests",
@@ -239,10 +239,10 @@ extension MetricsSystem {
 ```swift
 /// A shorter alias for `MetricsSystem` for more ergonomic API usage.
 ///
-/// This typealias allows using `Metrics.withCurrent(...)` instead of `MetricsSystem.withCurrent(...)`:
+/// This typealias allows using `Metrics.withMetricsFactory(...)` instead of `MetricsSystem.withMetricsFactory(...)`:
 ///
 /// ```swift
-/// Metrics.withCurrent(changingFactory: testFactory) {
+/// Metrics.withMetricsFactory(changingFactory: testFactory) {
 ///     Counter(label: "requests")
 /// }
 /// ```
@@ -290,7 +290,7 @@ let counter = Counter(label: "requests")
 @Test
 func test() async {
     let testFactory = TestMetrics()
-    let counter = await Metrics.withCurrent(changingFactory: testFactory) {
+    let counter = await Metrics.withMetricsFactory(changingFactory: testFactory) {
         Counter(label: "requests")
     }
 }
@@ -355,3 +355,46 @@ struct UserService {
 
 **Decision**: rejected because this is a breaking change for all existing code and does not solve the dependency
 testing problem.
+
+#### Alternative 3: global withMetricsFactory free functions
+
+Expose `withMetricsFactory(changingFactory:_:)` as free functions at the module level rather than static methods on
+`MetricsSystem`:
+
+```swift
+@available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+public func withMetricsFactory<Result, Failure: Error>(
+    changingFactory factory: MetricsFactory,
+    _ operation: () throws(Failure) -> Result
+) throws(Failure) -> Result
+
+@available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+public func withMetricsFactory<Result, Failure: Error>(
+    changingFactory factory: MetricsFactory,
+    _ operation: () async throws(Failure) -> Result
+) async throws(Failure) -> Result
+```
+
+Usage would look like:
+
+```swift
+withMetricsFactory(changingFactory: testFactory) {
+    Counter(label: "requests")
+}
+```
+
+**Advantages**:
+
+- Shorter call site — no `Metrics.` prefix required.
+- Consistency with `swift-distributed-tracing` `.withSpan` methods.
+
+**Disadvantages**:
+
+- **Discoverability**: Free functions are harder to discover than methods on a type. Users familiar with
+  `MetricsSystem.bootstrap()` and `MetricsSystem.factory` will naturally look for related API on `MetricsSystem`.
+- **Namespace pollution**: Adds symbols to the module's top-level namespace.
+- **Inconsistency**: All other `MetricsSystem` configuration API (`bootstrap`, `factory`) lives on `MetricsSystem`,
+  making free functions an inconsistent addition.
+
+**Decision**: rejected in favor of static methods on `MetricsSystem` for better discoverability and consistency with
+existing API conventions.
