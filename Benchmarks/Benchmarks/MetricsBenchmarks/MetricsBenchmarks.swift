@@ -19,13 +19,10 @@ import Metrics
 
 public func makeBenchmark(
     _ suffix: String = "",
-    _ body: @escaping (MetricsFactory) -> Void
+    _ body: @escaping (Benchmark) -> Void
 ) {
     let iterations = 1_000_000
     let metrics: [BenchmarkMetric] = [.instructions, .objectAllocCount]
-
-    let metricsFactory = TestMetrics()
-    MetricsSystem.bootstrap(metricsFactory)
 
     Benchmark(
         "metrics_benchmark_\(suffix)",
@@ -46,20 +43,38 @@ public func makeBenchmark(
             ]
         )
     ) { benchmark in
-        // This is used to measure the metrics init performance with Task-Local object
-        MetricsSystem.withCurrent(changingFactory: metricsFactory) {
-            benchmark.startMeasurement()
-            body(metricsFactory)
-            benchmark.stopMeasurement()
-        }
+        body(benchmark)
     }
 }
 
 
 public let benchmarks: @Sendable () -> Void = {
-    makeBenchmark("init") { _ in
-        let timer = Timer(label: "test-timer")
-        let counter = Counter(label: "test-counter")
-        let gauge = Gauge(label: "test-gauge")
+    let metricsFactory = TestMetrics()
+    MetricsSystem.bootstrap(metricsFactory)
+
+    makeBenchmark("task-local-init") { benchmark in
+        MetricsSystem.withCurrent(changingFactory: metricsFactory) {
+            benchmark.startMeasurement()
+            let _ = Timer(label: "test-timer")
+            let _ = Counter(label: "test-counter")
+            let _ = Gauge(label: "test-gauge")
+            benchmark.stopMeasurement()
+        }
+    }
+    makeBenchmark("explicit-init") { benchmark in
+        benchmark.startMeasurement()
+        let _ = Timer(label: "test-timer", factory: metricsFactory)
+        let _ = Counter(label: "test-counter", factory: metricsFactory)
+        let _ = Gauge(label: "test-gauge", factory: metricsFactory)
+        benchmark.stopMeasurement()
+    }
+    makeBenchmark("explicit-init-with-task-local") { benchmark in
+        MetricsSystem.withCurrent(changingFactory: metricsFactory) {
+            benchmark.startMeasurement()
+            let _ = Timer(label: "test-timer", factory: MetricsSystem.currentFactory)
+            let _ = Counter(label: "test-counter", factory: MetricsSystem.currentFactory)
+            let _ = Gauge(label: "test-gauge", factory: MetricsSystem.currentFactory)
+            benchmark.stopMeasurement()
+        }
     }
 }
