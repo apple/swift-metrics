@@ -53,7 +53,7 @@ public let benchmarks: @Sendable () -> Void = {
     MetricsSystem.bootstrap(metricsFactory)
 
     makeBenchmark("task-local-init") { benchmark in
-        MetricsSystem.withMetricsFactory(changingFactory: metricsFactory) {
+        withMetricsFactory(changingFactory: metricsFactory) {
             benchmark.startMeasurement()
             let _ = Timer(label: "test-timer")
             let _ = Counter(label: "test-counter")
@@ -69,7 +69,7 @@ public let benchmarks: @Sendable () -> Void = {
         benchmark.stopMeasurement()
     }
     makeBenchmark("explicit-init-with-current") { benchmark in
-        MetricsSystem.withMetricsFactory(changingFactory: metricsFactory) {
+        withMetricsFactory(changingFactory: metricsFactory) {
             benchmark.startMeasurement()
             let _ = Timer(label: "test-timer", factory: MetricsSystem.currentFactory)
             let _ = Counter(label: "test-counter", factory: MetricsSystem.currentFactory)
