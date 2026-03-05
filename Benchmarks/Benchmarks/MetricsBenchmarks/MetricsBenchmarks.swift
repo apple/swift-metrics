@@ -14,8 +14,8 @@
 
 import Benchmark
 import CoreMetrics
-import MetricsTestKit
 import Metrics
+import MetricsTestKit
 
 public func makeBenchmark(
     _ suffix: String = "",
@@ -46,7 +46,6 @@ public func makeBenchmark(
         body(benchmark)
     }
 }
-
 
 public let benchmarks: @Sendable () -> Void = {
     let metricsFactory = TestMetrics()
