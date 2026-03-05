@@ -112,7 +112,12 @@ extension Counter {
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            if MetricsSystem.useTaskLocalMetrics {
+//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            } else {
+                factory = MetricsSystem.factory
+//            }
         } else {
             factory = MetricsSystem.factory
         }
@@ -249,7 +254,12 @@ extension FloatingPointCounter {
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            if MetricsSystem.useTaskLocalMetrics {
+//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            } else {
+                factory = MetricsSystem.factory
+//            }
         } else {
             factory = MetricsSystem.factory
         }
@@ -435,7 +445,12 @@ extension Meter {
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            if MetricsSystem.useTaskLocalMetrics {
+//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            } else {
+                factory = MetricsSystem.factory
+//            }
         } else {
             factory = MetricsSystem.factory
         }
@@ -565,7 +580,12 @@ extension Recorder {
     public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
         let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            if MetricsSystem.useTaskLocalMetrics {
+//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            } else {
+                factory = MetricsSystem.factory
+//            }
         } else {
             factory = MetricsSystem.factory
         }
@@ -827,7 +847,12 @@ extension Timer {
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            if MetricsSystem.useTaskLocalMetrics {
+//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+//            } else {
+                factory = MetricsSystem.factory
+//            }
         } else {
             factory = MetricsSystem.factory
         }
@@ -894,6 +919,7 @@ extension Timer: CustomStringConvertible {
 /// implementation using ``MetricsFactory``.
 public enum MetricsSystem {
     private static let _factory = FactoryBox(NOOPMetricsHandler.instance)
+    nonisolated(unsafe) public static var useTaskLocalMetrics: Bool = false
 
     /// A one-time configuration function which globally selects the desired metrics backend
     /// implementation.
