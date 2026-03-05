@@ -890,7 +890,7 @@ public enum MetricsSystem {
 
     /// Task-local metrics factory override.
     ///
-    /// Used internally by `MetricsSystem.withMetricsFactory(changingFactory:)` methods.
+    /// Used internally by `withMetricsFactory(changingFactory:)` free functions.
     @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
     @usableFromInline
     @TaskLocal
@@ -1681,17 +1681,6 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
 // MARK: - Sendable support helpers
 
 extension MetricsSystem: Sendable {}
-
-/// A shorter alias for `MetricsSystem` for more ergonomic API usage.
-///
-/// This typealias allows using `Metrics.withMetricsFactory(...)` instead of `MetricsSystem.withMetricsFactory(...)`:
-///
-/// ```swift
-/// Metrics.withMetricsFactory(changingFactory: testFactory) {
-///     Counter(label: "requests")
-/// }
-/// ```
-public typealias Metrics = MetricsSystem
 
 extension Counter: Sendable {}
 extension FloatingPointCounter: Sendable {}
