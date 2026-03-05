@@ -94,7 +94,7 @@ public func withMetricsFactory<Result, Failure: Error>(
 nonisolated(nonsending)
     public func withMetricsFactory<Result, Failure: Error>(
         changingFactory factory: MetricsFactory,
-        _ operation: nonisolated (nonsending)() async throws(Failure) -> Result
+        _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
     ) async throws(Failure) -> Result
 {
     do {
