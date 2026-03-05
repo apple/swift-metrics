@@ -73,12 +73,21 @@ public final class Counter {
     ///   - dimensions: The dimensions for the `Counter`.
     ///   - handler: The custom backend, created by the global metrics factory.
     public convenience init(label: String, dimensions: [(String, String)], handler: CounterHandler) {
-        self.init(
-            label: label,
-            dimensions: dimensions,
-            handler: handler,
-            factory: MetricsSystem.factory
-        )
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            self.init(
+                label: label,
+                dimensions: dimensions,
+                handler: handler,
+                factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+            )
+        } else {
+            self.init(
+                label: label,
+                dimensions: dimensions,
+                handler: handler,
+                factory: MetricsSystem.factory
+            )
+        }
     }
 
     /// Increment the counter.
@@ -110,18 +119,11 @@ extension Counter {
     ///   - label: The label for the `Counter`.
     ///   - dimensions: The dimensions for the `Counter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            if MetricsSystem.useTaskLocalMetrics {
-//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            } else {
-                factory = MetricsSystem.factory
-//            }
+            self.init(label: label, dimensions: dimensions, factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory)
         } else {
-            factory = MetricsSystem.factory
+            self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
         }
-        self.init(label: label, dimensions: dimensions, factory: factory)
     }
 
     /// Create a new counter using a custom metrics factory that you provide.
@@ -215,12 +217,21 @@ public final class FloatingPointCounter {
     ///   - dimensions: The dimensions for the `FloatingPointCounter`.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: FloatingPointCounterHandler) {
-        self.init(
-            label: label,
-            dimensions: dimensions,
-            handler: handler,
-            factory: MetricsSystem.factory
-        )
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            self.init(
+                label: label,
+                dimensions: dimensions,
+                handler: handler,
+                factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+            )
+        } else {
+            self.init(
+                label: label,
+                dimensions: dimensions,
+                handler: handler,
+                factory: MetricsSystem.factory
+            )
+        }
     }
 
     /// Increment the floating-point counter.
@@ -252,18 +263,11 @@ extension FloatingPointCounter {
     ///   - label: The label for the `FloatingPointCounter`.
     ///   - dimensions: The dimensions for the `FloatingPointCounter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            if MetricsSystem.useTaskLocalMetrics {
-//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            } else {
-                factory = MetricsSystem.factory
-//            }
+            self.init(label: label, dimensions: dimensions, factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory)
         } else {
-            factory = MetricsSystem.factory
+            self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
         }
-        self.init(label: label, dimensions: dimensions, factory: factory)
     }
 
     /// Create a new floating-point counter using a custom metrics factory that you provide.
@@ -373,7 +377,11 @@ public final class Meter {
     ///   - dimensions: The dimensions for the `Recorder`.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: MeterHandler) {
-        self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory)
+        } else {
+            self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
+        }
     }
 
     /// Set an integer value.
@@ -443,18 +451,11 @@ extension Meter {
     ///   - label: The label for the `Meter`.
     ///   - dimensions: The dimensions for the `Meter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            if MetricsSystem.useTaskLocalMetrics {
-//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            } else {
-                factory = MetricsSystem.factory
-//            }
+            self.init(label: label, dimensions: dimensions, factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory)
         } else {
-            factory = MetricsSystem.factory
+            self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
         }
-        self.init(label: label, dimensions: dimensions, factory: factory)
     }
 
     /// Signal the underlying metrics library that this recorder will never be updated again.
@@ -536,13 +537,23 @@ public class Recorder {
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
-        self.init(
-            label: label,
-            dimensions: dimensions,
-            aggregate: aggregate,
-            handler: handler,
-            factory: MetricsSystem.factory
-        )
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            self.init(
+                label: label,
+                dimensions: dimensions,
+                aggregate: aggregate,
+                handler: handler,
+                factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+            )
+        } else {
+            self.init(
+                label: label,
+                dimensions: dimensions,
+                aggregate: aggregate,
+                handler: handler,
+                factory: MetricsSystem.factory
+            )
+        }
     }
 
     /// Record a value.
@@ -578,18 +589,11 @@ extension Recorder {
     ///   - dimensions: The dimensions for the `Recorder`.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
-        let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            if MetricsSystem.useTaskLocalMetrics {
-//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            } else {
-                factory = MetricsSystem.factory
-//            }
+            self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory)
         } else {
-            factory = MetricsSystem.factory
+            self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: MetricsSystem.factory)
         }
-        self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: factory)
     }
 
     /// Create a new recorder using a custom metrics factory that you provide..
@@ -726,7 +730,11 @@ public final class Timer {
     ///   - dimensions: The dimensions for the `Timer`.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: TimerHandler) {
-        self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory)
+        } else {
+            self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
+        }
     }
 
     /// Record a duration in nanoseconds.
@@ -845,18 +853,11 @@ extension Timer {
     ///   - label: The label for the `Timer`.
     ///   - dimensions: The dimensions for the `Timer`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        let factory: MetricsFactory
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            // factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            if MetricsSystem.useTaskLocalMetrics {
-//                factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-//            } else {
-                factory = MetricsSystem.factory
-//            }
+            self.init(label: label, dimensions: dimensions, factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory)
         } else {
-            factory = MetricsSystem.factory
+            self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
         }
-        self.init(label: label, dimensions: dimensions, factory: factory)
     }
 
     /// Create a new timer.
@@ -888,12 +889,21 @@ extension Timer {
         dimensions: [(String, String)] = [],
         preferredDisplayUnit displayUnit: TimeUnit
     ) {
-        self.init(
-            label: label,
-            dimensions: dimensions,
-            preferredDisplayUnit: displayUnit,
-            factory: MetricsSystem.factory
-        )
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            self.init(
+                label: label,
+                dimensions: dimensions,
+                preferredDisplayUnit: displayUnit,
+                factory: MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
+            )
+        } else {
+            self.init(
+                label: label,
+                dimensions: dimensions,
+                preferredDisplayUnit: displayUnit,
+                factory: MetricsSystem.factory
+            )
+        }
     }
 
     /// Signal the underlying metrics library that this timer will never be updated again.
