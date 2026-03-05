@@ -229,7 +229,7 @@ extension MetricsSystem {
     /// ```
     ///
     /// - Returns: The task-local factory if bound, otherwise the global factory.
-    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
     public static var currentFactory: MetricsFactory { get }
 }
 ```
@@ -251,18 +251,12 @@ public typealias Metrics = MetricsSystem
 
 ### Metric initialization changes
 
-All metric types (`Counter`, `Timer`, `Gauge`, `Meter`, `Recorder`, `FloatingPointCounter`) check for task-local
-factory at initialization:
+All metric types (`Counter`, `Timer`, `Gauge`, `Meter`, `Recorder`, `FloatingPointCounter`) delegate to
+`MetricsSystem.currentFactory` at initialization, which returns the task-local factory when one is bound:
 
 ```swift
 public convenience init(label: String, dimensions: [(String, String)] = []) {
-    let factory: MetricsFactory
-    if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-        factory = MetricsSystem._taskLocalFactory ?? MetricsSystem.factory
-    } else {
-        factory = MetricsSystem.factory
-    }
-    self.init(label: label, dimensions: dimensions, factory: factory)
+    self.init(label: label, dimensions: dimensions, factory: MetricsSystem.currentFactory)
 }
 ```
 
