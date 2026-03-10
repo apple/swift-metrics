@@ -45,25 +45,53 @@ Linux beefy.machine 4.4.0-101-generic #124-Ubuntu SMP Fri Nov 10 18:29:59 UTC 20
 My system has IPv6 disabled.
 ```
 
-## Writing a Patch
-
-A good SwiftMetrics patch is:
-
-1. Concise, and contains as few changes as needed to achieve the end result.
-2. Tested, ensuring that any tests provided failed before the patch and pass after it.
-3. Documented, adding API documentation as needed to cover new functions and properties.
-4. Accompanied by a great commit message, using our commit message template.
-
-### Commit Message Template
-
-We require that your commit messages match our template. The easiest way to do that is to get git to help you by explicitly using the template. To do that, `cd` to the root of our repository and run:
-
-    git config commit.template dev/git.commit.template
-
 ### Run CI checks locally
 
-You can run the Github Actions workflows locally using [act](https://github.com/nektos/act). For detailed steps on how to do this please see [https://github.com/swiftlang/github-workflows?tab=readme-ov-file#running-workflows-locally](https://github.com/swiftlang/github-workflows?tab=readme-ov-file#running-workflows-locally).
+You can run the Github Actions workflows locally using
+[act](https://github.com/nektos/act). To run all the jobs that run on a pull
+request, use the following command:
+
+```
+% act pull_request
+```
+
+To run just a single job, use `workflow_call -j <job>`, and specify the inputs
+the job expects. For example, to run just shellcheck:
+
+```
+% act workflow_call -j soundness --input shell_check_enabled=true
+```
+
+To bind-mount the working directory to the container, rather than a copy, use
+`--bind`. For example, to run just the formatting, and have the results
+reflected in your working directory:
+
+```
+% act --bind workflow_call -j soundness --input format_check_enabled=true
+```
+
+If you'd like `act` to always run with certain flags, these can be be placed in
+an `.actrc` file either in the current working directory or your home
+directory, for example:
+
+```
+--container-architecture=linux/amd64
+--remote-name upstream
+--action-offline-mode
+```
 
 ## How to contribute your work
 
-Please open a pull request at https://github.com/apple/swift-metrics. Make sure the CI passes, and then wait for code review.
+For non-trivial changes that affect the public API, it is good practice to have a discussion phase before writing code. Please follow the [proposal process](Sources/CoreMetrics/Docs.docc/Proposals/Proposals.md) to gather feedback and align on the approach with other contributors.
+
+1. Prepare your change, keeping in mind that a good patch is:
+  - Concise, and contains as few changes as needed to achieve the end result.
+  - Tested, ensuring that any tests provided failed before the patch and pass after it.
+  - Documented, adding API documentation as needed to cover new functions and properties.
+  - Accompanied by a great commit message.
+2. Open a pull request at https://github.com/apple/swift-metrics and wait for code review by the maintainers.
+
+## Automated release process
+
+This repository uses automated releases based on semantic versioning labels. See the [Auto Release Workflow documentation](https://github.com/apple/swift-temporal-sdk/blob/main/.github/workflows/README.md) for details.
+
