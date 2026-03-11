@@ -44,6 +44,36 @@ let counter = Counter(label: "com.example.BestExampleApp.numberOfRequests")
 counter.increment()
 ```
 
+### Correct metrics usage pattern
+
+Metrics objects should be created **once**, with pre-defined labels and dimensions known at initialization time, and
+reused for the lifetime of the component. Creating new metric objects on every request or operation is an antipattern
+that causes unbounded allocation and, more critically, **unbounded cardinality** in the metrics backend when
+dimensions contain per-request values.
+
+```swift
+// ❌ Creating metrics on demand — unbounded cardinality when dimensions vary per-request
+func handleRequest(requestID: String) {
+    let counter = Counter(label: "requests", dimensions: [("request_id", requestID)])
+    counter.increment()
+}
+
+// ✅ Create metrics once during setup with fixed dimensions and reuse them
+struct RequestHandler {
+    let requestCounter = Counter(label: "requests")
+
+    func handleRequest(requestID: String) {
+        requestCounter.increment()
+    }
+}
+```
+
+Task-local factory is scoped to the initialization block: the factory override is only active for the duration of
+the `withMetricsFactory(_:)` closure, without touching the global state. Any metrics created outside
+that scope — for example, inside `createUser` — will not see the task-local factory and will fall back to the global
+one. If the application has not bootstrapped a global factory, such metrics will fail to initialize, providing a
+safeguard against accidentally creating metrics outside of the designated setup scope.
+
 ### Selecting a metrics backend implementation (applications only)
 
 Note: If you are building a library, you don't need to concern yourself with this section. It is the end users of your library (the applications) who will decide which metrics backend to use. Libraries should never change the metrics implementation as that is something owned by the application.
