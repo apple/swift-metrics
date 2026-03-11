@@ -32,8 +32,9 @@ correctly, but testing code that creates and emits metrics currently requires ad
 
 ```swift
 struct UserService {
-    func createUser(name: String) async throws -> User {
-        let counter = Counter(label: "users.created")  // ❌ Relies on the global state 
+    let counter = Counter(label: "users.created")  // ❌ Relies on the global state
+    
+    func createUser(name: String) async throws -> User { 
         let user = User()
         counter.increment()
         return user
@@ -57,10 +58,13 @@ func testUserCreation() async throws {
 
 ```swift    
 struct UserService {
-    let factory: MetricsFactory  // ❌ Required for dependency injection
-
+    let counter: Counter
+    
+    init(metricsFactory: MetricsFactory) {  // ❌ Required for dependency injection
+        self.counter = Counter(label: "users.created", factory: metricsFactory)
+    }
+    
     func createUser(name: String) async throws -> User {
-        let counter = Counter(label: "users.created", factory: factory)
         let user = User()
         counter.increment()
         return user
@@ -70,7 +74,7 @@ struct UserService {
 
 ### Proposed solution
 
-Add `withMetricsFactory(changingFactory:)` free function that binds a factory to task-local context. Metrics created
+Add `withMetricsFactory(_:)` free function that binds a factory to task-local context. Metrics created
 within this context use the task-local factory instead of the global factory. This enables context-specific factory
 selection without global state or API pollution.
 
@@ -92,12 +96,12 @@ func testUserCreation() async throws {
     let testMetrics1 = TestMetrics()
     let testMetrics2 = TestMetrics()
     
-    async let user1 = withMetricsFactory(changingFactory: testMetrics1) {
+    async let user1 = withMetricsFactory(testMetrics1) {
         let service = UserService()
         return try await service.createUser(name: "Alice")
     }
 
-    async let user2 = withMetricsFactory(changingFactory: testMetrics2) {
+    async let user2 = withMetricsFactory(testMetrics2) {
         let service = UserService()
         return try await service.createUser(name: "Bob")
     }
@@ -109,12 +113,43 @@ func testUserCreation() async throws {
 }
 ```
 
+#### Correct metrics usage pattern
+
+This proposal does not change the correct pattern for creating and using metrics.
+
+Metrics objects should be created **once**, with pre-defined labels and dimensions known at initialization time, and
+reused for the lifetime of the component. Creating new metric objects on every request or operation is an antipattern
+that causes unbounded allocation.
+
+```swift
+// ❌ Creating metrics on demand — unbounded allocation and unbounded cardinality when dimensions vary per-request
+func handleRequest(requestID: String) {
+    let counter = Counter(label: "requests", dimensions: [("request_id", requestID)])
+    counter.increment()
+}
+
+// ✅ Create metrics once during setup with fixed dimensions and reuse them
+struct RequestHandler {
+    let requestCounter = Counter(label: "requests")
+
+    func handleRequest(requestID: String) {
+        requestCounter.increment()
+    }
+}
+```
+
+Task-local factory is scoped to the initialization block: the factory override is only active for the duration of
+the `withMetricsFactory(_:)` closure, without touching the global state. Any metrics created outside
+that scope — for example, inside `createUser` — will not see the task-local factory and will fall back to the global
+one. If the application has not bootstrapped a global factory, such metrics will fail to initialize, providing a
+safeguard against accidentally creating metrics outside of the designated setup scope.
+
 #### Factory selection priority
 
 When creating a metric, the factory is chosen in this order:
 
 1. **Explicit `factory` parameter** (if provided) - highest priority.
-2. **Task-local factory** via `withMetricsFactory(changingFactory:)` (if present).
+2. **Task-local factory** via `withMetricsFactory(_:)` (if present).
 3. **Global factory** via `MetricsSystem.bootstrap()` - fallback.
 
 The factory is captured at creation time and stored in the metric for its entire lifetime. This semantic ensures
@@ -124,7 +159,7 @@ metrics have a stable factory reference for their lifetime, avoiding confusion a
 
 ### Public API additions
 
-This proposal adds task-local factory support through `withMetricsFactory(changingFactory:)` free functions.
+This proposal adds task-local factory support through `withMetricsFactory(_:)` free functions.
 
 #### Core functions
 
@@ -140,7 +175,7 @@ This proposal adds task-local factory support through `withMetricsFactory(changi
 /// @Test
 /// func testRequestHandling() async {
 ///     let testFactory = TestMetrics()
-///     let service = await withMetricsFactory(changingFactory: testFactory) {
+///     let service = await withMetricsFactory(testFactory) {
 ///         RequestService()  // Creates metrics using testFactory
 ///     }
 ///
@@ -159,12 +194,12 @@ This proposal adds task-local factory support through `withMetricsFactory(changi
 ///     let factory1 = TestMetrics()
 ///     let factory2 = TestMetrics()
 ///
-///     async let result1 = withMetricsFactory(changingFactory: factory1) {
+///     async let result1 = withMetricsFactory(factory1) {
 ///         let service = RequestService()
 ///         return service.handleRequest()
 ///     }
 ///
-///     async let result2 = withMetricsFactory(changingFactory: factory2) {
+///     async let result2 = withMetricsFactory(factory2) {
 ///         let service = RequestService()
 ///         return service.handleRequest()
 ///     }
@@ -184,13 +219,13 @@ This proposal adds task-local factory support through `withMetricsFactory(changi
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
 @inlinable
 public func withMetricsFactory<Result, Failure: Error>(
-    changingFactory factory: MetricsFactory,
+    _ factory: MetricsFactory,
     _ operation: () throws(Failure) -> Result
 ) throws(Failure) -> Result
 
 /// Runs the given async closure with a factory bound to the task-local context.
 ///
-/// Async variant of `withMetricsFactory(changingFactory:_:)`. See that function for detailed documentation.
+/// Async variant of `withMetricsFactory(_:_:)`. See that function for detailed documentation.
 ///
 /// - Parameters:
 ///   - factory: The metrics factory to use for metric creation within the closure.
@@ -200,7 +235,7 @@ public func withMetricsFactory<Result, Failure: Error>(
 @inlinable
 nonisolated(nonsending)
 public func withMetricsFactory<Result, Failure: Error>(
-    changingFactory factory: MetricsFactory,
+    _ factory: MetricsFactory,
     _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
 ) async throws(Failure) -> Result
 ```
@@ -214,7 +249,7 @@ explicitly to APIs that require a factory parameter:
 extension MetricsSystem {
     /// Accesses the current factory for the task-local context.
     ///
-    /// Returns the task-local factory if one is bound via `withMetricsFactory(changingFactory:)`, otherwise returns
+    /// Returns the task-local factory if one is bound via `withMetricsFactory(_:)`, otherwise returns
     /// the global factory. This is useful for passing the current factory to APIs that expect an explicit factory
     /// parameter.
     ///
@@ -227,7 +262,7 @@ extension MetricsSystem {
     /// }
     ///
     /// // Usage with task-local factory
-    /// withMetricsFactory(changingFactory: testFactory) {
+    /// withMetricsFactory(testFactory) {
     ///     // Pass current factory to API expecting explicit parameter
     ///     let counter = createMetricWithExplicitFactory(
     ///         label: "requests",
@@ -277,7 +312,7 @@ let counter = Counter(label: "requests")
 @Test
 func test() async {
     let testFactory = TestMetrics()
-    let counter = await withMetricsFactory(changingFactory: testFactory) {
+    let counter = await withMetricsFactory(testFactory) {
         Counter(label: "requests")
     }
 }
@@ -345,18 +380,18 @@ testing problem.
 
 #### Alternative 3: put withMetricsFactory into MetricsSystem
 
-Expose `withMetricsFactory(changingFactory:_:)` as static methods on `MetricsSystem` rather than free functions:
+Expose `withMetricsFactory(_:_:)` as static methods on `MetricsSystem` rather than free functions:
 
 ```swift
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
 extension MetricsSystem {
     public static func withMetricsFactory<Result, Failure: Error>(
-        changingFactory factory: MetricsFactory,
+        _ factory: MetricsFactory,
         _ operation: () throws(Failure) -> Result
     ) throws(Failure) -> Result
 
     public static func withMetricsFactory<Result, Failure: Error>(
-        changingFactory factory: MetricsFactory,
+        _ factory: MetricsFactory,
         _ operation: () async throws(Failure) -> Result
     ) async throws(Failure) -> Result
 }
@@ -365,7 +400,7 @@ extension MetricsSystem {
 Usage would look like:
 
 ```swift
-MetricsSystem.withMetricsFactory(changingFactory: testFactory) {
+MetricsSystem.withMetricsFactory(testFactory) {
     Counter(label: "requests")
 }
 ```
