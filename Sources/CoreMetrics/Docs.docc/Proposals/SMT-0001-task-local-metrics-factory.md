@@ -33,8 +33,8 @@ correctly, but testing code that creates and emits metrics currently requires ad
 ```swift
 struct UserService {
     let counter = Counter(label: "users.created")  // ❌ Relies on the global state
-    
-    func createUser(name: String) async throws -> User { 
+
+    func createUser(name: String) async throws -> User {
         let user = User()
         counter.increment()
         return user
@@ -56,19 +56,30 @@ func testUserCreation() async throws {
 
 2. Passing factory explicitly through the API boundaries, which pollutes the API:
 
-```swift    
+```swift
 struct UserService {
     let counter: Counter
-    
+
     init(metricsFactory: MetricsFactory) {  // ❌ Required for dependency injection
         self.counter = Counter(label: "users.created", factory: metricsFactory)
     }
-    
+
     func createUser(name: String) async throws -> User {
         let user = User()
         counter.increment()
         return user
     }
+}
+
+@Test
+func testUserCreation() async throws {
+    let testMetrics = TestMetrics()
+
+    let service = UserService(metricsFactory: testMetrics)  // ❌ Required for dependency injection
+    _ = try await service.createUser(name: "Alice")
+
+    let counter = try testMetrics.expectCounter("users.created")
+    #expect(counter.values == [1])
 }
 ```
 
@@ -83,19 +94,19 @@ selection without global state or API pollution.
 ```swift
 struct UserService {
     let counter = Counter(label: "users.created")  // ✅ Gets factory from the task-local storage
-    
+
     func createUser(name: String) async throws -> User {
         let user = User()
         counter.increment()
         return user
     }
 }
-    
+
 @Test
 func testUserCreation() async throws {
     let testMetrics1 = TestMetrics()
     let testMetrics2 = TestMetrics()
-    
+
     async let user1 = withMetricsFactory(testMetrics1) {
         let service = UserService()
         return try await service.createUser(name: "Alice")
@@ -143,10 +154,46 @@ struct RequestHandler {
 ```
 
 Task-local factory is scoped to the initialization block: the factory override is only active for the duration of
-the `withMetricsFactory(_:)` closure, without touching the global state. Any metrics created outside
-that scope — for example, inside `createUser` — will not see the task-local factory and will fall back to the global
-one. If the application has not bootstrapped a global factory, such metrics will fail to initialize, providing a
-safeguard against accidentally creating metrics outside of the designated setup scope.
+the `withMetricsFactory(_:)` closure, without touching the global state. Any metrics created outside that scope will
+not see the task-local factory and will fall back to the global one. If the application has not bootstrapped a global
+factory, such metrics will fail to initialize, providing a safeguard against accidentally creating metrics outside of
+the designated setup scope.
+
+```swift
+struct UserService {
+    let counter: Counter
+
+    init() {
+        // ✅ Created during init — picks up the task-local factory
+        self.counter = Counter(label: "users.created")
+    }
+
+    func createUser(name: String) async throws -> User {
+        // ❌ Created on demand — task-local factory is no longer in scope,
+        //    falls back to global; fails if global is not bootstrapped
+        let onDemandCounter = Counter(label: "users.created.on_demand")
+        let user = User()
+        self.counter.increment()
+        return user
+    }
+}
+
+@Test
+func testUserCreation() async throws {
+    let testMetrics = TestMetrics()
+
+    // The task-local factory is only active inside this block
+    let service = withMetricsFactory(testMetrics) {
+        UserService()  // counter is created here — uses testMetrics
+    }
+
+    // service.createUser() runs outside the withMetricsFactory scope,
+    // so onDemandCounter inside it will NOT use testMetrics
+    _ = try await service.createUser(name: "Alice")
+
+    #expect(try testMetrics.expectCounter("users.created").values == [1])
+}
+```
 
 #### Factory selection priority
 
