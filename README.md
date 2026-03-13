@@ -71,11 +71,46 @@ struct RequestHandler {
 }
 ```
 
-Task-local factory is scoped to the initialization block: the factory override is only active for the duration of
-the `withMetricsFactory(_:)` closure, without touching the global state. Any metrics created outside
-that scope — for example, inside `createUser` — will not see the task-local factory and will fall back to the global
-one. If the application has not bootstrapped a global factory, such metrics will fail to initialize, providing a
-safeguard against accidentally creating metrics outside of the designated setup scope.
+When using a scoped factory override — such as `withMetricsFactory(_:)` for testing — the factory is only active for
+the duration of the closure. Any metrics created outside that scope will not see the overridden factory and will fall
+back to the global one. If no global factory has been bootstrapped, such metrics will fail to initialize, providing a
+safeguard against creating metrics outside of the designated setup scope.
+
+```swift
+struct UserService {
+    let counter: Counter
+
+    init() {
+        // ✅ Created during init — picks up the task-local factory
+        self.counter = Counter(label: "users.created")
+    }
+
+    func createUser(name: String) async throws -> User {
+        // ❌ Created on demand — task-local factory is no longer in scope,
+        //    falls back to global; fails if global is not bootstrapped
+        let onDemandCounter = Counter(label: "users.created.on_demand")
+        let user = User()
+        self.counter.increment()
+        return user
+    }
+}
+
+@Test
+func testUserCreation() async throws {
+    let testMetrics = TestMetrics()
+
+    // The task-local factory is only active inside this block
+    let service = withMetricsFactory(testMetrics) {
+        UserService()  // counter is created here — uses testMetrics
+    }
+
+    // service.createUser() runs outside the withMetricsFactory scope,
+    // so onDemandCounter inside it will NOT use testMetrics
+    _ = try await service.createUser(name: "Alice")
+
+    #expect(try testMetrics.expectCounter("users.created").values == [1])
+}
+```
 
 ### Selecting a metrics backend implementation (applications only)
 
