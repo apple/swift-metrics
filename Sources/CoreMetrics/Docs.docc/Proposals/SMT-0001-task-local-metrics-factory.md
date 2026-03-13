@@ -118,8 +118,12 @@ func testUserCreation() async throws {
 This proposal does not change the correct pattern for creating and using metrics.
 
 Metrics objects should be created **once**, with pre-defined labels and dimensions known at initialization time, and
-reused for the lifetime of the component. Creating new metric objects on every request or operation is an antipattern
-that causes unbounded allocation.
+reused for the lifetime of the component. Creating new metric objects on every request or operation is an antipattern:
+
+- It can lead to **unbounded memory allocation** if the labels or dimensions are unbounded (e.g. per-request IDs),
+  causing unbounded cardinality in the metrics backend.
+- It is **slow** and can become a bottleneck for fast parallel execution, since metric creation typically involves
+  factory synchronization and backend registration.
 
 ```swift
 // ❌ Creating metrics on demand — unbounded allocation and unbounded cardinality when dimensions vary per-request
