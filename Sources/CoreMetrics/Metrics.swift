@@ -77,7 +77,7 @@ public final class Counter {
             label: label,
             dimensions: dimensions,
             handler: handler,
-            factory: MetricsSystem.factory
+            factory: MetricsSystem.currentFactory
         )
     }
 
@@ -110,7 +110,7 @@ extension Counter {
     ///   - label: The label for the `Counter`.
     ///   - dimensions: The dimensions for the `Counter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.currentFactory)
     }
 
     /// Create a new counter using a custom metrics factory that you provide.
@@ -208,7 +208,7 @@ public final class FloatingPointCounter {
             label: label,
             dimensions: dimensions,
             handler: handler,
-            factory: MetricsSystem.factory
+            factory: MetricsSystem.currentFactory
         )
     }
 
@@ -241,7 +241,7 @@ extension FloatingPointCounter {
     ///   - label: The label for the `FloatingPointCounter`.
     ///   - dimensions: The dimensions for the `FloatingPointCounter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.currentFactory)
     }
 
     /// Create a new floating-point counter using a custom metrics factory that you provide.
@@ -351,7 +351,7 @@ public final class Meter {
     ///   - dimensions: The dimensions for the `Recorder`.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: MeterHandler) {
-        self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
+        self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.currentFactory)
     }
 
     /// Set an integer value.
@@ -421,7 +421,7 @@ extension Meter {
     ///   - label: The label for the `Meter`.
     ///   - dimensions: The dimensions for the `Meter`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.currentFactory)
     }
 
     /// Signal the underlying metrics library that this recorder will never be updated again.
@@ -508,7 +508,7 @@ public class Recorder {
             dimensions: dimensions,
             aggregate: aggregate,
             handler: handler,
-            factory: MetricsSystem.factory
+            factory: MetricsSystem.currentFactory
         )
     }
 
@@ -545,7 +545,7 @@ extension Recorder {
     ///   - dimensions: The dimensions for the `Recorder`.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
-        self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: MetricsSystem.factory)
+        self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: MetricsSystem.currentFactory)
     }
 
     /// Create a new recorder using a custom metrics factory that you provide..
@@ -682,7 +682,7 @@ public final class Timer {
     ///   - dimensions: The dimensions for the `Timer`.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: TimerHandler) {
-        self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
+        self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.currentFactory)
     }
 
     /// Record a duration in nanoseconds.
@@ -801,7 +801,7 @@ extension Timer {
     ///   - label: The label for the `Timer`.
     ///   - dimensions: The dimensions for the `Timer`.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
-        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
+        self.init(label: label, dimensions: dimensions, factory: MetricsSystem.currentFactory)
     }
 
     /// Create a new timer.
@@ -837,7 +837,7 @@ extension Timer {
             label: label,
             dimensions: dimensions,
             preferredDisplayUnit: displayUnit,
-            factory: MetricsSystem.factory
+            factory: MetricsSystem.currentFactory
         )
     }
 
@@ -886,6 +886,80 @@ public enum MetricsSystem {
     public static var factory: MetricsFactory {
         self._factory.underlying
     }
+
+    /// Task-local metrics factory override.
+    ///
+    /// Used internally by `withMetricsFactory(_:_:)` free functions.
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @usableFromInline
+    @TaskLocal
+    internal static var _taskLocalFactory: MetricsFactory?
+
+    /// The current factory.
+    ///
+    /// Returns the task-local factory if one is bound via `withMetricsFactory(_:_:)`, otherwise returns the global factory.
+    /// This is useful for passing the current factory to APIs that expect an explicit factory parameter.
+    ///
+    /// ## Example: Passing current factory to explicit API
+    ///
+    /// ```swift
+    /// // Library API that requires explicit factory
+    /// func createMetricWithExplicitFactory(label: String, factory: MetricsFactory) -> Counter {
+    ///     Counter(label: label, factory: factory)
+    /// }
+    ///
+    /// // Usage with task-local factory
+    /// withMetricsFactory(testFactory) {
+    ///     // Pass current factory to API expecting explicit parameter
+    ///     let counter = createMetricWithExplicitFactory(
+    ///         label: "requests",
+    ///         factory: MetricsSystem.currentFactory
+    ///     )
+    /// }
+    /// ```
+    ///
+    /// - Returns: The task-local factory if bound, otherwise the global factory.
+    @inlinable
+    public static var currentFactory: MetricsFactory {
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            _taskLocalFactory ?? factory
+        } else {
+            factory
+        }
+    }
+
+    /// Execute a closure with a factory bound to task-local storage.
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @usableFromInline
+    internal static func withTaskLocalFactory<R>(
+        _ factory: MetricsFactory,
+        operation: () throws -> R
+    ) rethrows -> R {
+        try $_taskLocalFactory.withValue(factory, operation: operation)
+    }
+
+    /// Execute an async closure with a factory bound to task-local storage.
+    #if compiler(>=6.2)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @usableFromInline
+    nonisolated(nonsending)
+        internal static func withTaskLocalFactory<R>(
+            _ factory: MetricsFactory,
+            operation: nonisolated(nonsending) () async throws -> R
+        ) async rethrows -> R
+    {
+        try await $_taskLocalFactory.withValue(factory, operation: operation)
+    }
+    #else
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @usableFromInline
+    internal static func withTaskLocalFactory<R>(
+        _ factory: MetricsFactory,
+        operation: () async throws -> R
+    ) async rethrows -> R {
+        try await $_taskLocalFactory.withValue(factory, operation: operation)
+    }
+    #endif
 
     /// Acquire a writer lock for the duration of the given block.
     ///
@@ -1606,6 +1680,7 @@ public final class NOOPMetricsHandler: MetricsFactory, CounterHandler, FloatingP
 // MARK: - Sendable support helpers
 
 extension MetricsSystem: Sendable {}
+
 extension Counter: Sendable {}
 extension FloatingPointCounter: Sendable {}
 // must be @unchecked since Gauge inherits Recorder :(
