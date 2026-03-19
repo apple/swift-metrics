@@ -864,7 +864,6 @@ extension Timer: CustomStringConvertible {
 /// implementation using ``MetricsFactory``.
 public enum MetricsSystem {
     private static let _factory = FactoryBox(NOOPMetricsHandler.instance)
-    nonisolated(unsafe) public static var useTaskLocalMetrics: Bool = false
 
     /// A one-time configuration function which globally selects the desired metrics backend
     /// implementation.
@@ -890,7 +889,7 @@ public enum MetricsSystem {
 
     /// Task-local metrics factory override.
     ///
-    /// Used internally by `withMetricsFactory(changingFactory:)` free functions.
+    /// Used internally by `withMetricsFactory(_:_:)` free functions.
     @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
     @usableFromInline
     @TaskLocal
@@ -898,7 +897,7 @@ public enum MetricsSystem {
 
     /// The current factory.
     ///
-    /// Returns the task-local factory if one is bound via `withMetricsFactory(changingFactory:)`, otherwise returns the global factory.
+    /// Returns the task-local factory if one is bound via `withMetricsFactory(_:_:)`, otherwise returns the global factory.
     /// This is useful for passing the current factory to APIs that expect an explicit factory parameter.
     ///
     /// ## Example: Passing current factory to explicit API
@@ -910,7 +909,7 @@ public enum MetricsSystem {
     /// }
     ///
     /// // Usage with task-local factory
-    /// Metrics.withMetricsFactory(changingFactory: testFactory) {
+    /// withMetricsFactory(testFactory) {
     ///     // Pass current factory to API expecting explicit parameter
     ///     let counter = createMetricWithExplicitFactory(
     ///         label: "requests",

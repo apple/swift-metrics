@@ -111,4 +111,17 @@ struct GlobalMetricsSystemTests {
         #expect(timer.values.count == 1, "expected number of entries to match")
         #expect(timer.values[0] > Int64(delay * 1_000_000_000), "expected delay to match")
     }
+
+    // MARK: - Task-local factory with global fallback
+
+    @Test func taskLocalTakesPriorityOverGlobal() throws {
+        let taskLocalMetrics = TestMetrics()
+        let counter = withMetricsFactory(taskLocalMetrics) {
+            Counter(label: "test.tl_priority")
+        }
+        counter.increment()
+
+        let testCounter = try taskLocalMetrics.expectCounter("test.tl_priority")
+        #expect(testCounter.values == [1])
+    }
 }

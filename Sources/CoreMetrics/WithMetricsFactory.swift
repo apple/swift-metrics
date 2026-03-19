@@ -23,7 +23,7 @@
 /// @Test
 /// func testRequestHandling() async {
 ///     let testFactory = TestMetrics()
-///     let service = await withMetricsFactory(changingFactory: testFactory) {
+///     let service = await withMetricsFactory(testFactory) {
 ///         RequestService()  // Creates metrics using testFactory
 ///     }
 ///
@@ -42,12 +42,12 @@
 ///     let factory1 = TestMetrics()
 ///     let factory2 = TestMetrics()
 ///
-///     async let result1 = withMetricsFactory(changingFactory: factory1) {
+///     async let result1 = withMetricsFactory(factory1) {
 ///         let service = RequestService()
 ///         return service.handleRequest()
 ///     }
 ///
-///     async let result2 = withMetricsFactory(changingFactory: factory2) {
+///     async let result2 = withMetricsFactory(factory2) {
 ///         let service = RequestService()
 ///         return service.handleRequest()
 ///     }
@@ -67,7 +67,7 @@
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
 @inlinable
 public func withMetricsFactory<Result, Failure: Error>(
-    changingFactory factory: MetricsFactory,
+    _ factory: MetricsFactory,
     _ operation: () throws(Failure) -> Result
 ) throws(Failure) -> Result {
     do {
@@ -82,7 +82,7 @@ public func withMetricsFactory<Result, Failure: Error>(
 
 /// Runs the given async closure with a factory bound to the task-local context.
 ///
-/// Async variant of `withMetricsFactory(changingFactory:_:)`. See that function for detailed documentation.
+/// Async variant of `withMetricsFactory(_:_:)`. See that function for detailed documentation.
 ///
 /// - Parameters:
 ///   - factory: The metrics factory to use for metric creation within the closure.
@@ -93,7 +93,7 @@ public func withMetricsFactory<Result, Failure: Error>(
 @inlinable
 nonisolated(nonsending)
     public func withMetricsFactory<Result, Failure: Error>(
-        changingFactory factory: MetricsFactory,
+        _ factory: MetricsFactory,
         _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
     ) async throws(Failure) -> Result
 {
@@ -110,7 +110,7 @@ nonisolated(nonsending)
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
 @inlinable
 public func withMetricsFactory<Result, Failure: Error>(
-    changingFactory factory: MetricsFactory,
+    _ factory: MetricsFactory,
     _ operation: () async throws(Failure) -> Result
 ) async throws(Failure) -> Result {
     do {
