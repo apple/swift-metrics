@@ -16,8 +16,8 @@
 ///
 /// `MappingMetricsFactory` wraps an existing ``MetricsFactory`` and applies a transformation to the label
 /// and dimensions of every metric before creating it in the upstream factory. This is useful for adding
-/// common dimensions (e.g. service name, environment), renaming labels, or filtering dimensions across
-/// all metrics created through this factory.
+/// common dimensions (for example, service name, environment), renaming labels, or filtering dimensions
+/// across all metrics created through this factory.
 ///
 /// ```swift
 /// let factory = upstream.withLabelAndDimensionsMapping { label, dimensions in
@@ -29,10 +29,11 @@
 /// ```
 ///
 /// - Note: The transformation only affects what the upstream factory receives. The metric object itself
-///   (e.g. `Counter.label`, `Counter.dimensions`) retains the original values passed at creation time.
-///   This means the label you see on the metric handle may differ from the label stored in the backend.
-///   When debugging, inspect the metric directly in the backend rather than relying on the metric
-///   handle's `.label` property.
+///   (for example, `Counter.label`, `Counter.dimensions`) retains the original values passed at creation
+///   time. This means the label you see on the metric handle may differ from the label stored in the
+///   backend. Keeping the original label on the metric object helps when debugging local code. This
+///   discrepancy only requires attention when correlating local metric handles with data in a remote
+///   backend.
 public struct MappingMetricsFactory<Upstream: MetricsFactory>: Sendable {
     private let upstream: Upstream
     private let transform: @Sendable (String, [(String, String)]) -> (String, [(String, String)])
