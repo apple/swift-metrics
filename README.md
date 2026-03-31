@@ -133,7 +133,7 @@ before forwarding it to the upstream factory:
 
 ```swift
 // Add a "service" dimension to all metrics created through this factory
-let factory = myMetricsImplementation.mappingLabelsAndDimensions { label, dimensions in
+let factory = myMetricsImplementation.withLabelAndDimensionsMapping { label, dimensions in
     (label, dimensions + [("service", "checkout")])
 }
 let counter = Counter(label: "request_count", dimensions: [("method", "GET")], factory: factory)
@@ -143,10 +143,10 @@ Transforms can also be chained:
 
 ```swift
 let factory = myMetricsImplementation
-    .mappingLabelsAndDimensions { label, dimensions in
+    .withLabelAndDimensionsMapping { label, dimensions in
         ("myapp.\(label)", dimensions)
     }
-    .mappingLabelsAndDimensions { label, dimensions in
+    .withLabelAndDimensionsMapping { label, dimensions in
         (label, dimensions + [("env", "production")])
     }
 ```

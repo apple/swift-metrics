@@ -20,7 +20,7 @@
 /// all metrics created through this factory.
 ///
 /// ```swift
-/// let factory = upstream.mappingLabelsAndDimensions { label, dimensions in
+/// let factory = upstream.withLabelAndDimensionsMapping { label, dimensions in
 ///     (label, dimensions + [("service", "my-service")])
 /// }
 /// let counter = Counter(label: "request_count", dimensions: [("method", "GET")], factory: factory)
@@ -31,6 +31,8 @@
 /// - Note: The transformation only affects what the upstream factory receives. The metric object itself
 ///   (e.g. `Counter.label`, `Counter.dimensions`) retains the original values passed at creation time.
 ///   This means the label you see on the metric handle may differ from the label stored in the backend.
+///   When debugging, inspect the metric directly in the backend rather than relying on the metric
+///   handle's `.label` property.
 public struct MappingMetricsFactory<Upstream: MetricsFactory>: Sendable {
     private let upstream: Upstream
     private let transform: @Sendable (String, [(String, String)]) -> (String, [(String, String)])
@@ -57,7 +59,7 @@ extension MetricsFactory {
     /// - parameters:
     ///   - transform: A closure that maps the label and dimensions to new values.
     /// - returns: A ``MappingMetricsFactory`` wrapping this factory with the given transformation.
-    public func mappingLabelsAndDimensions(
+    public func withLabelAndDimensionsMapping(
         _ transform:
             @escaping @Sendable (
                 String, [(String, String)]

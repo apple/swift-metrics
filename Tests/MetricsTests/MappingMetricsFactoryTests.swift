@@ -22,7 +22,7 @@ struct MappingMetricsFactoryTests {
 
     @Test func counter() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             ("prefix.\(label)", dimensions + [("env", "test")])
         }
         let counter = Counter(label: "requests", dimensions: [("method", "GET")], factory: mapped)
@@ -33,14 +33,15 @@ struct MappingMetricsFactoryTests {
 
     @Test func floatingPointCounter() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             ("prefix.\(label)", dimensions + [("env", "test")])
         }
         let counter = FloatingPointCounter(label: "bytes", dimensions: [("direction", "in")], factory: mapped)
         counter.increment(by: 1.5)
 
-        // FloatingPointCounter uses the default implementation which wraps a regular counter.
-        // Verify it reached the upstream factory with the transformed label.
+        // TestMetrics uses the default AccumulatingRoundingFloatingPointCounter, which delegates
+        // to a regular counter internally. The value 1.5 is accumulated and the integer part (1)
+        // is forwarded to the underlying counter.
         let testCounter = try upstream.expectCounter(
             "prefix.bytes",
             [("direction", "in"), ("env", "test")]
@@ -50,7 +51,7 @@ struct MappingMetricsFactoryTests {
 
     @Test func meter() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             ("prefix.\(label)", dimensions + [("env", "test")])
         }
         let meter = Meter(label: "temperature", dimensions: [("unit", "celsius")], factory: mapped)
@@ -61,7 +62,7 @@ struct MappingMetricsFactoryTests {
 
     @Test func recorder() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             ("prefix.\(label)", dimensions + [("env", "test")])
         }
         let recorder = Recorder(label: "latency", dimensions: [("path", "/api")], factory: mapped)
@@ -75,7 +76,7 @@ struct MappingMetricsFactoryTests {
 
     @Test func timer() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             ("prefix.\(label)", dimensions + [("env", "test")])
         }
         let timer = Timer(label: "duration", dimensions: [("op", "query")], factory: mapped)
@@ -88,7 +89,7 @@ struct MappingMetricsFactoryTests {
 
     @Test func destroyCounter() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             ("prefix.\(label)", dimensions)
         }
         let counter = Counter(label: "requests", factory: mapped)
@@ -98,9 +99,22 @@ struct MappingMetricsFactoryTests {
         #expect(upstream.counters.isEmpty)
     }
 
+    @Test func destroyFloatingPointCounter() throws {
+        let upstream = TestMetrics()
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
+            ("prefix.\(label)", dimensions)
+        }
+        let counter = FloatingPointCounter(label: "bytes", factory: mapped)
+        counter.increment(by: 1.5)
+        // The default AccumulatingRoundingFloatingPointCounter delegates to a regular counter.
+        #expect(upstream.counters.count == 1)
+        counter.destroy()
+        #expect(upstream.counters.isEmpty)
+    }
+
     @Test func destroyMeter() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             ("prefix.\(label)", dimensions)
         }
         let meter = Meter(label: "temperature", factory: mapped)
@@ -112,7 +126,7 @@ struct MappingMetricsFactoryTests {
 
     @Test func destroyRecorder() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             ("prefix.\(label)", dimensions)
         }
         let recorder = Recorder(label: "latency", factory: mapped)
@@ -124,7 +138,7 @@ struct MappingMetricsFactoryTests {
 
     @Test func destroyTimer() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             ("prefix.\(label)", dimensions)
         }
         let timer = Timer(label: "duration", factory: mapped)
@@ -140,10 +154,10 @@ struct MappingMetricsFactoryTests {
         let upstream = TestMetrics()
         let mapped =
             upstream
-            .mappingLabelsAndDimensions { label, dimensions in
+            .withLabelAndDimensionsMapping { label, dimensions in
                 ("app.\(label)", dimensions)
             }
-            .mappingLabelsAndDimensions { label, dimensions in
+            .withLabelAndDimensionsMapping { label, dimensions in
                 (label, dimensions + [("region", "us-east-1")])
             }
         let counter = Counter(label: "requests", factory: mapped)
@@ -156,7 +170,7 @@ struct MappingMetricsFactoryTests {
 
     @Test func identityTransform() throws {
         let upstream = TestMetrics()
-        let mapped = upstream.mappingLabelsAndDimensions { label, dimensions in
+        let mapped = upstream.withLabelAndDimensionsMapping { label, dimensions in
             (label, dimensions)
         }
         let counter = Counter(label: "requests", dimensions: [("method", "GET")], factory: mapped)
