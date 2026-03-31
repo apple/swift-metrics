@@ -51,7 +51,7 @@ Prometheus uses underscores, while others may use dots or other separators. With
 generic transform, each library would need to implement its own renaming support, duplicating the same logic across the
 ecosystem. A factory-level transform keeps renaming generic and reusable by any library.
 
-A core role of swift-metrics is to make it easy to connect libraries with metrics backends. Providing a standard
+A core role of `swift-metrics` is to make it easy to connect libraries with metrics backends. Providing a standard
 mapping factory in the library ensures that every library and backend in the ecosystem shares a single, well-tested
 implementation instead of each project rolling its own wrapper with subtly different semantics.
 
