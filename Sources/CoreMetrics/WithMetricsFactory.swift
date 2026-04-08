@@ -71,11 +71,11 @@ public func withMetricsFactory<Result, Failure: Error>(
     _ operation: () throws(Failure) -> Result
 ) throws(Failure) -> Result {
     do {
-        return try MetricsSystem.$_taskLocalFactory.withValue(factory, operation: operation)
+        return try MetricsSystem.withTaskLocalFactory(factory, operation: operation)
     } catch {
-        // `$_taskLocalFactory.withValue` uses `throws`, so the compiler cannot verify the error type at the
-        // boundary. However, the only errors it can propagate are those thrown by `operation`, which is declared
-        // `throws(Failure)`.
+        // `withTaskLocalFactory` uses `rethrows`, the underlying `$_taskLocalFactory.withValue` uses `throws`,
+        // so the compiler cannot verify the error type at the boundary. However, the only errors it can propagate
+        // are those thrown by `operation`, which is declared `throws(Failure)`.
         throw error as! Failure
     }
 }
@@ -140,11 +140,11 @@ public nonisolated(nonsending) func withMetricsFactory<Result, Failure: Error>(
     _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
 ) async throws(Failure) -> Result {
     do {
-        return try await MetricsSystem.$_taskLocalFactory.withValue(factory, operation: operation)
+        return try await MetricsSystem.withTaskLocalFactory(factory, operation: operation)
     } catch {
-        // `$_taskLocalFactory.withValue` uses `throws`, so the compiler cannot verify the error type at the
-        // boundary. However, the only errors it can propagate are those thrown by `operation`, which is declared
-        // `throws(Failure)`.
+        // `withTaskLocalFactory` uses `rethrows`, the underlying `$_taskLocalFactory.withValue` uses `throws`,
+        // so the compiler cannot verify the error type at the boundary. However, the only errors it can propagate
+        // are those thrown by `operation`, which is declared `throws(Failure)`.
         throw error as! Failure
     }
 }
@@ -156,11 +156,11 @@ public func withMetricsFactory<Result, Failure: Error>(
     _ operation: () async throws(Failure) -> Result
 ) async throws(Failure) -> Result {
     do {
-        return try await MetricsSystem.$_taskLocalFactory.withValue(factory, operation: operation)
+        return try await MetricsSystem.withTaskLocalFactory(factory, operation: operation)
     } catch {
-        // `$_taskLocalFactory.withValue` uses `throws`, so the compiler cannot verify the error type at the
-        // boundary. However, the only errors it can propagate are those thrown by `operation`, which is declared
-        // `throws(Failure)`.
+        // `withTaskLocalFactory` uses `rethrows`, the underlying `$_taskLocalFactory.withValue` uses `throws`,
+        // so the compiler cannot verify the error type at the boundary. However, the only errors it can propagate
+        // are those thrown by `operation`, which is declared `throws(Failure)`.
         throw error as! Failure
     }
 }
