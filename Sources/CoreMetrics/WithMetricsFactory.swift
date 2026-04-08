@@ -91,12 +91,10 @@ public func withMetricsFactory<Result, Failure: Error>(
 #if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
 @inlinable
-nonisolated(nonsending)
-    public func withMetricsFactory<Result, Failure: Error>(
-        _ factory: MetricsFactory,
-        _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
-    ) async throws(Failure) -> Result
-{
+public nonisolated(nonsending) func withMetricsFactory<Result, Failure: Error>(
+    _ factory: MetricsFactory,
+    _ operation: nonisolated(nonsending) () async throws(Failure) -> Result
+) async throws(Failure) -> Result {
     do {
         return try await MetricsSystem.withTaskLocalFactory(factory, operation: operation)
     } catch {
