@@ -895,7 +895,6 @@ public enum MetricsSystem {
     @TaskLocal
     internal static var _taskLocalFactory: MetricsFactory?
 
-    /// The current factory.
     ///
     /// Returns the currently used metrics factory.
     ///
