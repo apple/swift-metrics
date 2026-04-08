@@ -82,7 +82,51 @@ public func withMetricsFactory<Result, Failure: Error>(
 
 /// Runs the given async closure with a factory bound to the task-local context.
 ///
-/// Async variant of `withMetricsFactory(_:_:)`. See that function for detailed documentation.
+/// Metrics created within the closure will use the specified factory instead of the global factory. The factory
+/// is captured at metric creation time and used for the metric's entire lifetime.
+///
+/// ## Example: Testing with isolated factory
+///
+/// ```swift
+/// @Test
+/// func testRequestHandling() async {
+///     let testFactory = TestMetrics()
+///     let service = await withMetricsFactory(testFactory) {
+///         RequestService()  // Creates metrics using testFactory
+///     }
+///
+///     service.handleRequest()
+///
+///     let counter = try testFactory.expectCounter("requests")
+///     #expect(counter.values == [1])
+/// }
+/// ```
+///
+/// ## Example: Parallel tests with isolated factories
+///
+/// ```swift
+/// @Test
+/// func testParallelRequests() async {
+///     let factory1 = TestMetrics()
+///     let factory2 = TestMetrics()
+///
+///     async let result1 = withMetricsFactory(factory1) {
+///         let service = RequestService()
+///         return service.handleRequest()
+///     }
+///
+///     async let result2 = withMetricsFactory(factory2) {
+///         let service = RequestService()
+///         return service.handleRequest()
+///     }
+///
+///     _ = try await (result1, result2)
+///
+///     // Each factory has isolated metrics
+///     #expect(try factory1.expectCounter("requests").values == [1])
+///     #expect(try factory2.expectCounter("requests").values == [1])
+/// }
+/// ```
 ///
 /// - Parameters:
 ///   - factory: The metrics factory to use for metric creation within the closure.
