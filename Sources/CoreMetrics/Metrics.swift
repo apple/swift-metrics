@@ -895,7 +895,6 @@ public enum MetricsSystem {
     @usableFromInline
     internal static var _taskLocalFactory: MetricsFactory?
 
-    ///
     /// Returns the currently used metrics factory.
     ///
     /// If a task-local factory was bound by using ``withMetricsFactory(_:_:)`` this factory is returned, otherwise the globally bootstrapped factory will be returned.
