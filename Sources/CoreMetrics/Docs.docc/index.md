@@ -388,7 +388,7 @@ class SimpleMetricsLibrary: MetricsFactory {
 }
 ```
 
-## Related Libraries
+### Related libraries
 
 [swift-system-metrics](https://github.com/apple/swift-system-metrics) uses the Metrics API to emit system resource
 metrics such as CPU, memory, and file descriptors, providing insight into your application's resource consumption.

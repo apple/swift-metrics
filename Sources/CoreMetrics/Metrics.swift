@@ -897,7 +897,7 @@ public enum MetricsSystem {
 
     /// Returns the currently used metrics factory.
     ///
-    /// If a task-local factory was bound by using ``withMetricsFactory(_:_:)`` this factory is returned, otherwise the globally bootstrapped factory will be returned.
+    /// If a task-local factory was bound by using `withMetricsFactory(_:_:)` this factory is returned, otherwise the globally bootstrapped factory will be returned.
     /// This is useful for passing the current factory to APIs that expect an explicit factory parameter.
     ///
     /// ## Example: Passing current factory to explicit API
