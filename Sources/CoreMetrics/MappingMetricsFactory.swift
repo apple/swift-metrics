@@ -35,8 +35,8 @@
 ///   discrepancy only requires attention when correlating local metric handles with data in a remote
 ///   backend.
 public struct MappingMetricsFactory<Upstream: MetricsFactory>: Sendable {
-    private let upstream: Upstream
-    private let transform: @Sendable (String, [(String, String)]) -> (String, [(String, String)])
+    private var upstream: Upstream
+    private var transform: @Sendable (String, [(String, String)]) -> (String, [(String, String)])
 
     /// Create a new `MappingMetricsFactory`.
     ///
@@ -80,8 +80,8 @@ extension MappingMetricsFactory: MetricsFactory {
         label: String,
         dimensions: [(String, String)]
     ) -> CounterHandler {
-        let (newLabel, newDimensions) = transform(label, dimensions)
-        return upstream.makeCounter(label: newLabel, dimensions: newDimensions)
+        let (newLabel, newDimensions) = self.transform(label, dimensions)
+        return self.upstream.makeCounter(label: newLabel, dimensions: newDimensions)
     }
 
     /// Create a backing floating-point counter handler with transformed label and dimensions.
@@ -93,8 +93,8 @@ extension MappingMetricsFactory: MetricsFactory {
         label: String,
         dimensions: [(String, String)]
     ) -> FloatingPointCounterHandler {
-        let (newLabel, newDimensions) = transform(label, dimensions)
-        return upstream.makeFloatingPointCounter(label: newLabel, dimensions: newDimensions)
+        let (newLabel, newDimensions) = self.transform(label, dimensions)
+        return self.upstream.makeFloatingPointCounter(label: newLabel, dimensions: newDimensions)
     }
 
     /// Create a backing meter handler with transformed label and dimensions.
@@ -106,8 +106,8 @@ extension MappingMetricsFactory: MetricsFactory {
         label: String,
         dimensions: [(String, String)]
     ) -> MeterHandler {
-        let (newLabel, newDimensions) = transform(label, dimensions)
-        return upstream.makeMeter(label: newLabel, dimensions: newDimensions)
+        let (newLabel, newDimensions) = self.transform(label, dimensions)
+        return self.upstream.makeMeter(label: newLabel, dimensions: newDimensions)
     }
 
     /// Create a backing recorder handler with transformed label and dimensions.
@@ -121,8 +121,8 @@ extension MappingMetricsFactory: MetricsFactory {
         dimensions: [(String, String)],
         aggregate: Bool
     ) -> RecorderHandler {
-        let (newLabel, newDimensions) = transform(label, dimensions)
-        return upstream.makeRecorder(label: newLabel, dimensions: newDimensions, aggregate: aggregate)
+        let (newLabel, newDimensions) = self.transform(label, dimensions)
+        return self.upstream.makeRecorder(label: newLabel, dimensions: newDimensions, aggregate: aggregate)
     }
 
     /// Create a backing timer handler with transformed label and dimensions.
@@ -134,8 +134,8 @@ extension MappingMetricsFactory: MetricsFactory {
         label: String,
         dimensions: [(String, String)]
     ) -> TimerHandler {
-        let (newLabel, newDimensions) = transform(label, dimensions)
-        return upstream.makeTimer(label: newLabel, dimensions: newDimensions)
+        let (newLabel, newDimensions) = self.transform(label, dimensions)
+        return self.upstream.makeTimer(label: newLabel, dimensions: newDimensions)
     }
 
     /// Invoked when the corresponding counter's `destroy()` function is invoked.
@@ -143,7 +143,7 @@ extension MappingMetricsFactory: MetricsFactory {
     /// - parameters:
     ///   - handler: The handler to be destroyed.
     public func destroyCounter(_ handler: CounterHandler) {
-        upstream.destroyCounter(handler)
+        self.upstream.destroyCounter(handler)
     }
 
     /// Invoked when the corresponding meter's `destroy()` function is invoked.
@@ -151,7 +151,7 @@ extension MappingMetricsFactory: MetricsFactory {
     /// - parameters:
     ///   - handler: The handler to be destroyed.
     public func destroyMeter(_ handler: MeterHandler) {
-        upstream.destroyMeter(handler)
+        self.upstream.destroyMeter(handler)
     }
 
     /// Invoked when the corresponding floating-point counter's `destroy()` function is invoked.
@@ -159,7 +159,7 @@ extension MappingMetricsFactory: MetricsFactory {
     /// - parameters:
     ///   - handler: The handler to be destroyed.
     public func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler) {
-        upstream.destroyFloatingPointCounter(handler)
+        self.upstream.destroyFloatingPointCounter(handler)
     }
 
     /// Invoked when the corresponding recorder's `destroy()` function is invoked.
@@ -167,7 +167,7 @@ extension MappingMetricsFactory: MetricsFactory {
     /// - parameters:
     ///   - handler: The handler to be destroyed.
     public func destroyRecorder(_ handler: RecorderHandler) {
-        upstream.destroyRecorder(handler)
+        self.upstream.destroyRecorder(handler)
     }
 
     /// Invoked when the corresponding timer's `destroy()` function is invoked.
@@ -175,6 +175,6 @@ extension MappingMetricsFactory: MetricsFactory {
     /// - parameters:
     ///   - handler: The handler to be destroyed.
     public func destroyTimer(_ handler: TimerHandler) {
-        upstream.destroyTimer(handler)
+        self.upstream.destroyTimer(handler)
     }
 }
