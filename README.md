@@ -44,6 +44,74 @@ let counter = Counter(label: "com.example.BestExampleApp.numberOfRequests")
 counter.increment()
 ```
 
+### Correct metrics usage pattern
+
+Metrics objects should be created **once**, with pre-defined labels and dimensions known at initialization time, and
+reused for the lifetime of the component. Creating new metric objects on every request or operation is an antipattern:
+
+- It can lead to **unbounded memory allocation** if the labels or dimensions are unbounded (e.g. per-request IDs),
+  causing unbounded cardinality in the metrics backend.
+- It is **slow** and can become a bottleneck for fast parallel execution, since metric creation typically involves
+  factory synchronization and backend registration.
+
+```swift
+// ❌ Creating metrics on demand — unbounded cardinality when dimensions vary per-request
+func handleRequest(requestID: String) {
+    let counter = Counter(label: "requests", dimensions: [("request_id", requestID)])
+    counter.increment()
+}
+
+// ✅ Create metrics once during setup with fixed dimensions and reuse them
+struct RequestHandler {
+    let requestCounter = Counter(label: "requests")
+
+    func handleRequest(requestID: String) {
+        requestCounter.increment()
+    }
+}
+```
+
+When using a scoped factory override — such as `withMetricsFactory(_:)` for testing — the factory is only active for
+the duration of the closure. Any metrics created outside that scope will not see the overridden factory and will fall
+back to the global one. If no global factory has been bootstrapped, such metrics will fail to initialize, providing a
+safeguard against creating metrics outside of the designated setup scope.
+
+```swift
+struct UserService {
+    let counter: Counter
+
+    init() {
+        // ✅ Created during init — picks up the task-local factory
+        self.counter = Counter(label: "users.created")
+    }
+
+    func createUser(name: String) async throws -> User {
+        // ❌ Created on demand — task-local factory is no longer in scope,
+        //    falls back to global; fails if global is not bootstrapped
+        let onDemandCounter = Counter(label: "users.created.on_demand")
+        let user = User()
+        self.counter.increment()
+        return user
+    }
+}
+
+@Test
+func testUserCreation() async throws {
+    let testMetrics = TestMetrics()
+
+    // The task-local factory is only active inside this block
+    let service = withMetricsFactory(testMetrics) {
+        UserService()  // counter is created here — uses testMetrics
+    }
+
+    // service.createUser() runs outside the withMetricsFactory scope,
+    // so onDemandCounter inside it will NOT use testMetrics
+    _ = try await service.createUser(name: "Alice")
+
+    #expect(try testMetrics.expectCounter("users.created").values == [1])
+}
+```
+
 ### Selecting a metrics backend implementation (applications only)
 
 Note: If you are building a library, you don't need to concern yourself with this section. It is the end users of your library (the applications) who will decide which metrics backend to use. Libraries should never change the metrics implementation as that is something owned by the application.
