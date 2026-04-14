@@ -171,6 +171,33 @@ Group) to the "sandbox level" of the SSWG's incubation process.
 [discussion](https://forums.swift.org/t/discussion-server-metrics-api/) |
 [feedback](https://forums.swift.org/t/feedback-server-metrics-api/)
 
+### Transforming labels and dimensions
+
+When integrating metrics from multiple libraries or subsystems, you may want to add common dimensions
+(such as service name or environment) or rename labels consistently.
+``MappingMetricsFactory`` wraps an existing ``MetricsFactory`` and applies a transformation to the label
+and dimensions of every metric before forwarding it to the upstream factory:
+
+```swift
+// Add a "service" dimension to all metrics created through this factory
+let factory = myMetricsImplementation.withLabelAndDimensionsMapping { label, dimensions in
+    (label, dimensions + [("service", "checkout")])
+}
+let counter = Counter(label: "request_count", dimensions: [("method", "GET")], factory: factory)
+```
+
+Transforms can also be chained:
+
+```swift
+let factory = myMetricsImplementation
+    .withLabelAndDimensionsMapping { label, dimensions in
+        ("myapp.\(label)", dimensions)
+    }
+    .withLabelAndDimensionsMapping { label, dimensions in
+        (label, dimensions + [("env", "production")])
+    }
+```
+
 ### Implementing a metrics backend
 
 > Note: Unless you need to implement a custom metrics backend, everything in this section is likely not relevant, so feel
@@ -465,6 +492,7 @@ timer.recordMilliseconds(100)
 
 - ``MetricsFactory``
 - ``MetricsSystem``
+- ``MappingMetricsFactory``
 
 ### Supporting Types
 

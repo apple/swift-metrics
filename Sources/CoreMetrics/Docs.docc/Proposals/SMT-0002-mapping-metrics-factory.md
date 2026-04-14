@@ -6,7 +6,7 @@ A `MetricsFactory` wrapper that transforms labels and dimensions before forwardi
 
 - Proposal: SMT-0002
 - Author(s): [Vladimir Kukushkin](https://github.com/kukushechkin)
-- Status: **Ready for Implementation**
+- Status: **Approved**
 - Implementation:
   - [apple/swift-metrics#194](https://github.com/apple/swift-metrics/pull/194)
 - Related links:
