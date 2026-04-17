@@ -118,11 +118,11 @@ struct TaskLocalMetricsFactoryTests {
         let taskLocalMetrics = TestMetrics()
 
         withMetricsFactory(taskLocalMetrics) {
-            #expect(MetricsSystem.currentFactory as AnyObject === taskLocalMetrics)
+            #expect(MetricsSystem.factory as AnyObject === taskLocalMetrics)
         }
 
         // Outside the scope, the current factory should no longer be the task-local one
-        #expect(MetricsSystem.currentFactory as AnyObject !== taskLocalMetrics)
+        #expect(MetricsSystem.factory as AnyObject !== taskLocalMetrics)
     }
 
     @Test func nestedFactoriesUseInnermostScope() throws {
