@@ -1,5 +1,10 @@
 # SwiftMetrics
 
+[![](https://img.shields.io/badge/docc-read_documentation-blue)](https://swiftpackageindex.com/apple/swift-metrics/documentation)
+[![](https://img.shields.io/github/v/release/apple/swift-metrics)](https://github.com/apple/swift-metrics/releases)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fapple%2Fswift-metrics%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/apple/swift-metrics)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fapple%2Fswift-metrics%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/apple/swift-metrics)
+
 A Metrics API package for Swift.
 
 Almost all production server software needs to emit metrics information for observability. Because it's unlikely that all parties can agree on one specific metrics backend implementation, this API is designed to establish a standard that can be implemented by various metrics libraries which then post the metrics data to backends like [Prometheus](https://prometheus.io/), [Graphite](https://graphiteapp.org), publish over [statsd](https://github.com/statsd/statsd), write to disk, etc.
@@ -432,7 +437,7 @@ class SimpleMetricsLibrary: MetricsFactory {
 
 ## Security
 
-Please see [SECURITY.md](SECURITY.md) for details on the security process.
+Please see [the security process](https://github.com/apple/swift-metrics?tab=security-ov-file) for details on the security process.
 
 ## Getting involved
 

@@ -4,7 +4,6 @@
 .gitattributes
 .git-blame-ignore-revs
 .mailfilter
-.mailmap
 .spi.yml
 .swift-format
 .editorconfig
@@ -31,5 +30,4 @@ Makefile
 Dockerfile
 **/Dockerfile
 Snippets/*
-dev/git.commit.template
 .unacceptablelanguageignore
