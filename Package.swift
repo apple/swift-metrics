@@ -9,6 +9,9 @@ let package = Package(
         .library(name: "Metrics", targets: ["Metrics"]),
         .library(name: "MetricsTestKit", targets: ["MetricsTestKit"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.4.3")
+    ],
     targets: [
         .target(
             name: "CoreMetrics"
@@ -19,11 +22,18 @@ let package = Package(
         ),
         .target(
             name: "MetricsTestKit",
-            dependencies: ["Metrics"]
+            dependencies: [
+                "Metrics",
+                .product(name: "Logging", package: "swift-log"),
+            ]
         ),
         .testTarget(
             name: "MetricsTests",
-            dependencies: ["Metrics", "MetricsTestKit"]
+            dependencies: [
+                "Metrics",
+                "MetricsTestKit",
+                .product(name: "Logging", package: "swift-log"),
+            ]
         ),
     ]
 )

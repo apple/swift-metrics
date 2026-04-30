@@ -29,14 +29,16 @@ import CoreMetrics
 import Foundation
 import Metrics
 
-/// A metrics factory which allows you to inspect recorded metrics programmatically.
+/// A metrics factory which records all reported values in memory and lets you inspect them programmatically.
 ///
-/// This instance is only intended for tests of the Metrics API itself.
+/// Use this in tests to assert that a piece of code reports the metrics you expect — the various
+/// `expect*` helpers retrieve a typed handler so you can check its recorded values.
 ///
-/// Taken directly from `swift-cluster-memberships`'s own test target package, which
-/// adopts the `TestMetrics` from `swift-metrics`.
+/// To observe metric activity as it happens (in examples, demos, or local debugging), use
+/// ``LoggingMetricsFactory`` instead, optionally combined with this type via `MultiplexMetricsHandler`.
 ///
-/// Created Handlers will store Metrics until they are explicitly destroyed.
+/// Created handlers store all reported values until they are explicitly destroyed via the corresponding
+/// `destroy*` method, or cleared in bulk via ``reset()``.
 public final class TestMetrics: MetricsFactory {
     private let lock = NSLock()
 
