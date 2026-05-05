@@ -10,7 +10,7 @@ let package = Package(
         .library(name: "MetricsTestKit", targets: ["MetricsTestKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.4.3")
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.11.0")
     ],
     targets: [
         .target(

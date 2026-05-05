@@ -43,16 +43,10 @@ private struct CapturingLogHandler: LogHandler {
         set { self.metadata[key] = newValue }
     }
 
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
-        self.storage.append(Entry(level: level, message: message, metadata: metadata ?? [:]))
+    func log(event: LogEvent) {
+        self.storage.append(
+            Entry(level: event.level, message: event.message, metadata: event.metadata ?? [:])
+        )
     }
 
     private final class Storage: @unchecked Sendable {
