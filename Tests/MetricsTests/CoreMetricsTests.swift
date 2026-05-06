@@ -514,7 +514,7 @@ struct MetricsTests {
         #expect(testMeter.values.count == 0, "expected zero values to be ignored")
     }
 
-    @Test func mUX_Counter() throws {
+    @Test func muxCounter() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
         let multiplexFactory = MultiplexMetricsHandler(factories: factories)
@@ -536,7 +536,7 @@ struct MetricsTests {
         }
     }
 
-    @Test func mUX_Meter() throws {
+    @Test func muxMeter() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
         let multiplexFactory = MultiplexMetricsHandler(factories: factories)
@@ -553,7 +553,7 @@ struct MetricsTests {
         }
     }
 
-    @Test func mUX_Recorder() throws {
+    @Test func muxRecorder() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
         let multiplexFactory = MultiplexMetricsHandler(factories: factories)
@@ -570,7 +570,7 @@ struct MetricsTests {
         }
     }
 
-    @Test func mUX_Timer() throws {
+    @Test func muxTimer() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
         let multiplexFactory = MultiplexMetricsHandler(factories: factories)
@@ -589,6 +589,78 @@ struct MetricsTests {
                 timer?.valueInPreferredUnit(atIndex: 0) == Double(seconds) / 60.0,
                 "seconds should be returned as minutes"
             )
+        }
+    }
+
+    @Test func muxCounterDestroy() throws {
+        let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
+        let multiplexFactory = MultiplexMetricsHandler(factories: factories)
+        let counter = Counter(label: UUID().uuidString, factory: multiplexFactory)
+        counter.increment()
+        for factory in factories {
+            #expect(factory.counters.count == 1, "expected counter to be created in each underlying factory")
+        }
+        counter.destroy()
+        for factory in factories {
+            #expect(factory.counters.isEmpty, "expected underlying counter to be destroyed in each factory")
+        }
+    }
+
+    @Test func muxFloatingPointCounterDestroy() throws {
+        let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
+        let multiplexFactory = MultiplexMetricsHandler(factories: factories)
+        let counter = FloatingPointCounter(label: UUID().uuidString, factory: multiplexFactory)
+        counter.increment(by: 1.5)
+        // The default FloatingPointCounter wraps an underlying Counter; the underlying counter
+        // is what ends up registered with each TestMetrics factory.
+        for factory in factories {
+            #expect(factory.counters.count == 1, "expected backing counter to be created in each underlying factory")
+        }
+        counter.destroy()
+        for factory in factories {
+            #expect(factory.counters.isEmpty, "expected backing counter to be destroyed in each factory")
+        }
+    }
+
+    @Test func muxMeterDestroy() throws {
+        let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
+        let multiplexFactory = MultiplexMetricsHandler(factories: factories)
+        let meter = Meter(label: UUID().uuidString, factory: multiplexFactory)
+        meter.set(1.0)
+        for factory in factories {
+            #expect(factory.meters.count == 1, "expected meter to be created in each underlying factory")
+        }
+        meter.destroy()
+        for factory in factories {
+            #expect(factory.meters.isEmpty, "expected underlying meter to be destroyed in each factory")
+        }
+    }
+
+    @Test func muxRecorderDestroy() throws {
+        let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
+        let multiplexFactory = MultiplexMetricsHandler(factories: factories)
+        let recorder = Recorder(label: UUID().uuidString, factory: multiplexFactory)
+        recorder.record(1.0)
+        for factory in factories {
+            #expect(factory.recorders.count == 1, "expected recorder to be created in each underlying factory")
+        }
+        recorder.destroy()
+        for factory in factories {
+            #expect(factory.recorders.isEmpty, "expected underlying recorder to be destroyed in each factory")
+        }
+    }
+
+    @Test func muxTimerDestroy() throws {
+        let factories = [TestMetrics(), TestMetrics(), TestMetrics()]
+        let multiplexFactory = MultiplexMetricsHandler(factories: factories)
+        let timer = Timer(label: UUID().uuidString, factory: multiplexFactory)
+        timer.recordNanoseconds(1)
+        for factory in factories {
+            #expect(factory.timers.count == 1, "expected timer to be created in each underlying factory")
+        }
+        timer.destroy()
+        for factory in factories {
+            #expect(factory.timers.isEmpty, "expected underlying timer to be destroyed in each factory")
         }
     }
 

@@ -1530,40 +1530,45 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     /// Signal the underlying metrics library that this counter will never be updated again.
     /// - Parameter handler: The counter handler to signal.
     public func destroyCounter(_ handler: CounterHandler) {
-        for factory in self.factories {
-            factory.destroyCounter(handler)
+        guard let mux = handler as? MuxCounter else { return }
+        for (factory, counter) in zip(self.factories, mux.counters) {
+            factory.destroyCounter(counter)
         }
     }
 
     /// Signal the underlying metrics library that this floating point counter will never be updated again.
     /// - Parameter handler: The floating point counter handler to signal.
     public func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler) {
-        for factory in self.factories {
-            factory.destroyFloatingPointCounter(handler)
+        guard let mux = handler as? MuxFloatingPointCounter else { return }
+        for (factory, counter) in zip(self.factories, mux.counters) {
+            factory.destroyFloatingPointCounter(counter)
         }
     }
 
     /// Signal the underlying metrics library that this meter will never be updated again.
     /// - Parameter handler: The meter handler to signal.
     public func destroyMeter(_ handler: MeterHandler) {
-        for factory in self.factories {
-            factory.destroyMeter(handler)
+        guard let mux = handler as? MuxMeter else { return }
+        for (factory, meter) in zip(self.factories, mux.meters) {
+            factory.destroyMeter(meter)
         }
     }
 
     /// Signal the underlying metrics library that this recorder will never be updated again.
     /// - Parameter handler: The recorder handler to signal.
     public func destroyRecorder(_ handler: RecorderHandler) {
-        for factory in self.factories {
-            factory.destroyRecorder(handler)
+        guard let mux = handler as? MuxRecorder else { return }
+        for (factory, recorder) in zip(self.factories, mux.recorders) {
+            factory.destroyRecorder(recorder)
         }
     }
 
     /// Signal the underlying metrics library that this timer will never be updated again.
     /// - Parameter handler: The timer handler to signal.
     public func destroyTimer(_ handler: TimerHandler) {
-        for factory in self.factories {
-            factory.destroyTimer(handler)
+        guard let mux = handler as? MuxTimer else { return }
+        for (factory, timer) in zip(self.factories, mux.timers) {
+            factory.destroyTimer(timer)
         }
     }
 
