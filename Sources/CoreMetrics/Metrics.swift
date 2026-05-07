@@ -466,7 +466,7 @@ public class Recorder {
     public let label: String
     /// The dimensions for the recorder, as `(name, value)` tuples.
     public let dimensions: [(String, String)]
-    /// A Boolean value that indicates whether to aggregate values.
+    /// Whether the backend summarizes recorded values as a distribution.
     public let aggregate: Bool
 
     /// Alternative way to create a new recorder, while providing an explicit recorder handler.
@@ -633,7 +633,7 @@ public struct TimeUnit: Equatable, Sendable {
 /// A timer collects observations that represents durations within a time window.
 ///
 /// It is similar to a `Recorder` but specialized for values that represent durations, such as request durations.
-/// A time provides  aggregated information about the data sample, such as min, max, and various quantiles.
+/// A timer provides aggregated information about the data sample, such as min, max, and various quantiles.
 ///
 /// This is the user-facing Timer API.
 /// Its behavior depends on the ``TimerHandler`` implementation.
@@ -1082,7 +1082,7 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// - parameters:
     ///   - label: The label for the `RecorderHandler`.
     ///   - dimensions: The dimensions for the `RecorderHandler`, as `(name, value)` tuples.
-    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
+    ///   - aggregate: Whether the returned handler should summarize recorded values as a distribution.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
 
     /// Create a backing timer handler.
@@ -1386,6 +1386,17 @@ public protocol FloatingPointCounterHandler: AnyObject, _SwiftMetricsSendablePro
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the SwiftMetrics API, please refer to the documentation of `Recorder`.
 ///
+/// The `aggregate` argument to ``MetricsFactory/makeRecorder(label:dimensions:aggregate:)``
+/// selects one of two modes for the handler:
+///
+/// - **Aggregating** (`aggregate: true`): Each call to `record(_:)` contributes a distribution
+/// that the backend summarizes. This is the default ``Recorder`` behavior.
+/// - **Non-aggregating** (`aggregate: false`): Each call to `record(_:)` replaces the previous value.
+///   This is the behavior ``Gauge`` expects.
+///
+/// A single handler instance is bound to one mode — the flag is consumed by the factory
+/// when the handler is created, not on each call.
+///
 /// ### Implementation requirements
 ///
 /// To implement your own `RecorderHandler` you should respect a few requirements that are necessary so applications work
@@ -1530,40 +1541,45 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     /// Signal the underlying metrics library that this counter will never be updated again.
     /// - Parameter handler: The counter handler to signal.
     public func destroyCounter(_ handler: CounterHandler) {
-        for factory in self.factories {
-            factory.destroyCounter(handler)
+        guard let mux = handler as? MuxCounter else { return }
+        for (factory, counter) in zip(self.factories, mux.counters) {
+            factory.destroyCounter(counter)
         }
     }
 
     /// Signal the underlying metrics library that this floating point counter will never be updated again.
     /// - Parameter handler: The floating point counter handler to signal.
     public func destroyFloatingPointCounter(_ handler: FloatingPointCounterHandler) {
-        for factory in self.factories {
-            factory.destroyFloatingPointCounter(handler)
+        guard let mux = handler as? MuxFloatingPointCounter else { return }
+        for (factory, counter) in zip(self.factories, mux.counters) {
+            factory.destroyFloatingPointCounter(counter)
         }
     }
 
     /// Signal the underlying metrics library that this meter will never be updated again.
     /// - Parameter handler: The meter handler to signal.
     public func destroyMeter(_ handler: MeterHandler) {
-        for factory in self.factories {
-            factory.destroyMeter(handler)
+        guard let mux = handler as? MuxMeter else { return }
+        for (factory, meter) in zip(self.factories, mux.meters) {
+            factory.destroyMeter(meter)
         }
     }
 
     /// Signal the underlying metrics library that this recorder will never be updated again.
     /// - Parameter handler: The recorder handler to signal.
     public func destroyRecorder(_ handler: RecorderHandler) {
-        for factory in self.factories {
-            factory.destroyRecorder(handler)
+        guard let mux = handler as? MuxRecorder else { return }
+        for (factory, recorder) in zip(self.factories, mux.recorders) {
+            factory.destroyRecorder(recorder)
         }
     }
 
     /// Signal the underlying metrics library that this timer will never be updated again.
     /// - Parameter handler: The timer handler to signal.
     public func destroyTimer(_ handler: TimerHandler) {
-        for factory in self.factories {
-            factory.destroyTimer(handler)
+        guard let mux = handler as? MuxTimer else { return }
+        for (factory, timer) in zip(self.factories, mux.timers) {
+            factory.destroyTimer(timer)
         }
     }
 
