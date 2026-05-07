@@ -466,7 +466,7 @@ public class Recorder {
     public let label: String
     /// The dimensions for the recorder.
     public let dimensions: [(String, String)]
-    /// A Boolean value that indicates whether to aggregate values.
+    /// Whether the backend summarizes recorded values as a distribution.
     public let aggregate: Bool
 
     /// Alternative way to create a new recorder, while providing an explicit recorder handler.
@@ -633,7 +633,7 @@ public struct TimeUnit: Equatable, Sendable {
 /// A timer collects observations that represents durations within a time window.
 ///
 /// It is similar to a `Recorder` but specialized for values that represent durations, such as request durations.
-/// A time provides  aggregated information about the data sample, such as min, max, and various quantiles.
+/// A timer provides aggregated information about the data sample, such as min, max, and various quantiles.
 ///
 /// This is the user-facing Timer API.
 /// Its behavior depends on the ``TimerHandler`` implementation.
@@ -1082,7 +1082,7 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     /// - parameters:
     ///   - label: The label for the `RecorderHandler`.
     ///   - dimensions: The dimensions for the `RecorderHandler`.
-    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
+    ///   - aggregate: Whether the returned handler should summarize recorded values as a distribution.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
 
     /// Create a backing timer handler.
@@ -1385,6 +1385,17 @@ public protocol FloatingPointCounterHandler: AnyObject, _SwiftMetricsSendablePro
 ///
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the SwiftMetrics API, please refer to the documentation of `Recorder`.
+///
+/// A handler operates in one of two modes, selected by the `aggregate` argument to
+/// ``MetricsFactory/makeRecorder(label:dimensions:aggregate:)``:
+///
+/// - **Aggregating** (`aggregate: true`): each call to `record(_:)` contributes a sample to a
+///   distribution that the backend summarizes. This is the default ``Recorder`` behavior.
+/// - **Non-aggregating** (`aggregate: false`): each call to `record(_:)` replaces the previous
+///   value. This is the behavior ``Gauge`` expects.
+///
+/// A single handler instance is bound to one mode — the flag is consumed by the factory
+/// when the handler is created, not on each call.
 ///
 /// ### Implementation requirements
 ///
