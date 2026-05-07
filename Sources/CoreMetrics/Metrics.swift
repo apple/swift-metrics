@@ -1389,8 +1389,8 @@ public protocol FloatingPointCounterHandler: AnyObject, _SwiftMetricsSendablePro
  /// The `aggregate` argument to ``MetricsFactory/makeRecorder(label:dimensions:aggregate:)``
   /// selects one of two modes for the handler:
 ///
-/// - **Aggregating** (`aggregate: true`): each call to `record(_:)` contributes a sample to a
-///   distribution that the backend summarizes. This is the default ``Recorder`` behavior.
+/// - **Aggregating** (`aggregate: true`): Each call to `record(_:)` contributes a distribution 
+/// that the backend summarizes. This is the default ``Recorder`` behavior.
 /// - **Non-aggregating** (`aggregate: false`): Each call to `record(_:)` replaces the previous value.
 ///   This is the behavior ``Gauge`` expects.
 ///
