@@ -75,7 +75,7 @@ extension MappingMetricsFactory: MetricsFactory {
     ///
     /// - parameters:
     ///   - label: The label for the `CounterHandler`.
-    ///   - dimensions: The dimensions for the `CounterHandler`.
+    ///   - dimensions: The dimensions for the `CounterHandler`, as `(name, value)` tuples.
     public func makeCounter(
         label: String,
         dimensions: [(String, String)]
@@ -88,7 +88,7 @@ extension MappingMetricsFactory: MetricsFactory {
     ///
     /// - parameters:
     ///   - label: The label for the `FloatingPointCounterHandler`.
-    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`, as `(name, value)` tuples.
     public func makeFloatingPointCounter(
         label: String,
         dimensions: [(String, String)]
@@ -101,7 +101,7 @@ extension MappingMetricsFactory: MetricsFactory {
     ///
     /// - parameters:
     ///   - label: The label for the `MeterHandler`.
-    ///   - dimensions: The dimensions for the `MeterHandler`.
+    ///   - dimensions: The dimensions for the `MeterHandler`, as `(name, value)` tuples.
     public func makeMeter(
         label: String,
         dimensions: [(String, String)]
@@ -114,7 +114,7 @@ extension MappingMetricsFactory: MetricsFactory {
     ///
     /// - parameters:
     ///   - label: The label for the `RecorderHandler`.
-    ///   - dimensions: The dimensions for the `RecorderHandler`.
+    ///   - dimensions: The dimensions for the `RecorderHandler`, as `(name, value)` tuples.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     public func makeRecorder(
         label: String,
@@ -129,7 +129,7 @@ extension MappingMetricsFactory: MetricsFactory {
     ///
     /// - parameters:
     ///   - label: The label for the `TimerHandler`.
-    ///   - dimensions: The dimensions for the `TimerHandler`.
+    ///   - dimensions: The dimensions for the `TimerHandler`, as `(name, value)` tuples.
     public func makeTimer(
         label: String,
         dimensions: [(String, String)]

@@ -45,7 +45,7 @@ public final class Counter {
     package let _factory: MetricsFactory
     /// The label for the counter.
     public let label: String
-    /// The dimensions for the counter.
+    /// The dimensions for the counter, as `(name, value)` tuples.
     public let dimensions: [(String, String)]
 
     /// Alternative way to create a new counter with an explicit counter handler.
@@ -54,7 +54,7 @@ public final class Counter {
     ///
     /// - parameters:
     ///   - label: The label for the `Counter`.
-    ///   - dimensions: The dimensions for the `Counter`.
+    ///   - dimensions: The dimensions for the `Counter`, as `(name, value)` tuples.
     ///   - handler: The custom backend.
     ///   - factory: The custom metrics factory.
     public init(label: String, dimensions: [(String, String)], handler: CounterHandler, factory: MetricsFactory) {
@@ -70,7 +70,7 @@ public final class Counter {
     ///
     /// - parameters:
     ///   - label: The label for the `Counter`.
-    ///   - dimensions: The dimensions for the `Counter`.
+    ///   - dimensions: The dimensions for the `Counter`, as `(name, value)` tuples.
     ///   - handler: The custom backend, created by the global metrics factory.
     public convenience init(label: String, dimensions: [(String, String)], handler: CounterHandler) {
         self.init(
@@ -108,7 +108,7 @@ extension Counter {
     ///
     /// - parameters:
     ///   - label: The label for the `Counter`.
-    ///   - dimensions: The dimensions for the `Counter`.
+    ///   - dimensions: The dimensions for the `Counter`, as `(name, value)` tuples.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
     }
@@ -117,7 +117,7 @@ extension Counter {
     ///
     /// - parameters:
     ///   - label: The label for the `Counter`.
-    ///   - dimensions: The dimensions for the `Counter`.
+    ///   - dimensions: The dimensions for the `Counter`, as `(name, value)` tuples.
     ///   - factory: The custom metrics factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         let handler = factory.makeCounter(label: label, dimensions: dimensions)
@@ -171,7 +171,7 @@ public final class FloatingPointCounter {
     package let _factory: MetricsFactory
     /// The label for the floating point counter.
     public let label: String
-    /// The dimensions for the floating point counter.
+    /// The dimensions for the floating point counter, as `(name, value)` tuples.
     public let dimensions: [(String, String)]
 
     /// Alternative way to create a new floating-point counter, while providing an explicit floating-point counter handler.
@@ -201,7 +201,7 @@ public final class FloatingPointCounter {
     ///
     /// - parameters:
     ///   - label: The label for the `FloatingPointCounter`.
-    ///   - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounter`, as `(name, value)` tuples.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: FloatingPointCounterHandler) {
         self.init(
@@ -239,7 +239,7 @@ extension FloatingPointCounter {
     ///
     /// - parameters:
     ///   - label: The label for the `FloatingPointCounter`.
-    ///   - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounter`, as `(name, value)` tuples.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
     }
@@ -248,7 +248,7 @@ extension FloatingPointCounter {
     ///
     /// - parameters:
     ///   - label: The label for the `FloatingPointCounter`.
-    ///   - dimensions: The dimensions for the `FloatingPointCounter`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounter`, as `(name, value)` tuples.
     ///   - factory: The custom metrics factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         let handler = factory.makeFloatingPointCounter(label: label, dimensions: dimensions)
@@ -287,7 +287,7 @@ public final class Gauge: Recorder, @unchecked Sendable {
     ///
     /// - parameters:
     ///   - label: The label for the `Gauge`.
-    ///   - dimensions: The dimensions for the `Gauge`.
+    ///   - dimensions: The dimensions for the `Gauge`, as `(name, value)` tuples.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, aggregate: false)
     }
@@ -296,7 +296,7 @@ public final class Gauge: Recorder, @unchecked Sendable {
     ///
     /// - parameters:
     ///   - label: The label for the `Gauge`.
-    ///   - dimensions: The dimensions for the `Gauge`.
+    ///   - dimensions: The dimensions for the `Gauge`, as `(name, value)` tuples.
     ///   - factory: The custom metrics factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         self.init(label: label, dimensions: dimensions, aggregate: false, factory: factory)
@@ -323,7 +323,7 @@ public final class Meter {
     package let _factory: MetricsFactory
     /// The label for the meter.
     public let label: String
-    /// The dimensions for the meter.
+    /// The dimensions for the meter, as `(name, value)` tuples.
     public let dimensions: [(String, String)]
 
     /// Alternative way to create a new meter, while providing an explicit meter handler.
@@ -332,7 +332,7 @@ public final class Meter {
     ///
     /// - parameters:
     ///   - label: The label for the `Recorder`.
-    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`, as `(name, value)` tuples.
     ///   - handler: The custom backend.
     ///   - factory: The custom metrics factory.
     public init(label: String, dimensions: [(String, String)], handler: MeterHandler, factory: MetricsFactory) {
@@ -348,7 +348,7 @@ public final class Meter {
     ///
     /// - parameters:
     ///   - label: The label for the `Recorder`.
-    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`, as `(name, value)` tuples.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: MeterHandler) {
         self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
@@ -408,7 +408,7 @@ extension Meter {
     ///
     /// - parameters:
     ///   - label: The label for the `Meter`.
-    ///   - dimensions: The dimensions for the `Meter`.
+    ///   - dimensions: The dimensions for the `Meter`, as `(name, value)` tuples.
     ///   - factory: The custom metrics factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         let handler = factory.makeMeter(label: label, dimensions: dimensions)
@@ -419,7 +419,7 @@ extension Meter {
     ///
     /// - parameters:
     ///   - label: The label for the `Meter`.
-    ///   - dimensions: The dimensions for the `Meter`.
+    ///   - dimensions: The dimensions for the `Meter`, as `(name, value)` tuples.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
     }
@@ -464,7 +464,7 @@ public class Recorder {
     package let _factory: MetricsFactory
     /// The label for the recorder.
     public let label: String
-    /// The dimensions for the recorder.
+    /// The dimensions for the recorder, as `(name, value)` tuples.
     public let dimensions: [(String, String)]
     /// A Boolean value that indicates whether to aggregate values.
     public let aggregate: Bool
@@ -475,7 +475,7 @@ public class Recorder {
     ///
     /// - parameters:
     ///   - label: The label for the `Recorder`.
-    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`, as `(name, value)` tuples.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     ///   - handler: The custom backend.
     ///   - factory: The custom metrics factory.
@@ -499,7 +499,7 @@ public class Recorder {
     ///
     /// - parameters:
     ///   - label: The label for the `Recorder`.
-    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`, as `(name, value)` tuples.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], aggregate: Bool, handler: RecorderHandler) {
@@ -542,7 +542,7 @@ extension Recorder {
     ///
     /// - parameters:
     ///   - label: The label for the `Recorder`.
-    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`, as `(name, value)` tuples.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     public convenience init(label: String, dimensions: [(String, String)] = [], aggregate: Bool = true) {
         self.init(label: label, dimensions: dimensions, aggregate: aggregate, factory: MetricsSystem.factory)
@@ -552,7 +552,7 @@ extension Recorder {
     ///
     /// - parameters:
     ///   - label: The label for the `Recorder`.
-    ///   - dimensions: The dimensions for the `Recorder`.
+    ///   - dimensions: The dimensions for the `Recorder`, as `(name, value)` tuples.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     ///   - factory: The custom metrics factory.
     public convenience init(
@@ -654,7 +654,7 @@ public final class Timer {
     package let _factory: MetricsFactory
     /// The label for the timer.
     public let label: String
-    /// The dimensions for the timer.
+    /// The dimensions for the timer, as `(name, value)` tuples.
     public let dimensions: [(String, String)]
 
     /// Alternative way to create a new timer, while providing an explicit timer handler.
@@ -663,7 +663,7 @@ public final class Timer {
     ///
     /// - parameters:
     ///   - label: The label for the `Timer`.
-    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`, as `(name, value)` tuples.
     ///   - handler: The custom backend.
     ///   - factory: The custom factory.
     public init(label: String, dimensions: [(String, String)], handler: TimerHandler, factory: MetricsFactory) {
@@ -679,7 +679,7 @@ public final class Timer {
     ///
     /// - parameters:
     ///   - label: The label for the `Timer`.
-    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`, as `(name, value)` tuples.
     ///   - handler: The custom backend.
     public convenience init(label: String, dimensions: [(String, String)], handler: TimerHandler) {
         self.init(label: label, dimensions: dimensions, handler: handler, factory: MetricsSystem.factory)
@@ -788,7 +788,7 @@ extension Timer {
     ///
     /// - parameters:
     ///   - label: The label for the `Timer`.
-    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`, as `(name, value)` tuples.
     ///   - factory: The custom factory.
     public convenience init(label: String, dimensions: [(String, String)] = [], factory: MetricsFactory) {
         let handler = factory.makeTimer(label: label, dimensions: dimensions)
@@ -799,7 +799,7 @@ extension Timer {
     ///
     /// - parameters:
     ///   - label: The label for the `Timer`.
-    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`, as `(name, value)` tuples.
     public convenience init(label: String, dimensions: [(String, String)] = []) {
         self.init(label: label, dimensions: dimensions, factory: MetricsSystem.factory)
     }
@@ -808,7 +808,7 @@ extension Timer {
     ///
     /// - parameters:
     ///   - label: The label for the `Timer`.
-    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`, as `(name, value)` tuples.
     ///   - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     ///   - factory: The custom factory.
     public convenience init(
@@ -826,7 +826,7 @@ extension Timer {
     ///
     /// - parameters:
     ///   - label: The label for the `Timer`.
-    ///   - dimensions: The dimensions for the `Timer`.
+    ///   - dimensions: The dimensions for the `Timer`, as `(name, value)` tuples.
     ///   - displayUnit: A hint to the backend responsible for presenting the data of the preferred display unit. This is not guaranteed to be supported by all backends.
     public convenience init(
         label: String,
@@ -1060,28 +1060,28 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     ///
     /// - parameters:
     ///   - label: The label for the `CounterHandler`.
-    ///   - dimensions: The dimensions for the `CounterHandler`.
+    ///   - dimensions: The dimensions for the `CounterHandler`, as `(name, value)` tuples.
     func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler
 
     /// Create a backing floating-point handler.
     ///
     /// - parameters:
     ///   - label: The label for the `FloatingPointCounterHandler`.
-    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`, as `(name, value)` tuples.
     func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler
 
     /// Create a backing meter handler.
     ///
     /// - parameters:
     ///   - label: The label for the `MeterHandler`.
-    ///   - dimensions: The dimensions for the `MeterHandler`.
+    ///   - dimensions: The dimensions for the `MeterHandler`, as `(name, value)` tuples.
     func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler
 
     /// Create a backing recorder handler.
     ///
     /// - parameters:
     ///   - label: The label for the `RecorderHandler`.
-    ///   - dimensions: The dimensions for the `RecorderHandler`.
+    ///   - dimensions: The dimensions for the `RecorderHandler`, as `(name, value)` tuples.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler
 
@@ -1089,7 +1089,7 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     ///
     /// - parameters:
     ///   - label: The label for the `TimerHandler`.
-    ///   - dimensions: The dimensions for the `TimerHandler`.
+    ///   - dimensions: The dimensions for the `TimerHandler`, as `(name, value)` tuples.
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
 
     /// Invoked when the corresponding counter's `destroy()` function is invoked.
@@ -1292,7 +1292,7 @@ extension MetricsFactory {
     ///
     /// - parameters:
     ///   - label: The label for the `FloatingPointCounterHandler`.
-    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`, as `(name, value)` tuples.
     public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
         AccumulatingRoundingFloatingPointCounter(label: label, dimensions: dimensions, factory: self)
     }
@@ -1317,7 +1317,7 @@ extension MetricsFactory {
     ///
     /// - parameters:
     ///   - label: The label for the `MeterHandler`.
-    ///   - dimensions: The dimensions for the `MeterHandler`.
+    ///   - dimensions: The dimensions for the `MeterHandler`, as `(name, value)` tuples.
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
         AccumulatingMeter(label: label, dimensions: dimensions, factory: self)
     }
@@ -1489,7 +1489,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     /// Creates a new counter handler.
     /// - Parameters:
     ///   - label: The label for the `CounterHandler`.
-    ///   - dimensions: The dimensions for the `CounterHandler`.
+    ///   - dimensions: The dimensions for the `CounterHandler`, as `(name, value)` tuples.
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         MuxCounter(factories: self.factories, label: label, dimensions: dimensions)
     }
@@ -1497,7 +1497,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     /// Creates a new floating point counter handler.
     /// - Parameters:
     ///   - label: The label for the `FloatingPointCounterHandler`.
-    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`.
+    ///   - dimensions: The dimensions for the `FloatingPointCounterHandler`, as `(name, value)` tuples.
     public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> FloatingPointCounterHandler {
         MuxFloatingPointCounter(factories: self.factories, label: label, dimensions: dimensions)
     }
@@ -1505,7 +1505,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     /// Creates a new meter handler.
     /// - Parameters:
     ///   - label: The label for the `MeterHandler`.
-    ///   - dimensions: The dimensions for the `MeterHandler`.
+    ///   - dimensions: The dimensions for the `MeterHandler`, as `(name, value)` tuples.
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
         MuxMeter(factories: self.factories, label: label, dimensions: dimensions)
     }
@@ -1513,7 +1513,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     /// Creates a new recorder handler.
     /// - Parameters:
     ///   - label: The label for the `RecorderHandler`.
-    ///   - dimensions: The dimensions for the `RecorderHandler`.
+    ///   - dimensions: The dimensions for the `RecorderHandler`, as `(name, value)` tuples.
     ///   - aggregate: A Boolean value that indicates whether to aggregate values..
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         MuxRecorder(factories: self.factories, label: label, dimensions: dimensions, aggregate: aggregate)
@@ -1522,7 +1522,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     /// Creates a new timer handler.
     /// - Parameters:
     ///   - label: The label for the `TimerHandler`.
-    ///   - dimensions: The dimensions for the `TimerHandler`.
+    ///   - dimensions: The dimensions for the `TimerHandler`, as `(name, value)` tuples.
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
         MuxTimer(factories: self.factories, label: label, dimensions: dimensions)
     }
