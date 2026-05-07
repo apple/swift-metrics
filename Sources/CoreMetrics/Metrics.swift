@@ -1386,10 +1386,10 @@ public protocol FloatingPointCounterHandler: AnyObject, _SwiftMetricsSendablePro
 /// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
 /// To use the SwiftMetrics API, please refer to the documentation of `Recorder`.
 ///
- /// The `aggregate` argument to ``MetricsFactory/makeRecorder(label:dimensions:aggregate:)``
-  /// selects one of two modes for the handler:
+/// The `aggregate` argument to ``MetricsFactory/makeRecorder(label:dimensions:aggregate:)``
+/// selects one of two modes for the handler:
 ///
-/// - **Aggregating** (`aggregate: true`): Each call to `record(_:)` contributes a distribution 
+/// - **Aggregating** (`aggregate: true`): Each call to `record(_:)` contributes a distribution
 /// that the backend summarizes. This is the default ``Recorder`` behavior.
 /// - **Non-aggregating** (`aggregate: false`): Each call to `record(_:)` replaces the previous value.
 ///   This is the behavior ``Gauge`` expects.
