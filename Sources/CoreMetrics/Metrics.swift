@@ -1525,7 +1525,7 @@ public final class MultiplexMetricsHandler: MetricsFactory {
     /// - Parameters:
     ///   - label: The label for the `RecorderHandler`.
     ///   - dimensions: The dimensions for the `RecorderHandler`, as `(name, value)` tuples.
-    ///   - aggregate: A Boolean value that indicates whether to aggregate values..
+    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         MuxRecorder(factories: self.factories, label: label, dimensions: dimensions, aggregate: aggregate)
     }

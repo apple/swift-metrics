@@ -32,7 +32,7 @@ extension Timer {
     ///
     /// - parameters:
     ///     - label: The label for the Timer.
-    ///     - dimensions: The dimensions for the Timer, as `(name, value)` tuples.
+    ///     - dimensions: The dimensions for the `Timer`, as `(name, value)` tuples.
     ///     - body: Closure to run & record.
     @inlinable
     public static func measure<T>(
@@ -48,7 +48,7 @@ extension Timer {
     ///
     /// - parameters:
     ///     - label: The label for the Timer.
-    ///     - dimensions: The dimensions for the Timer, as `(name, value)` tuples.
+    ///     - dimensions: The dimensions for the `Timer`, as `(name, value)` tuples.
     ///     - factory: The custom metrics factory
     ///     - body: Closure to run & record.
     @inlinable
