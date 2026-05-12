@@ -8,11 +8,11 @@ This module provides two `MetricsFactory` implementations, each focused on a dif
 
 - ``TestMetrics`` — an in-memory factory that records every reported value so you can assert on it
   in tests.
-- ``LoggingMetricsFactory`` — a stateless factory that emits one `swift-log` `.debug` message per
-  metric mutation, so you can observe metric activity as it happens without standing up a real
+- ``StreamMetricsFactory`` — a stateless factory that writes one line per metric mutation to a
+  `TextOutputStream`, so you can observe metric activity as it happens without standing up a real
   backend.
 
-The two compose — combine them via `MultiplexMetricsHandler` to layer debug logging on top of any
+The two compose — combine them via `MultiplexMetricsHandler` to layer debug output on top of any
 real backend.
 
 ### Asserting metrics in tests
@@ -41,41 +41,37 @@ struct ExampleTests {
 }
 ```
 
-### Logging every metric mutation as it happens
+### Writing every metric mutation as it happens
 
-Use ``LoggingMetricsFactory`` when you want a running trace of metric activity emitted through a
-`swift-log` `Logger`. Each mutation produces one structured `.debug` log line carrying the metric
-name, dimensions, and the recorded delta or value.
+Use ``StreamMetricsFactory`` when you want a running trace of metric activity written to a
+`TextOutputStream`. Each mutation produces one line carrying the metric name, dimensions, and the
+recorded delta or value.
 
 ```swift
-import Logging
 import Metrics
 import MetricsTestKit
 
-var logger = Logger(label: "metrics")
-logger.logLevel = .debug
-MetricsSystem.bootstrap(LoggingMetricsFactory(logger: logger))
+MetricsSystem.bootstrap(StreamMetricsFactory.standardOutput())
 
 Counter(label: "requests", dimensions: [("method", "GET")]).increment(by: 5)
-// debug: increment counter [metric.amount=5, metric.dimensions=[[method, GET]], metric.name=requests]
+// increment counter metric.name=requests metric.dimensions=[method=GET] metric.amount=5
 ```
 
-The factory is stateless and faithfully logs every recorded value, including values a real
+The factory is stateless and faithfully writes every recorded value, including values a real
 backend would silently drop (for example, `meter.increment(by: .nan)`). Purely configurational
 calls such as `Timer.preferDisplayUnit(_:)` are hints rather than recorded values and are not
-logged. The intent is to make instrumentation bugs visible rather than to hide them.
+written. The intent is to make instrumentation bugs visible rather than to hide them.
 
-> Warning: One log line is emitted per metric mutation. On a hot request path that fires many
-> metrics per request, the cost can become significant once the configured `level` is enabled
-> on the supplied logger. This factory is intended for examples, demos, and local debugging,
-> not for always-on production tracing.
+> Warning: One line is written per metric mutation. On a hot request path that fires many metrics
+> per request the cost of writing and flushing can become significant. This factory is intended
+> for examples, demos, and local debugging, not for always-on production tracing.
 
 ## Topics
 
 ### Factories
 
 - ``TestMetrics``
-- ``LoggingMetricsFactory``
+- ``StreamMetricsFactory``
 
 ### Articles
 

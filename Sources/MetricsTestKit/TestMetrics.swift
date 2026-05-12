@@ -35,7 +35,7 @@ import Metrics
 /// `expect*` helpers retrieve a typed handler so you can check its recorded values.
 ///
 /// To observe metric activity as it happens (in examples, demos, or local debugging), use
-/// ``LoggingMetricsFactory`` instead, optionally combined with this type via `MultiplexMetricsHandler`.
+/// ``StreamMetricsFactory`` instead, optionally combined with this type via `MultiplexMetricsHandler`.
 ///
 /// Created handlers store all reported values until they are explicitly destroyed via the corresponding
 /// `destroy*` method, or cleared in bulk via ``reset()``.
