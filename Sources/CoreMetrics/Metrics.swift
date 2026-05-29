@@ -36,10 +36,11 @@
 /// counter.reset()
 /// ````
 public final class Counter {
-    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// `_handler` and `_factory` are only `package` to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     @_documentation(visibility: internal)
-    public let _handler: CounterHandler
+    @usableFromInline
+    package let _handler: CounterHandler
     @_documentation(visibility: internal)
     @usableFromInline
     package let _factory: MetricsFactory
@@ -162,10 +163,11 @@ extension Counter: CustomStringConvertible {
 /// counter.reset()
 /// ````
 public final class FloatingPointCounter {
-    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// `_handler` and `_factory` are only `package` to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     @_documentation(visibility: internal)
-    public let _handler: FloatingPointCounterHandler
+    @usableFromInline
+    package let _handler: FloatingPointCounterHandler
     @_documentation(visibility: internal)
     @usableFromInline
     package let _factory: MetricsFactory
@@ -314,10 +316,11 @@ public final class Gauge: Recorder, @unchecked Sendable {
 /// meter.record(100)
 /// ```
 public final class Meter {
-    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// `_handler` and `_factory` are only `package` to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     @_documentation(visibility: internal)
-    public let _handler: MeterHandler
+    @usableFromInline
+    package let _handler: MeterHandler
     @usableFromInline
     @_documentation(visibility: internal)
     package let _factory: MetricsFactory
@@ -455,10 +458,11 @@ extension Meter: CustomStringConvertible {
 /// recorder.record(101)
 /// ```
 public class Recorder {
-    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// `_handler` and `_factory` are only `package` to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     @_documentation(visibility: internal)
-    public let _handler: RecorderHandler
+    @usableFromInline
+    package let _handler: RecorderHandler
     @_documentation(visibility: internal)
     @usableFromInline
     package let _factory: MetricsFactory
@@ -645,10 +649,11 @@ public struct TimeUnit: Equatable, Sendable {
 /// ```
 
 public final class Timer {
-    /// `_handler` and `_factory` are only public to allow access from `MetricsTestKit`.
+    /// `_handler` and `_factory` are only `package` to allow access from `MetricsTestKit`.
     /// Do not consider them part of the public API.
     @_documentation(visibility: internal)
-    public let _handler: TimerHandler
+    @usableFromInline
+    package let _handler: TimerHandler
     @_documentation(visibility: internal)
     @usableFromInline
     package let _factory: MetricsFactory
