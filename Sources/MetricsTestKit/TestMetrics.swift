@@ -594,3 +594,85 @@ extension TestCounter: @unchecked Sendable {}
 extension TestMeter: @unchecked Sendable {}
 extension TestRecorder: @unchecked Sendable {}
 extension TestTimer: @unchecked Sendable {}
+
+// MARK: - CustomStringConvertible support
+
+extension TestMetrics: CustomStringConvertible {
+    /// A human-readable dump of every live instrument and the values recorded into it.
+    ///
+    /// Instruments are grouped by kind and, within each group, sorted by label and then by dimensions, so
+    /// the output is deterministic across runs. Use this while debugging a test to see what a piece of code
+    /// reported; it is intended for humans to read, not for machine parsing.
+    public var description: String {
+        // Snapshot each dictionary under the factory lock, then render outside it. Each instrument's own
+        // `description` takes that instrument's lock, and we never hold the factory lock while calling into
+        // one, so there is no nested-lock hazard.
+        let counters = self.lock.withLock { Array(self._counters.values) }
+        let meters = self.lock.withLock { Array(self._meters.values) }
+        let recorders = self.lock.withLock { Array(self._recorders.values) }
+        let timers = self.lock.withLock { Array(self._timers.values) }
+
+        var lines: [String] = []
+        func appendGroup<Metric: TestMetric & CustomStringConvertible>(_ title: String, _ items: [Metric]) {
+            guard !items.isEmpty else { return }
+            lines.append("\(title):")
+            for item in items.sorted(by: { Self.isOrderedBefore($0, $1) }) {
+                lines.append("  \(item.description)")
+            }
+        }
+
+        appendGroup("Counters", counters)
+        appendGroup("Meters", meters)
+        appendGroup("Recorders", recorders)
+        appendGroup("Timers", timers)
+
+        return lines.isEmpty ? "TestMetrics(empty)" : "TestMetrics:\n" + lines.joined(separator: "\n")
+    }
+
+    /// Orders two instruments by label, then by their dimensions rendered as a `key=value` list, so that
+    /// instruments stored in an unordered dictionary print in a stable, deterministic order.
+    private static func isOrderedBefore(_ lhs: some TestMetric, _ rhs: some TestMetric) -> Bool {
+        let lhsKey = lhs.key
+        let rhsKey = rhs.key
+        if lhsKey.label != rhsKey.label {
+            return lhsKey.label < rhsKey.label
+        }
+        let lhsDimensions = lhsKey.dimensions.map { "\($0.0)=\($0.1)" }
+        let rhsDimensions = rhsKey.dimensions.map { "\($0.0)=\($0.1)" }
+        return lhsDimensions.lexicographicallyPrecedes(rhsDimensions)
+    }
+}
+
+extension TestCounter: CustomStringConvertible {
+    /// Shows the label, dimensions, every recorded increment, and their running total.
+    public var description: String {
+        let values = self.values
+        return "TestCounter(\(self.label), dimensions: \(self.dimensions), "
+            + "values: \(values), total: \(values.reduce(0, +)))"
+    }
+}
+
+extension TestMeter: CustomStringConvertible {
+    /// Shows the label, dimensions, and recorded values in observation order.
+    public var description: String {
+        "TestMeter(\(self.label), dimensions: \(self.dimensions), values: \(self.values))"
+    }
+}
+
+extension TestRecorder: CustomStringConvertible {
+    /// Shows the label, dimensions, aggregate flag, and recorded values.
+    public var description: String {
+        "TestRecorder(\(self.label), dimensions: \(self.dimensions), "
+            + "aggregate: \(self.aggregate), values: \(self.values))"
+    }
+}
+
+extension TestTimer: CustomStringConvertible {
+    /// Shows the label, dimensions, and recorded durations in nanoseconds.
+    ///
+    /// Values are always rendered in nanoseconds — the unit they are stored in — regardless of any preferred
+    /// unit set via ``preferDisplayUnit(_:)``. Use ``valueInPreferredUnit(atIndex:)`` to read a converted value.
+    public var description: String {
+        "TestTimer(\(self.label), dimensions: \(self.dimensions), valuesNanos: \(self.values))"
+    }
+}
