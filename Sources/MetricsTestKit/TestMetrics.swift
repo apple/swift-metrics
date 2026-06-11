@@ -604,13 +604,17 @@ extension TestMetrics: CustomStringConvertible {
     /// the output is deterministic across runs. Use this while debugging a test to see what a piece of code
     /// reported; it is intended for humans to read, not for machine parsing.
     public var description: String {
-        // Snapshot each dictionary under the factory lock, then render outside it. Each instrument's own
-        // `description` takes that instrument's lock, and we never hold the factory lock while calling into
-        // one, so there is no nested-lock hazard.
-        let counters = self.lock.withLock { Array(self._counters.values) }
-        let meters = self.lock.withLock { Array(self._meters.values) }
-        let recorders = self.lock.withLock { Array(self._recorders.values) }
-        let timers = self.lock.withLock { Array(self._timers.values) }
+        // Snapshot all instruments under a single factory-lock acquisition, so the dump is a consistent
+        // point-in-time view across kinds, then render outside the lock. Each instrument's own `description`
+        // takes that instrument's lock.
+        let (counters, meters, recorders, timers) = self.lock.withLock {
+            (
+                Array(self._counters.values),
+                Array(self._meters.values),
+                Array(self._recorders.values),
+                Array(self._timers.values)
+            )
+        }
 
         var lines: [String] = []
         func appendGroup<Metric: TestMetric & CustomStringConvertible>(_ title: String, _ items: [Metric]) {
