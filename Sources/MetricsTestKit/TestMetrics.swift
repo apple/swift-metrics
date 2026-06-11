@@ -672,11 +672,12 @@ extension TestRecorder: CustomStringConvertible {
 }
 
 extension TestTimer: CustomStringConvertible {
-    /// Shows the label, dimensions, and recorded durations in nanoseconds.
+    /// Shows the label, dimensions, unit, and recorded durations.
     ///
-    /// Values are always rendered in nanoseconds — the unit they are stored in — regardless of any preferred
-    /// unit set via ``preferDisplayUnit(_:)``. Use ``valueInPreferredUnit(atIndex:)`` to read a converted value.
+    /// Durations are always rendered in nanoseconds — the unit they are stored in, as called out by the
+    /// `unit: nanoseconds` field — regardless of any preferred unit set via ``preferDisplayUnit(_:)``. Use
+    /// ``valueInPreferredUnit(atIndex:)`` to read a converted value.
     public var description: String {
-        "TestTimer(\(self.label), dimensions: \(self.dimensions), valuesNanos: \(self.values))"
+        "TestTimer(\(self.label), dimensions: \(self.dimensions), unit: nanoseconds, values: \(self.values))"
     }
 }

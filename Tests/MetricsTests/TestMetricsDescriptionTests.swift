@@ -65,7 +65,7 @@ struct TestMetricsDescriptionTests {
         let testTimer = try metrics.expectTimer("latency", [])
         // A preferred display unit must not change the printed (stored) nanosecond values.
         testTimer.preferDisplayUnit(.milliseconds)
-        #expect(testTimer.description == "TestTimer(latency, dimensions: [], valuesNanos: [1000000])")
+        #expect(testTimer.description == "TestTimer(latency, dimensions: [], unit: nanoseconds, values: [1000000])")
     }
 
     @Test func metricsDescriptionGroupsAndSortsDeterministically() throws {
