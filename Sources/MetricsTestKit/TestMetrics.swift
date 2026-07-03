@@ -31,7 +31,7 @@ import Metrics
 
 /// A metrics factory which records all reported values in memory and lets you inspect them programmatically.
 ///
-/// Use this in tests to assert that a piece of code reports the metrics you expect — the various
+/// Use this in tests to assert that a piece of code reports the metrics you expect â the various
 /// `expect*` helpers retrieve a typed handler so you can check its recorded values.
 ///
 /// To observe metric activity as it happens (in examples, demos, or local debugging), use
@@ -181,12 +181,32 @@ extension TestMetrics {
         return testCounter
     }
 
-    /// All the counters which have been created and not destroyed
+    /// All the counters which have been created and not destroyed.
     public var counters: [TestCounter] {
         let counters = self.lock.withLock {
             self._counters
         }
         return Array(counters.values)
+    }
+
+    /// All counters with the given label, regardless of their dimensions.
+    ///
+    /// Useful when your code emits the same logical counter with varying dimension sets and you
+    /// only care about the label.
+    public func counters(label: String) -> [TestCounter] {
+        self.lock.withLock { self._counters }.values.filter { $0.label == label }
+    }
+
+    /// All counters with the given label whose dimensions include every specified key-value pair.
+    ///
+    /// Counters that carry extra dimensions are still returned; use this to narrow to e.g. all
+    /// "http_requests" counters that have a ("method", "GET") dimension regardless of status.
+    public func counters(label: String, dimensions: [(String, String)]) -> [TestCounter] {
+        let required = Set(dimensions.map { $0.0 + "=" + $0.1 })
+        return self.counters(label: label).filter { counter in
+            let present = Set(counter.dimensions.map { $0.0 + "=" + $0.1 })
+            return required.isSubset(of: present)
+        }
     }
 
     // MARK: - Gauge
@@ -218,12 +238,28 @@ extension TestMetrics {
         return testMeter
     }
 
-    /// All the meters which have been created and not destroyed
+    /// All the meters which have been created and not destroyed.
     public var meters: [TestMeter] {
         let meters = self.lock.withLock {
             self._meters
         }
         return Array(meters.values)
+    }
+
+    /// All meters with the given label, regardless of their dimensions.
+    public func meters(label: String) -> [TestMeter] {
+        self.lock.withLock { self._meters }.values.filter { $0.label == label }
+    }
+
+    /// All meters with the given label whose dimensions include every specified key-value pair.
+    ///
+    /// Meters that carry extra dimensions are still returned.
+    public func meters(label: String, dimensions: [(String, String)]) -> [TestMeter] {
+        let required = Set(dimensions.map { $0.0 + "=" + $0.1 })
+        return self.meters(label: label).filter { meter in
+            let present = Set(meter.dimensions.map { $0.0 + "=" + $0.1 })
+            return required.isSubset(of: present)
+        }
     }
 
     // MARK: - Recorder
@@ -245,12 +281,28 @@ extension TestMetrics {
         return testRecorder
     }
 
-    /// All the recorders which have been created and not destroyed
+    /// All the recorders which have been created and not destroyed.
     public var recorders: [TestRecorder] {
         let recorders = self.lock.withLock {
             self._recorders
         }
         return Array(recorders.values)
+    }
+
+    /// All recorders with the given label, regardless of their dimensions.
+    public func recorders(label: String) -> [TestRecorder] {
+        self.lock.withLock { self._recorders }.values.filter { $0.label == label }
+    }
+
+    /// All recorders with the given label whose dimensions include every specified key-value pair.
+    ///
+    /// Recorders that carry extra dimensions are still returned.
+    public func recorders(label: String, dimensions: [(String, String)]) -> [TestRecorder] {
+        let required = Set(dimensions.map { $0.0 + "=" + $0.1 })
+        return self.recorders(label: label).filter { recorder in
+            let present = Set(recorder.dimensions.map { $0.0 + "=" + $0.1 })
+            return required.isSubset(of: present)
+        }
     }
 
     // MARK: - Timer
@@ -272,12 +324,28 @@ extension TestMetrics {
         return testTimer
     }
 
-    /// All the timers which have been created and not destroyed
+    /// All the timers which have been created and not destroyed.
     public var timers: [TestTimer] {
         let timers = self.lock.withLock {
             self._timers
         }
         return Array(timers.values)
+    }
+
+    /// All timers with the given label, regardless of their dimensions.
+    public func timers(label: String) -> [TestTimer] {
+        self.lock.withLock { self._timers }.values.filter { $0.label == label }
+    }
+
+    /// All timers with the given label whose dimensions include every specified key-value pair.
+    ///
+    /// Timers that carry extra dimensions are still returned.
+    public func timers(label: String, dimensions: [(String, String)]) -> [TestTimer] {
+        let required = Set(dimensions.map { $0.0 + "=" + $0.1 })
+        return self.timers(label: label).filter { timer in
+            let present = Set(timer.dimensions.map { $0.0 + "=" + $0.1 })
+            return required.isSubset(of: present)
+        }
     }
 }
 
@@ -674,8 +742,8 @@ extension TestRecorder: CustomStringConvertible {
 extension TestTimer: CustomStringConvertible {
     /// Shows the label, dimensions, unit, and recorded durations.
     ///
-    /// Durations are always rendered in nanoseconds — the unit they are stored in, as called out by the
-    /// `unit: nanoseconds` field — regardless of any preferred unit set via ``preferDisplayUnit(_:)``. Use
+    /// Durations are always rendered in nanoseconds â the unit they are stored in, as called out by the
+    /// `unit: nanoseconds` field â regardless of any preferred unit set via ``preferDisplayUnit(_:)``. Use
     /// ``valueInPreferredUnit(atIndex:)`` to read a converted value.
     public var description: String {
         "TestTimer(\(self.label), dimensions: \(self.dimensions), unit: nanoseconds, values: \(self.values))"
