@@ -24,377 +24,382 @@ import Dispatch
 #endif
 
 struct MetricsExtensionsTests {
-        #if canImport(Dispatch)
-        @Test func timerBlock() throws {
-                    // create our test metrics, avoid bootstrapping global MetricsSystem
-                    let metrics = TestMetrics()
-                    // run the test
-                    let name = "timer-\(UUID().uuidString)"
-                    let delay = 0.05
-                    Timer.measure(label: name, factory: metrics) {
-                                    Thread.sleep(forTimeInterval: delay)
-                    }
-                    let timer = try metrics.expectTimer(name)
-                    #expect(timer.values.count == 1, "expected number of entries to match")
-                    #expect(timer.values[0] > Int64(delay * 1_000_000_000), "expected delay to match")
+    #if canImport(Dispatch)
+    @Test func timerBlock() throws {
+        // create our test metrics, avoid bootstrapping global MetricsSystem
+        let metrics = TestMetrics()
+        // run the test
+        let name = "timer-\(UUID().uuidString)"
+        let delay = 0.05
+        Timer.measure(label: name, factory: metrics) {
+            Thread.sleep(forTimeInterval: delay)
         }
-        #endif
+        let timer = try metrics.expectTimer(name)
+        #expect(timer.values.count == 1, "expected number of entries to match")
+        #expect(timer.values[0] > Int64(delay * 1_000_000_000), "expected delay to match")
+    }
+    #endif
 
-        @Test func timerWithTimeInterval() throws {
-                    // create our test metrics, avoid bootstrapping global MetricsSystem
-                    let metrics = TestMetrics()
-                    // run the test
-                    let timer = Timer(label: "test-timer", factory: metrics)
-                    let testTimer = try metrics.expectTimer(timer)
-                    let timeInterval = TimeInterval(Double.random(in: 1...500))
-                    timer.record(timeInterval)
-                    #expect(testTimer.values.count == 1, "expected number of entries to match")
-                    #expect(testTimer.values[0] == Int64(timeInterval * 1_000_000_000), "expected value to match")
-        }
+    @Test func timerWithTimeInterval() throws {
+        // create our test metrics, avoid bootstrapping global MetricsSystem
+        let metrics = TestMetrics()
+        // run the test
+        let timer = Timer(label: "test-timer", factory: metrics)
+        let testTimer = try metrics.expectTimer(timer)
+        let timeInterval = TimeInterval(Double.random(in: 1...500))
+        timer.record(timeInterval)
+        #expect(testTimer.values.count == 1, "expected number of entries to match")
+        #expect(testTimer.values[0] == Int64(timeInterval * 1_000_000_000), "expected value to match")
+    }
 
-        #if canImport(Dispatch)
-        @Test func timerWithDispatchTime() throws {
-                    // create our test metrics, avoid bootstrapping global MetricsSystem
-                    let metrics = TestMetrics()
-                    // run the test
-                    let timer = Timer(label: "test-timer", factory: metrics)
-                    let testTimer = try metrics.expectTimer(timer)
-                    // nano
-                    let nano = DispatchTimeInterval.nanoseconds(Int.random(in: 1...500))
-                    timer.record(nano)
-                    #expect(testTimer.values.count == 1, "expected number of entries to match")
-                    #expect(Int(testTimer.values[0]) == nano.nano(), "expected value to match")
-                    // micro
-                    let micro = DispatchTimeInterval.microseconds(Int.random(in: 1...500))
-                    timer.record(micro)
-                    #expect(testTimer.values.count == 2, "expected number of entries to match")
-                    #expect(Int(testTimer.values[1]) == micro.nano(), "expected value to match")
-                    // milli
-                    let milli = DispatchTimeInterval.milliseconds(Int.random(in: 1...500))
-                    timer.record(milli)
-                    #expect(testTimer.values.count == 3, "expected number of entries to match")
-                    #expect(Int(testTimer.values[2]) == milli.nano(), "expected value to match")
-                    // seconds
-                    let sec = DispatchTimeInterval.seconds(Int.random(in: 1...500))
-                    timer.record(sec)
-                    #expect(testTimer.values.count == 4, "expected number of entries to match")
-                    #expect(Int(testTimer.values[3]) == sec.nano(), "expected value to match")
-                    // never
-                    timer.record(DispatchTimeInterval.never)
-                    #expect(testTimer.values.count == 5, "expected number of entries to match")
-                    #expect(testTimer.values[4] == 0, "expected value to match")
-        }
+    #if canImport(Dispatch)
+    @Test func timerWithDispatchTime() throws {
+        // create our test metrics, avoid bootstrapping global MetricsSystem
+        let metrics = TestMetrics()
+        // run the test
+        let timer = Timer(label: "test-timer", factory: metrics)
+        let testTimer = try metrics.expectTimer(timer)
+        // nano
+        let nano = DispatchTimeInterval.nanoseconds(Int.random(in: 1...500))
+        timer.record(nano)
+        #expect(testTimer.values.count == 1, "expected number of entries to match")
+        #expect(Int(testTimer.values[0]) == nano.nano(), "expected value to match")
+        // micro
+        let micro = DispatchTimeInterval.microseconds(Int.random(in: 1...500))
+        timer.record(micro)
+        #expect(testTimer.values.count == 2, "expected number of entries to match")
+        #expect(Int(testTimer.values[1]) == micro.nano(), "expected value to match")
+        // milli
+        let milli = DispatchTimeInterval.milliseconds(Int.random(in: 1...500))
+        timer.record(milli)
+        #expect(testTimer.values.count == 3, "expected number of entries to match")
+        #expect(Int(testTimer.values[2]) == milli.nano(), "expected value to match")
+        // seconds
+        let sec = DispatchTimeInterval.seconds(Int.random(in: 1...500))
+        timer.record(sec)
+        #expect(testTimer.values.count == 4, "expected number of entries to match")
+        #expect(Int(testTimer.values[3]) == sec.nano(), "expected value to match")
+        // never
+        timer.record(DispatchTimeInterval.never)
+        #expect(testTimer.values.count == 5, "expected number of entries to match")
+        #expect(testTimer.values[4] == 0, "expected value to match")
+    }
 
-        @Test func timerWithDispatchTimeInterval() throws {
-                    let metrics = TestMetrics()
+    @Test func timerWithDispatchTimeInterval() throws {
+        let metrics = TestMetrics()
 
-                    let name = "timer-\(UUID().uuidString)"
+        let name = "timer-\(UUID().uuidString)"
 
-                    let timer = Timer(label: name, factory: metrics)
-                    let start = DispatchTime.now()
-                    let end = DispatchTime(uptimeNanoseconds: start.uptimeNanoseconds + 1000 * 1000 * 1000)
-                    timer.recordInterval(since: start, end: end)
+        let timer = Timer(label: name, factory: metrics)
+        let start = DispatchTime.now()
+        let end = DispatchTime(uptimeNanoseconds: start.uptimeNanoseconds + 1000 * 1000 * 1000)
+        timer.recordInterval(since: start, end: end)
 
-                    let testTimer = try metrics.expectTimer(timer)
-                    #expect(testTimer.values.count == 1, "expected number of entries to match")
-                    #expect(
-                                    UInt64(testTimer.values.first!) == end.uptimeNanoseconds - start.uptimeNanoseconds,
-                                    "expected value to match"
-                    )
-                    #expect(metrics.timers.count == 1, "timer should have been stored")
-        }
-        #endif
+        let testTimer = try metrics.expectTimer(timer)
+        #expect(testTimer.values.count == 1, "expected number of entries to match")
+        #expect(
+            UInt64(testTimer.values.first!) == end.uptimeNanoseconds - start.uptimeNanoseconds,
+            "expected value to match"
+        )
+        #expect(metrics.timers.count == 1, "timer should have been stored")
+    }
+    #endif
 
-        @Test func timerDuration() throws {
-                    let metrics = TestMetrics()
+    @Test func timerDuration() throws {
+        let metrics = TestMetrics()
 
-                    let name = "timer-\(UUID().uuidString)"
-                    let timer = Timer(label: name, factory: metrics)
+        let name = "timer-\(UUID().uuidString)"
+        let timer = Timer(label: name, factory: metrics)
 
-                    let duration = Duration(secondsComponent: 3, attosecondsComponent: 123_000_000_000_000_000)
-                    let nanoseconds = duration.components.seconds * 1_000_000_000 + duration.components.attoseconds / 1_000_000_000
-                    timer.record(duration: duration)
+        let duration = Duration(secondsComponent: 3, attosecondsComponent: 123_000_000_000_000_000)
+        let nanoseconds = duration.components.seconds * 1_000_000_000 + duration.components.attoseconds / 1_000_000_000
+        timer.record(duration: duration)
 
-                    // Record a Duration that would overflow,
-                    // expect Int64.max to be recorded.
-                    timer.record(duration: Duration(secondsComponent: 10_000_000_000, attosecondsComponent: 123))
+        // Record a Duration that would overflow,
+        // expect Int64.max to be recorded.
+        timer.record(duration: Duration(secondsComponent: 10_000_000_000, attosecondsComponent: 123))
 
-                    let testTimer = try metrics.expectTimer(timer)
-                    #expect(testTimer.values.count == 2, "expected number of entries to match")
-                    #expect(testTimer.values.first == nanoseconds, "expected value to match")
-                    #expect(testTimer.values[1] == Int64.max, "expected to record Int64.max if Durataion overflows")
-                    #expect(metrics.timers.count == 1, "timer should have been stored")
-        }
+        let testTimer = try metrics.expectTimer(timer)
+        #expect(testTimer.values.count == 2, "expected number of entries to match")
+        #expect(testTimer.values.first == nanoseconds, "expected value to match")
+        #expect(testTimer.values[1] == Int64.max, "expected to record Int64.max if Durataion overflows")
+        #expect(metrics.timers.count == 1, "timer should have been stored")
+    }
 
-        @Test func timerUnits() throws {
-                    let metrics = TestMetrics()
+    @Test func timerUnits() throws {
+        let metrics = TestMetrics()
 
-                    let name = "timer-\(UUID().uuidString)"
-                    let value = Int64.random(in: 0...1000)
+        let name = "timer-\(UUID().uuidString)"
+        let value = Int64.random(in: 0...1000)
 
-                    let timer = Timer(label: name, factory: metrics)
-                    timer.recordNanoseconds(value)
+        let timer = Timer(label: name, factory: metrics)
+        timer.recordNanoseconds(value)
 
-                    let testTimer = try metrics.expectTimer(timer)
-                    #expect(testTimer.values.count == 1, "expected number of entries to match")
-                    #expect(testTimer.values.first == value, "expected value to match")
-                    #expect(metrics.timers.count == 1, "timer should have been stored")
+        let testTimer = try metrics.expectTimer(timer)
+        #expect(testTimer.values.count == 1, "expected number of entries to match")
+        #expect(testTimer.values.first == value, "expected value to match")
+        #expect(metrics.timers.count == 1, "timer should have been stored")
 
-                    let secondsName = "timer-seconds-\(UUID().uuidString)"
-                    let secondsValue = Int64.random(in: 0...1000)
-                    let secondsTimer = Timer(label: secondsName, preferredDisplayUnit: .seconds, factory: metrics)
-                    secondsTimer.recordSeconds(secondsValue)
+        let secondsName = "timer-seconds-\(UUID().uuidString)"
+        let secondsValue = Int64.random(in: 0...1000)
+        let secondsTimer = Timer(label: secondsName, preferredDisplayUnit: .seconds, factory: metrics)
+        secondsTimer.recordSeconds(secondsValue)
 
-                    let testSecondsTimer = try metrics.expectTimer(secondsTimer)
-                    #expect(testSecondsTimer.values.count == 1, "expected number of entries to match")
-                    #expect(metrics.timers.count == 2, "timer should have been stored")
-        }
+        let testSecondsTimer = try metrics.expectTimer(secondsTimer)
+        #expect(testSecondsTimer.values.count == 1, "expected number of entries to match")
+        #expect(metrics.timers.count == 2, "timer should have been stored")
+    }
 
-        @Test func preferDisplayUnit() throws {
-                    let metrics = TestMetrics()
+    @Test func preferDisplayUnit() throws {
+        let metrics = TestMetrics()
 
-                    let value = Double.random(in: 0...1000)
-                    let timer = Timer(label: "test", preferredDisplayUnit: .seconds, factory: metrics)
-                    timer.recordSeconds(value)
+        let value = Double.random(in: 0...1000)
+        let timer = Timer(label: "test", preferredDisplayUnit: .seconds, factory: metrics)
+        timer.recordSeconds(value)
 
-                    let testTimer = try metrics.expectTimer(timer)
+        let testTimer = try metrics.expectTimer(timer)
 
-                    // The suggested way for comparing float numbers is to use swift-numerics,
-                    // but this would add a dependency. Instead, as we fully control the values
-                    // used in tests, we can get away with the simple `abs(x - y) < accuracy`.
-                    // See https://developer.apple.com/documentation/testing/migratingfromxctest
+        // The suggested way for comparing float numbers is to use swift-numerics,
+        // but this would add a dependency. Instead, as we fully control the values
+        // used in tests, we can get away with the simple `abs(x - y) < accuracy`.
+        // See https://developer.apple.com/documentation/testing/migratingfromxctest
 
-                    testTimer.preferDisplayUnit(.nanoseconds)
-                    #expect(
-                                    abs(testTimer.valueInPreferredUnit(atIndex: 0) - value * 1000 * 1000 * 1000) < 1.0,
-                                    "expected value to match"
-                    )
+        testTimer.preferDisplayUnit(.nanoseconds)
+        #expect(
+            abs(testTimer.valueInPreferredUnit(atIndex: 0) - value * 1000 * 1000 * 1000) < 1.0,
+            "expected value to match"
+        )
 
-                    testTimer.preferDisplayUnit(.microseconds)
-                    #expect(
-                                    abs(testTimer.valueInPreferredUnit(atIndex: 0) - value * 1000 * 1000) < 0.1,
-                                    "expected value to match"
-                    )
+        testTimer.preferDisplayUnit(.microseconds)
+        #expect(
+            abs(testTimer.valueInPreferredUnit(atIndex: 0) - value * 1000 * 1000) < 0.1,
+            "expected value to match"
+        )
 
-                    testTimer.preferDisplayUnit(.milliseconds)
-                    #expect(
-                                    abs(testTimer.valueInPreferredUnit(atIndex: 0) - value * 1000) < 0.1,
-                                    "expected value to match"
-                    )
+        testTimer.preferDisplayUnit(.milliseconds)
+        #expect(
+            abs(testTimer.valueInPreferredUnit(atIndex: 0) - value * 1000) < 0.1,
+            "expected value to match"
+        )
 
-                    testTimer.preferDisplayUnit(.seconds)
-                    #expect(
-                                    abs(testTimer.valueInPreferredUnit(atIndex: 0) - value) < 0.000000001,
-                                    "expected value to match"
-                    )
+        testTimer.preferDisplayUnit(.seconds)
+        #expect(
+            abs(testTimer.valueInPreferredUnit(atIndex: 0) - value) < 0.000000001,
+            "expected value to match"
+        )
 
-                    testTimer.preferDisplayUnit(.minutes)
-                    #expect(
-                                    abs(testTimer.valueInPreferredUnit(atIndex: 0) - value / 60) < 0.000000001,
-                                    "expected value to match"
-                    )
+        testTimer.preferDisplayUnit(.minutes)
+        #expect(
+            abs(testTimer.valueInPreferredUnit(atIndex: 0) - value / 60) < 0.000000001,
+            "expected value to match"
+        )
 
-                    testTimer.preferDisplayUnit(.hours)
-                    #expect(
-                                    abs(testTimer.valueInPreferredUnit(atIndex: 0) - value / (60 * 60)) < 0.000000001,
-                                    "expected value to match"
-                    )
+        testTimer.preferDisplayUnit(.hours)
+        #expect(
+            abs(testTimer.valueInPreferredUnit(atIndex: 0) - value / (60 * 60)) < 0.000000001,
+            "expected value to match"
+        )
 
-                    testTimer.preferDisplayUnit(.days)
-                    #expect(
-                                    abs(testTimer.valueInPreferredUnit(atIndex: 0) - value / (60 * 60 * 24)) < 0.000000001,
-                                    "expected value to match"
-                    )
-        }
+        testTimer.preferDisplayUnit(.days)
+        #expect(
+            abs(testTimer.valueInPreferredUnit(atIndex: 0) - value / (60 * 60 * 24)) < 0.000000001,
+            "expected value to match"
+        )
+    }
 
-        @Test func timerMeasure() async throws {
-                    // create our test metrics, avoid bootstrapping global MetricsSystem
-                    let metrics = TestMetrics()
-                    // run the test
-                    let name = "timer-\(UUID().uuidString)"
-                    let delay = Duration.milliseconds(5)
-                    let timer = Timer(label: name, factory: metrics)
-                    try await timer.measure {
-                                    try await Task.sleep(for: delay)
-                    }
-
-                    let expectedTimer = try metrics.expectTimer(name)
-                    #expect(expectedTimer.values.count == 1, "expected number of entries to match")
-                    #expect(expectedTimer.values[0] > delay.nanosecondsClamped, "expected delay to match")
+    @Test func timerMeasure() async throws {
+        // create our test metrics, avoid bootstrapping global MetricsSystem
+        let metrics = TestMetrics()
+        // run the test
+        let name = "timer-\(UUID().uuidString)"
+        let delay = Duration.milliseconds(5)
+        let timer = Timer(label: name, factory: metrics)
+        try await timer.measure {
+            try await Task.sleep(for: delay)
         }
 
-        @Test func timerMeasureSync() async throws {
-                    // create our test metrics, avoid bootstrapping global MetricsSystem
-                    let metrics = TestMetrics()
-                    // run the test
-                    let name = "timer-\(UUID().uuidString)"
-                    let delay = 0.5
-                    let timer = Timer(label: name, factory: metrics)
-                    timer.measure {
-                                    Thread.sleep(forTimeInterval: delay)
-                    }
+        let expectedTimer = try metrics.expectTimer(name)
+        #expect(expectedTimer.values.count == 1, "expected number of entries to match")
+        #expect(expectedTimer.values[0] > delay.nanosecondsClamped, "expected delay to match")
+    }
 
-                    let expectedTimer = try metrics.expectTimer(name)
-                    #expect(expectedTimer.values.count == 1, "expected number of entries to match")
-                    #expect(expectedTimer.values[0] > Int64(delay * 1_000_000_000), "expected delay to match in nanoseconds")
+    @Test func timerMeasureSync() async throws {
+        // create our test metrics, avoid bootstrapping global MetricsSystem
+        let metrics = TestMetrics()
+        // run the test
+        let name = "timer-\(UUID().uuidString)"
+        let delay = 0.5
+        let timer = Timer(label: name, factory: metrics)
+        timer.measure {
+            Thread.sleep(forTimeInterval: delay)
         }
 
-        @MainActor
-        @Test func timerMeasureFromMainActor() async throws {
-                    // create our test metrics, avoid bootstrapping global MetricsSystem
-                    let metrics = TestMetrics()
-                    // run the test
-                    let name = "timer-\(UUID().uuidString)"
-                    let delay = Duration.milliseconds(5)
-                    let timer = Timer(label: name, factory: metrics)
-                    try await timer.measure {
-                                    try await Task.sleep(for: delay)
-                    }
+        let expectedTimer = try metrics.expectTimer(name)
+        #expect(expectedTimer.values.count == 1, "expected number of entries to match")
+        #expect(expectedTimer.values[0] > Int64(delay * 1_000_000_000), "expected delay to match in nanoseconds")
+    }
 
-                    let expectedTimer = try metrics.expectTimer(name)
-                    #expect(expectedTimer.values.count == 1, "expected number of entries to match")
-                    #expect(expectedTimer.values[0] > delay.nanosecondsClamped, "expected delay to match")
+    @MainActor
+    @Test func timerMeasureFromMainActor() async throws {
+        // create our test metrics, avoid bootstrapping global MetricsSystem
+        let metrics = TestMetrics()
+        // run the test
+        let name = "timer-\(UUID().uuidString)"
+        let delay = Duration.milliseconds(5)
+        let timer = Timer(label: name, factory: metrics)
+        try await timer.measure {
+            try await Task.sleep(for: delay)
         }
+
+        let expectedTimer = try metrics.expectTimer(name)
+        #expect(expectedTimer.values.count == 1, "expected number of entries to match")
+        #expect(expectedTimer.values[0] > delay.nanosecondsClamped, "expected delay to match")
+    }
 }
 
 // MARK: - Dimension query API tests
 
 struct MetricsDimensionQueryTests {
-        @Test func countersLabelReturnsAllMatchingLabel() {
-                    let metrics = TestMetrics()
-                    // create counters with different dimension sets but the same label
-                    Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment()
-                    Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics).increment()
-                    Counter(label: "db_queries", dimensions: [("table", "users")], factory: metrics).increment()
+    @Test func countersLabelReturnsAllMatchingLabel() {
+        let metrics = TestMetrics()
+        // create counters with different dimension sets but the same label
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment()
+        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics).increment()
+        Counter(label: "db_queries", dimensions: [("table", "users")], factory: metrics).increment()
 
-                    #expect(metrics.counters(label: "http_requests").count == 2)
-                    #expect(metrics.counters(label: "db_queries").count == 1)
-                    #expect(metrics.counters(label: "nonexistent").isEmpty)
-        }
+        #expect(metrics.counters(label: "http_requests").count == 2)
+        #expect(metrics.counters(label: "db_queries").count == 1)
+        #expect(metrics.counters(label: "nonexistent").isEmpty)
+    }
 
-        @Test func countersLabelDimensionsFiltersCorrectly() {
-                    let metrics = TestMetrics()
-                    Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment()
-                    Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics).increment()
-                    Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "500")], factory: metrics).increment()
+    @Test func countersLabelDimensionsFiltersCorrectly() {
+        let metrics = TestMetrics()
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment()
+        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics).increment()
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "500")], factory: metrics).increment()
 
-                    // matches any counter carrying ("method", "GET"), regardless of extra dimensions
-                    #expect(metrics.counters(label: "http_requests", dimensions: [("method", "GET")]).count == 2)
-                    // exact subset
-                    #expect(
-                                    metrics.counters(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")]).count == 1
-                    )
-                    // no match
-                    #expect(metrics.counters(label: "http_requests", dimensions: [("method", "DELETE")]).isEmpty)
-                    // empty dimensions matches all
-                    #expect(metrics.counters(label: "http_requests", dimensions: []).count == 3)
-        }
+        // matches any counter carrying ("method", "GET"), regardless of extra dimensions
+        #expect(metrics.counters(label: "http_requests", dimensions: [("method", "GET")]).count == 2)
+        // exact subset
+        #expect(
+            metrics.counters(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")]).count == 1
+        )
+        // no match
+        #expect(metrics.counters(label: "http_requests", dimensions: [("method", "DELETE")]).isEmpty)
+        // empty dimensions matches all
+        #expect(metrics.counters(label: "http_requests", dimensions: []).count == 3)
+    }
 
-        @Test func countersLabelDimensionsNoStringConcatenationCollision() {
-                    // ("a=b", "c") and ("a", "b=c") must NOT be treated as the same dimension pair
-                    let metrics = TestMetrics()
-                    Counter(label: "tricky", dimensions: [("a=b", "c")], factory: metrics).increment()
-                    Counter(label: "tricky", dimensions: [("a", "b=c")], factory: metrics).increment()
+    @Test func countersLabelDimensionsNoStringConcatenationCollision() {
+        // ("a=b", "c") and ("a", "b=c") must NOT be treated as the same dimension pair
+        let metrics = TestMetrics()
+        Counter(label: "tricky", dimensions: [("a=b", "c")], factory: metrics).increment()
+        Counter(label: "tricky", dimensions: [("a", "b=c")], factory: metrics).increment()
 
-                    #expect(metrics.counters(label: "tricky", dimensions: [("a=b", "c")]).count == 1)
-                    #expect(metrics.counters(label: "tricky", dimensions: [("a", "b=c")]).count == 1)
-        }
+        #expect(metrics.counters(label: "tricky", dimensions: [("a=b", "c")]).count == 1)
+        #expect(metrics.counters(label: "tricky", dimensions: [("a", "b=c")]).count == 1)
+    }
 
-        @Test func timersLabelAndDimensions() {
-                    let metrics = TestMetrics()
-                    let t1 = Timer(label: "request_duration", dimensions: [("route", "/api/v1"), ("method", "GET")], factory: metrics)
-                    let t2 = Timer(label: "request_duration", dimensions: [("route", "/api/v1"), ("method", "POST")], factory: metrics)
-                    let t3 = Timer(label: "request_duration", dimensions: [("route", "/api/v2"), ("method", "GET")], factory: metrics)
-                    t1.recordMilliseconds(10)
-                    t2.recordMilliseconds(20)
-                    t3.recordMilliseconds(30)
+    @Test func timersLabelAndDimensions() {
+        let metrics = TestMetrics()
+        let t1 = Timer(
+            label: "request_duration", dimensions: [("route", "/api/v1"), ("method", "GET")], factory: metrics)
+        let t2 = Timer(
+            label: "request_duration", dimensions: [("route", "/api/v1"), ("method", "POST")], factory: metrics)
+        let t3 = Timer(
+            label: "request_duration", dimensions: [("route", "/api/v2"), ("method", "GET")], factory: metrics)
+        t1.recordMilliseconds(10)
+        t2.recordMilliseconds(20)
+        t3.recordMilliseconds(30)
 
-                    #expect(metrics.timers(label: "request_duration").count == 3)
-                    #expect(metrics.timers(label: "request_duration", dimensions: [("route", "/api/v1")]).count == 2)
-                    #expect(metrics.timers(label: "request_duration", dimensions: [("method", "GET")]).count == 2)
-                    #expect(
-                                    metrics.timers(
-                                                        label: "request_duration",
-                                                        dimensions: [("route", "/api/v1"), ("method", "POST")]
-                                    ).count == 1
-                    )
-                    #expect(metrics.timers(label: "request_duration", dimensions: [("route", "/api/v3")]).isEmpty)
-        }
+        #expect(metrics.timers(label: "request_duration").count == 3)
+        #expect(metrics.timers(label: "request_duration", dimensions: [("route", "/api/v1")]).count == 2)
+        #expect(metrics.timers(label: "request_duration", dimensions: [("method", "GET")]).count == 2)
+        #expect(
+            metrics.timers(
+                label: "request_duration",
+                dimensions: [("route", "/api/v1"), ("method", "POST")]
+            ).count == 1
+        )
+        #expect(metrics.timers(label: "request_duration", dimensions: [("route", "/api/v3")]).isEmpty)
+    }
 
-        @Test func metersLabelAndDimensions() {
-                    let metrics = TestMetrics()
-                    Meter(label: "active_connections", dimensions: [("region", "us-east")], factory: metrics).set(5)
-                    Meter(label: "active_connections", dimensions: [("region", "eu-west")], factory: metrics).set(3)
-                    Meter(label: "memory_usage", dimensions: [], factory: metrics).set(1024)
+    @Test func metersLabelAndDimensions() {
+        let metrics = TestMetrics()
+        Meter(label: "active_connections", dimensions: [("region", "us-east")], factory: metrics).set(5)
+        Meter(label: "active_connections", dimensions: [("region", "eu-west")], factory: metrics).set(3)
+        Meter(label: "memory_usage", dimensions: [], factory: metrics).set(1024)
 
-                    #expect(metrics.meters(label: "active_connections").count == 2)
-                    #expect(metrics.meters(label: "active_connections", dimensions: [("region", "us-east")]).count == 1)
-                    #expect(metrics.meters(label: "active_connections", dimensions: [("region", "unknown")]).isEmpty)
-                    #expect(metrics.meters(label: "memory_usage").count == 1)
-        }
+        #expect(metrics.meters(label: "active_connections").count == 2)
+        #expect(metrics.meters(label: "active_connections", dimensions: [("region", "us-east")]).count == 1)
+        #expect(metrics.meters(label: "active_connections", dimensions: [("region", "unknown")]).isEmpty)
+        #expect(metrics.meters(label: "memory_usage").count == 1)
+    }
 
-        @Test func recordersLabelAndDimensions() {
-                    let metrics = TestMetrics()
-                    Recorder(label: "response_size", dimensions: [("content_type", "json")], factory: metrics).record(512)
-                    Recorder(label: "response_size", dimensions: [("content_type", "html")], factory: metrics).record(1024)
-                    Recorder(label: "response_size", dimensions: [("content_type", "json"), ("compressed", "true")], factory: metrics)
-                        .record(256)
+    @Test func recordersLabelAndDimensions() {
+        let metrics = TestMetrics()
+        Recorder(label: "response_size", dimensions: [("content_type", "json")], factory: metrics).record(512)
+        Recorder(label: "response_size", dimensions: [("content_type", "html")], factory: metrics).record(1024)
+        Recorder(
+            label: "response_size",
+            dimensions: [("content_type", "json"), ("compressed", "true")], factory: metrics
+        ).record(256)
 
-                    #expect(metrics.recorders(label: "response_size").count == 3)
-                    #expect(metrics.recorders(label: "response_size", dimensions: [("content_type", "json")]).count == 2)
-                    #expect(metrics.recorders(label: "response_size", dimensions: [("content_type", "html")]).count == 1)
-                    #expect(metrics.recorders(label: "response_size", dimensions: [("compressed", "true")]).count == 1)
-        }
+        #expect(metrics.recorders(label: "response_size").count == 3)
+        #expect(metrics.recorders(label: "response_size", dimensions: [("content_type", "json")]).count == 2)
+        #expect(metrics.recorders(label: "response_size", dimensions: [("content_type", "html")]).count == 1)
+        #expect(metrics.recorders(label: "response_size", dimensions: [("compressed", "true")]).count == 1)
+    }
 }
 
 #if canImport(Dispatch)
 // https://bugs.swift.org/browse/SR-6310
 extension DispatchTimeInterval {
-        func nano() -> Int {
-                    // This wrapping in a optional is a workaround because DispatchTimeInterval
-                    // is a non-frozen public enum and Dispatch is built with library evolution
-                    // mode turned on.
-                    // This means we should have an `@unknown default` case, but this breaks
-                    // on non-Darwin platforms.
-                    // Switching over an optional means that the `.none` case will map to
-                    // `default` (which means we'll always have a valid case to go into
-                    // the default case), but in reality this case will never exist as this
-                    // optional will never be nil.
-                    let interval = Optional(self)
-                    switch interval {
-                                case .nanoseconds(let value):
-                                    return value
-                                case .microseconds(let value):
-                                    return value * 1000
-                                case .milliseconds(let value):
-                                    return value * 1_000_000
-                                case .seconds(let value):
-                                    return value * 1_000_000_000
-                                case .never:
-                                    return 0
-                                default:
-                                    return 0
-                    }
+    func nano() -> Int {
+        // This wrapping in a optional is a workaround because DispatchTimeInterval
+        // is a non-frozen public enum and Dispatch is built with library evolution
+        // mode turned on.
+        // This means we should have an `@unknown default` case, but this breaks
+        // on non-Darwin platforms.
+        // Switching over an optional means that the `.none` case will map to
+        // `default` (which means we'll always have a valid case to go into
+        // the default case), but in reality this case will never exist as this
+        // optional will never be nil.
+        let interval = Optional(self)
+        switch interval {
+        case .nanoseconds(let value):
+            return value
+        case .microseconds(let value):
+            return value * 1000
+        case .milliseconds(let value):
+            return value * 1_000_000
+        case .seconds(let value):
+            return value * 1_000_000_000
+        case .never:
+            return 0
+        default:
+            return 0
         }
+    }
 }
 #endif
 
 @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
 extension Swift.Duration {
-        fileprivate var nanosecondsClamped: Int64 {
-                    let components = self.components
+    fileprivate var nanosecondsClamped: Int64 {
+        let components = self.components
 
-                    let secondsComponentNanos = components.seconds.multipliedReportingOverflow(by: 1_000_000_000)
-                    let attosCompononentNanos = components.attoseconds / 1_000_000_000
-                    let combinedNanos = secondsComponentNanos.partialValue.addingReportingOverflow(attosCompononentNanos)
+        let secondsComponentNanos = components.seconds.multipliedReportingOverflow(by: 1_000_000_000)
+        let attosCompononentNanos = components.attoseconds / 1_000_000_000
+        let combinedNanos = secondsComponentNanos.partialValue.addingReportingOverflow(attosCompononentNanos)
 
-                    guard
-                        !secondsComponentNanos.overflow,
-                        !combinedNanos.overflow
-                    else {
-                                    return .max
-                    }
-
-                    return combinedNanos.partialValue
+        guard
+            !secondsComponentNanos.overflow,
+            !combinedNanos.overflow
+        else {
+            return .max
         }
+
+        return combinedNanos.partialValue
+    }
 }
