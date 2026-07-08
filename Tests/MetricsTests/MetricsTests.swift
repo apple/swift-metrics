@@ -263,8 +263,10 @@ struct MetricsDimensionQueryTests {
     @Test func countersLabelReturnsAllMatchingLabel() {
         let metrics = TestMetrics()
         // create counters with different dimension sets but the same label
-        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment()
-        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics).increment()
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics)
+            .increment()
+        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics)
+            .increment()
         Counter(label: "db_queries", dimensions: [("table", "users")], factory: metrics).increment()
 
         #expect(metrics.counters(label: "http_requests").count == 2)
@@ -274,9 +276,12 @@ struct MetricsDimensionQueryTests {
 
     @Test func countersLabelDimensionsFiltersCorrectly() {
         let metrics = TestMetrics()
-        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment()
-        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics).increment()
-        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "500")], factory: metrics).increment()
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics)
+            .increment()
+        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics)
+            .increment()
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "500")], factory: metrics)
+            .increment()
 
         // matches any counter carrying ("method", "GET"), regardless of extra dimensions
         #expect(metrics.counters(label: "http_requests", dimensions: [("method", "GET")]).count == 2)
@@ -303,11 +308,20 @@ struct MetricsDimensionQueryTests {
     @Test func timersLabelAndDimensions() {
         let metrics = TestMetrics()
         let t1 = Timer(
-            label: "request_duration", dimensions: [("route", "/api/v1"), ("method", "GET")], factory: metrics)
+            label: "request_duration",
+            dimensions: [("route", "/api/v1"), ("method", "GET")],
+            factory: metrics
+        )
         let t2 = Timer(
-            label: "request_duration", dimensions: [("route", "/api/v1"), ("method", "POST")], factory: metrics)
+            label: "request_duration",
+            dimensions: [("route", "/api/v1"), ("method", "POST")],
+            factory: metrics
+        )
         let t3 = Timer(
-            label: "request_duration", dimensions: [("route", "/api/v2"), ("method", "GET")], factory: metrics)
+            label: "request_duration",
+            dimensions: [("route", "/api/v2"), ("method", "GET")],
+            factory: metrics
+        )
         t1.recordMilliseconds(10)
         t2.recordMilliseconds(20)
         t3.recordMilliseconds(30)
@@ -342,7 +356,8 @@ struct MetricsDimensionQueryTests {
         Recorder(label: "response_size", dimensions: [("content_type", "html")], factory: metrics).record(1024)
         Recorder(
             label: "response_size",
-            dimensions: [("content_type", "json"), ("compressed", "true")], factory: metrics
+            dimensions: [("content_type", "json"), ("compressed", "true")],
+            factory: metrics
         ).record(256)
 
         #expect(metrics.recorders(label: "response_size").count == 3)
