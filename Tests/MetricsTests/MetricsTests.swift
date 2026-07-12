@@ -209,7 +209,7 @@ struct MetricsExtensionsTests {
 
     @Test func timerMeasure() async throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
-        let metrics = TestMetrics()
+    0   let metrics = TestMetrics()
         // run the test
         let name = "timer-\(UUID().uuidString)"
         let delay = Duration.milliseconds(5)
@@ -225,7 +225,7 @@ struct MetricsExtensionsTests {
 
     @Test func timerMeasureSync() async throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
-        let metrics = TestMetrics()
+     0  let metrics = TestMetrics()
         // run the test
         let name = "timer-\(UUID().uuidString)"
         let delay = 0.5
@@ -364,6 +364,22 @@ struct MetricsDimensionQueryTests {
         #expect(metrics.recorders(label: "response_size", dimensions: [("content_type", "json")]).count == 2)
         #expect(metrics.recorders(label: "response_size", dimensions: [("content_type", "html")]).count == 1)
         #expect(metrics.recorders(label: "response_size", dimensions: [("compressed", "true")]).count == 1)
+    }
+
+    @Test func counterTotalSumsAcrossDimensions() {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        defer { MetricsSystem.bootstrapInternal(NOOPMetricsHandler.instance) }
+
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment(by: 10)
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "404")], factory: metrics).increment(by: 3)
+        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics).increment(by: 7)
+
+        #expect(metrics.counterTotal(label: "http_requests") == 20)
+        #expect(metrics.counterTotal(label: "http_requests", dimensions: [("method", "GET")]) == 13)
+        #expect(metrics.counterTotal(label: "http_requests", dimensions: [("method", "POST")]) == 7)
+        #expect(metrics.counterTotal(label: "http_requests", dimensions: [("method", "DELETE")]) == 0)
+        #expect(metrics.counterTotal(label: "nonexistent") == 0)
     }
 }
 
