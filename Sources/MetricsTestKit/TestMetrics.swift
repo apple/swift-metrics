@@ -31,7 +31,7 @@ import Metrics
 
 /// A metrics factory which records all reported values in memory and lets you inspect them programmatically.
 ///
-/// Use this in tests to assert that a piece of code reports the metrics you expect — the various
+/// Use this in tests to assert that a piece of code reports the metrics you expect â the various
 /// `expect*` helpers retrieve a typed handler so you can check its recorded values.
 ///
 /// To observe metric activity as it happens (in examples, demos, or local debugging), use
@@ -206,6 +206,21 @@ extension TestMetrics {
                 counter.dimensions.contains { $0.0 == req.0 && $0.1 == req.1 }
             }
         }
+    }
+
+    /// The sum of `totalValue` across all counters with the given label.
+    ///
+    /// Equivalent to `counters(label:).map(\.totalValue).reduce(0, +)`.
+    public func counterTotal(label: String) -> Int64 {
+        self.counters(label: label).map(\.totalValue).reduce(0, +)
+    }
+
+    /// The sum of `totalValue` across all counters with the given label
+    /// whose dimensions include every specified key-value pair.
+    ///
+    /// Equivalent to `counters(label:dimensions:).map(\.totalValue).reduce(0, +)`.
+    public func counterTotal(label: String, dimensions: [(String, String)]) -> Int64 {
+        self.counters(label: label, dimensions: dimensions).map(\.totalValue).reduce(0, +)
     }
 
     // MARK: - Gauge
@@ -741,8 +756,8 @@ extension TestRecorder: CustomStringConvertible {
 extension TestTimer: CustomStringConvertible {
     /// Shows the label, dimensions, unit, and recorded durations.
     ///
-    /// Durations are always rendered in nanoseconds — the unit they are stored in, as called out by the
-    /// `unit: nanoseconds` field — regardless of any preferred unit set via ``preferDisplayUnit(_:)``. Use
+    /// Durations are always rendered in nanoseconds â the unit they are stored in, as called out by the
+    /// `unit: nanoseconds` field â regardless of any preferred unit set via ``preferDisplayUnit(_:)``. Use
     /// ``valueInPreferredUnit(atIndex:)`` to read a converted value.
     public var description: String {
         "TestTimer(\(self.label), dimensions: \(self.dimensions), unit: nanoseconds, values: \(self.values))"
