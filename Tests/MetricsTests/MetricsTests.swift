@@ -209,7 +209,7 @@ struct MetricsExtensionsTests {
 
     @Test func timerMeasure() async throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
-    0   let metrics = TestMetrics()
+        let metrics = TestMetrics()
         // run the test
         let name = "timer-\(UUID().uuidString)"
         let delay = Duration.milliseconds(5)
@@ -225,7 +225,7 @@ struct MetricsExtensionsTests {
 
     @Test func timerMeasureSync() async throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
-     0  let metrics = TestMetrics()
+        let metrics = TestMetrics()
         // run the test
         let name = "timer-\(UUID().uuidString)"
         let delay = 0.5
