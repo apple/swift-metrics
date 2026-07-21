@@ -37,4 +37,5 @@ If you have any questions, ask in an issue on GitHub.
 
 - <doc:SMT-0001-task-local-metrics-factory>
 - <doc:SMT-0002-mapping-metrics-factory>
+- <doc:SMT-0003-metric-descriptions>
 - <doc:SMT-NNNN>
