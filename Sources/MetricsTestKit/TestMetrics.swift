@@ -31,7 +31,7 @@ import Metrics
 
 /// A metrics factory which records all reported values in memory and lets you inspect them programmatically.
 ///
-/// Use this in tests to assert that a piece of code reports the metrics you expect â the various
+/// Use this in tests to assert that a piece of code reports the metrics you expect — the various
 /// `expect*` helpers retrieve a typed handler so you can check its recorded values.
 ///
 /// To observe metric activity as it happens (in examples, demos, or local debugging), use
@@ -756,8 +756,8 @@ extension TestRecorder: CustomStringConvertible {
 extension TestTimer: CustomStringConvertible {
     /// Shows the label, dimensions, unit, and recorded durations.
     ///
-    /// Durations are always rendered in nanoseconds â the unit they are stored in, as called out by the
-    /// `unit: nanoseconds` field â regardless of any preferred unit set via ``preferDisplayUnit(_:)``. Use
+    /// Durations are always rendered in nanoseconds — the unit they are stored in, as called out by the
+    /// `unit: nanoseconds` field — regardless of any preferred unit set via ``preferDisplayUnit(_:)``. Use
     /// ``valueInPreferredUnit(atIndex:)`` to read a converted value.
     public var description: String {
         "TestTimer(\(self.label), dimensions: \(self.dimensions), unit: nanoseconds, values: \(self.values))"
