@@ -371,9 +371,14 @@ struct MetricsDimensionQueryTests {
         MetricsSystem.bootstrapInternal(metrics)
         defer { MetricsSystem.bootstrapInternal(NOOPMetricsHandler.instance) }
 
-        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment(by: 10)
-        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "404")], factory: metrics).increment(by: 3)
-        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics).increment(by: 7)
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment(
+            by: 10
+        )
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "404")], factory: metrics).increment(
+            by: 3
+        )
+        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics)
+            .increment(by: 7)
 
         #expect(metrics.counterTotal(label: "http_requests") == 20)
         #expect(metrics.counterTotal(label: "http_requests", dimensions: [("method", "GET")]) == 13)
