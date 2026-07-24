@@ -257,6 +257,137 @@ struct MetricsExtensionsTests {
     }
 }
 
+// MARK: - Dimension query API tests
+
+struct MetricsDimensionQueryTests {
+    @Test func countersLabelReturnsAllMatchingLabel() {
+        let metrics = TestMetrics()
+        // create counters with different dimension sets but the same label
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics)
+            .increment()
+        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics)
+            .increment()
+        Counter(label: "db_queries", dimensions: [("table", "users")], factory: metrics).increment()
+
+        #expect(metrics.counters(label: "http_requests").count == 2)
+        #expect(metrics.counters(label: "db_queries").count == 1)
+        #expect(metrics.counters(label: "nonexistent").isEmpty)
+    }
+
+    @Test func countersLabelDimensionsFiltersCorrectly() {
+        let metrics = TestMetrics()
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics)
+            .increment()
+        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics)
+            .increment()
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "500")], factory: metrics)
+            .increment()
+
+        // matches any counter carrying ("method", "GET"), regardless of extra dimensions
+        #expect(metrics.counters(label: "http_requests", dimensions: [("method", "GET")]).count == 2)
+        // exact subset
+        #expect(
+            metrics.counters(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")]).count == 1
+        )
+        // no match
+        #expect(metrics.counters(label: "http_requests", dimensions: [("method", "DELETE")]).isEmpty)
+        // empty dimensions matches all
+        #expect(metrics.counters(label: "http_requests", dimensions: []).count == 3)
+    }
+
+    @Test func countersLabelDimensionsNoStringConcatenationCollision() {
+        // ("a=b", "c") and ("a", "b=c") must NOT be treated as the same dimension pair
+        let metrics = TestMetrics()
+        Counter(label: "tricky", dimensions: [("a=b", "c")], factory: metrics).increment()
+        Counter(label: "tricky", dimensions: [("a", "b=c")], factory: metrics).increment()
+
+        #expect(metrics.counters(label: "tricky", dimensions: [("a=b", "c")]).count == 1)
+        #expect(metrics.counters(label: "tricky", dimensions: [("a", "b=c")]).count == 1)
+    }
+
+    @Test func timersLabelAndDimensions() {
+        let metrics = TestMetrics()
+        let t1 = Timer(
+            label: "request_duration",
+            dimensions: [("route", "/api/v1"), ("method", "GET")],
+            factory: metrics
+        )
+        let t2 = Timer(
+            label: "request_duration",
+            dimensions: [("route", "/api/v1"), ("method", "POST")],
+            factory: metrics
+        )
+        let t3 = Timer(
+            label: "request_duration",
+            dimensions: [("route", "/api/v2"), ("method", "GET")],
+            factory: metrics
+        )
+        t1.recordMilliseconds(10)
+        t2.recordMilliseconds(20)
+        t3.recordMilliseconds(30)
+
+        #expect(metrics.timers(label: "request_duration").count == 3)
+        #expect(metrics.timers(label: "request_duration", dimensions: [("route", "/api/v1")]).count == 2)
+        #expect(metrics.timers(label: "request_duration", dimensions: [("method", "GET")]).count == 2)
+        #expect(
+            metrics.timers(
+                label: "request_duration",
+                dimensions: [("route", "/api/v1"), ("method", "POST")]
+            ).count == 1
+        )
+        #expect(metrics.timers(label: "request_duration", dimensions: [("route", "/api/v3")]).isEmpty)
+    }
+
+    @Test func metersLabelAndDimensions() {
+        let metrics = TestMetrics()
+        Meter(label: "active_connections", dimensions: [("region", "us-east")], factory: metrics).set(5)
+        Meter(label: "active_connections", dimensions: [("region", "eu-west")], factory: metrics).set(3)
+        Meter(label: "memory_usage", dimensions: [], factory: metrics).set(1024)
+
+        #expect(metrics.meters(label: "active_connections").count == 2)
+        #expect(metrics.meters(label: "active_connections", dimensions: [("region", "us-east")]).count == 1)
+        #expect(metrics.meters(label: "active_connections", dimensions: [("region", "unknown")]).isEmpty)
+        #expect(metrics.meters(label: "memory_usage").count == 1)
+    }
+
+    @Test func recordersLabelAndDimensions() {
+        let metrics = TestMetrics()
+        Recorder(label: "response_size", dimensions: [("content_type", "json")], factory: metrics).record(512)
+        Recorder(label: "response_size", dimensions: [("content_type", "html")], factory: metrics).record(1024)
+        Recorder(
+            label: "response_size",
+            dimensions: [("content_type", "json"), ("compressed", "true")],
+            factory: metrics
+        ).record(256)
+
+        #expect(metrics.recorders(label: "response_size").count == 3)
+        #expect(metrics.recorders(label: "response_size", dimensions: [("content_type", "json")]).count == 2)
+        #expect(metrics.recorders(label: "response_size", dimensions: [("content_type", "html")]).count == 1)
+        #expect(metrics.recorders(label: "response_size", dimensions: [("compressed", "true")]).count == 1)
+    }
+
+    @Test func counterTotalSumsAcrossDimensions() {
+        let metrics = TestMetrics()
+        MetricsSystem.bootstrapInternal(metrics)
+        defer { MetricsSystem.bootstrapInternal(NOOPMetricsHandler.instance) }
+
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment(
+            by: 10
+        )
+        Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "404")], factory: metrics).increment(
+            by: 3
+        )
+        Counter(label: "http_requests", dimensions: [("method", "POST"), ("status", "201")], factory: metrics)
+            .increment(by: 7)
+
+        #expect(metrics.counterTotal(label: "http_requests") == 20)
+        #expect(metrics.counterTotal(label: "http_requests", dimensions: [("method", "GET")]) == 13)
+        #expect(metrics.counterTotal(label: "http_requests", dimensions: [("method", "POST")]) == 7)
+        #expect(metrics.counterTotal(label: "http_requests", dimensions: [("method", "DELETE")]) == 0)
+        #expect(metrics.counterTotal(label: "nonexistent") == 0)
+    }
+}
+
 #if canImport(Dispatch)
 // https://bugs.swift.org/browse/SR-6310
 extension DispatchTimeInterval {

@@ -189,6 +189,40 @@ extension TestMetrics {
         return Array(counters.values)
     }
 
+    /// All counters with the given label, regardless of their dimensions.
+    ///
+    /// Useful when a metric is emitted with varying dimension sets and you only care about the label.
+    public func counters(label: String) -> [TestCounter] {
+        self.lock.withLock { self._counters }.values.filter { $0.label == label }
+    }
+
+    /// All counters with the given label whose dimensions include every specified key-value pair.
+    ///
+    /// Counters that carry additional dimensions beyond those requested are still returned; pass an empty
+    /// array to retrieve all counters for a label regardless of dimensions.
+    public func counters(label: String, dimensions: [(String, String)]) -> [TestCounter] {
+        self.counters(label: label).filter { counter in
+            dimensions.allSatisfy { req in
+                counter.dimensions.contains { $0.0 == req.0 && $0.1 == req.1 }
+            }
+        }
+    }
+
+    /// The sum of `totalValue` across all counters with the given label.
+    ///
+    /// Equivalent to `counters(label:).map(\.totalValue).reduce(0, +)`.
+    public func counterTotal(label: String) -> Int64 {
+        self.counters(label: label).map(\.totalValue).reduce(0, +)
+    }
+
+    /// The sum of `totalValue` across all counters with the given label
+    /// whose dimensions include every specified key-value pair.
+    ///
+    /// Equivalent to `counters(label:dimensions:).map(\.totalValue).reduce(0, +)`.
+    public func counterTotal(label: String, dimensions: [(String, String)]) -> Int64 {
+        self.counters(label: label, dimensions: dimensions).map(\.totalValue).reduce(0, +)
+    }
+
     // MARK: - Gauge
 
     public func expectGauge(_ metric: Gauge) throws -> TestRecorder {
@@ -226,6 +260,22 @@ extension TestMetrics {
         return Array(meters.values)
     }
 
+    /// All meters with the given label, regardless of their dimensions.
+    public func meters(label: String) -> [TestMeter] {
+        self.lock.withLock { self._meters }.values.filter { $0.label == label }
+    }
+
+    /// All meters with the given label whose dimensions include every specified key-value pair.
+    ///
+    /// Meters that carry additional dimensions beyond those requested are still returned.
+    public func meters(label: String, dimensions: [(String, String)]) -> [TestMeter] {
+        self.meters(label: label).filter { meter in
+            dimensions.allSatisfy { req in
+                meter.dimensions.contains { $0.0 == req.0 && $0.1 == req.1 }
+            }
+        }
+    }
+
     // MARK: - Recorder
 
     public func expectRecorder(_ metric: Recorder) throws -> TestRecorder {
@@ -253,6 +303,22 @@ extension TestMetrics {
         return Array(recorders.values)
     }
 
+    /// All recorders with the given label, regardless of their dimensions.
+    public func recorders(label: String) -> [TestRecorder] {
+        self.lock.withLock { self._recorders }.values.filter { $0.label == label }
+    }
+
+    /// All recorders with the given label whose dimensions include every specified key-value pair.
+    ///
+    /// Recorders that carry additional dimensions beyond those requested are still returned.
+    public func recorders(label: String, dimensions: [(String, String)]) -> [TestRecorder] {
+        self.recorders(label: label).filter { recorder in
+            dimensions.allSatisfy { req in
+                recorder.dimensions.contains { $0.0 == req.0 && $0.1 == req.1 }
+            }
+        }
+    }
+
     // MARK: - Timer
 
     public func expectTimer(_ metric: CoreMetrics.Timer) throws -> TestTimer {
@@ -278,6 +344,22 @@ extension TestMetrics {
             self._timers
         }
         return Array(timers.values)
+    }
+
+    /// All timers with the given label, regardless of their dimensions.
+    public func timers(label: String) -> [TestTimer] {
+        self.lock.withLock { self._timers }.values.filter { $0.label == label }
+    }
+
+    /// All timers with the given label whose dimensions include every specified key-value pair.
+    ///
+    /// Timers that carry additional dimensions beyond those requested are still returned.
+    public func timers(label: String, dimensions: [(String, String)]) -> [TestTimer] {
+        self.timers(label: label).filter { timer in
+            dimensions.allSatisfy { req in
+                timer.dimensions.contains { $0.0 == req.0 && $0.1 == req.1 }
+            }
+        }
     }
 }
 
