@@ -29,6 +29,20 @@ jobs:
     name: Cxx interop
     uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
 
+  cmake-lists:
+    name: Check cmake lists
+    uses: apple/swift-nio/.github/workflows/cmake_tests.yml@main
+    with:
+      image: "swift:6.1-noble"
+      update_cmake_lists_config: >-
+        {
+          "targets": [
+            { "name": "CoreMetrics", "type": "source", "exceptions": [] },
+            { "name": "Metrics", "type": "source", "exceptions": [] },
+            { "name": "MetricsTestKit", "type": "source", "exceptions": [] }
+          ]
+        }
+
   macos-tests:
     name: macOS tests
     uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
