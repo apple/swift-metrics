@@ -71,45 +71,65 @@ public final class TestMetrics: MetricsFactory {
     }
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+        self.makeCounter(descriptor: MetricDescriptor(label: label, dimensions: dimensions))
+    }
+
+    public func makeCounter(descriptor: MetricDescriptor) -> CounterHandler {
         self.lock.withLock { () -> CounterHandler in
-            if let existing = self._counters[.init(label: label, dimensions: dimensions)] {
+            let key = FullKey(label: descriptor.label, dimensions: descriptor.dimensions)
+            if let existing = self._counters[key] {
                 return existing
             }
-            let item = TestCounter(label: label, dimensions: dimensions)
-            self._counters[.init(label: label, dimensions: dimensions)] = item
+            let item = TestCounter(descriptor: descriptor)
+            self._counters[key] = item
             return item
         }
     }
 
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+        self.makeMeter(descriptor: MetricDescriptor(label: label, dimensions: dimensions))
+    }
+
+    public func makeMeter(descriptor: MetricDescriptor) -> MeterHandler {
         self.lock.withLock { () -> MeterHandler in
-            if let existing = self._meters[.init(label: label, dimensions: dimensions)] {
+            let key = FullKey(label: descriptor.label, dimensions: descriptor.dimensions)
+            if let existing = self._meters[key] {
                 return existing
             }
-            let item = TestMeter(label: label, dimensions: dimensions)
-            self._meters[.init(label: label, dimensions: dimensions)] = item
+            let item = TestMeter(descriptor: descriptor)
+            self._meters[key] = item
             return item
         }
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+        self.makeRecorder(descriptor: MetricDescriptor(label: label, dimensions: dimensions), aggregate: aggregate)
+    }
+
+    public func makeRecorder(descriptor: MetricDescriptor, aggregate: Bool) -> RecorderHandler {
         self.lock.withLock { () -> RecorderHandler in
-            if let existing = self._recorders[.init(label: label, dimensions: dimensions)] {
+            let key = FullKey(label: descriptor.label, dimensions: descriptor.dimensions)
+            if let existing = self._recorders[key] {
                 return existing
             }
-            let item = TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
-            self._recorders[.init(label: label, dimensions: dimensions)] = item
+            let item = TestRecorder(descriptor: descriptor, aggregate: aggregate)
+            self._recorders[key] = item
             return item
         }
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+        self.makeTimer(descriptor: MetricDescriptor(label: label, dimensions: dimensions))
+    }
+
+    public func makeTimer(descriptor: MetricDescriptor) -> TimerHandler {
         self.lock.withLock { () -> TimerHandler in
-            if let existing = self._timers[.init(label: label, dimensions: dimensions)] {
+            let key = FullKey(label: descriptor.label, dimensions: descriptor.dimensions)
+            if let existing = self._timers[key] {
                 return existing
             }
-            let item = TestTimer(label: label, dimensions: dimensions)
-            self._timers[.init(label: label, dimensions: dimensions)] = item
+            let item = TestTimer(descriptor: descriptor)
+            self._timers[key] = item
             return item
         }
     }
@@ -378,8 +398,10 @@ public protocol TestMetric {
 /// A test counter that you can inspect.
 public final class TestCounter: TestMetric, CounterHandler, Equatable {
     public let id: String
-    public let label: String
-    public let dimensions: [(String, String)]
+    /// The descriptor the counter was created from, including its optional description.
+    public let descriptor: MetricDescriptor
+    public var label: String { self.descriptor.label }
+    public var dimensions: [(String, String)] { self.descriptor.dimensions }
 
     public var key: TestMetrics.FullKey {
         TestMetrics.FullKey(label: self.label, dimensions: self.dimensions)
@@ -388,10 +410,9 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
     let lock = NSLock()
     private var _values = [(Date, Int64)]()
 
-    init(label: String, dimensions: [(String, String)]) {
+    init(descriptor: MetricDescriptor) {
         self.id = UUID().uuidString
-        self.label = label
-        self.dimensions = dimensions
+        self.descriptor = descriptor
     }
 
     public func increment(by amount: Int64) {
@@ -434,8 +455,10 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
 /// A test meter that you can inspect.
 public final class TestMeter: TestMetric, MeterHandler, Equatable {
     public let id: String
-    public let label: String
-    public let dimensions: [(String, String)]
+    /// The descriptor the meter was created from, including its optional description.
+    public let descriptor: MetricDescriptor
+    public var label: String { self.descriptor.label }
+    public var dimensions: [(String, String)] { self.descriptor.dimensions }
 
     public var key: TestMetrics.FullKey {
         TestMetrics.FullKey(label: self.label, dimensions: self.dimensions)
@@ -444,10 +467,9 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
     let lock = NSLock()
     private var _values = [(Date, Double)]()
 
-    init(label: String, dimensions: [(String, String)]) {
+    init(descriptor: MetricDescriptor) {
         self.id = UUID().uuidString
-        self.label = label
-        self.dimensions = dimensions
+        self.descriptor = descriptor
     }
 
     public func set(_ value: Int64) {
@@ -537,8 +559,10 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
 /// A test recorder that you can inspect.
 public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     public let id: String
-    public let label: String
-    public let dimensions: [(String, String)]
+    /// The descriptor the recorder was created from, including its optional description.
+    public let descriptor: MetricDescriptor
+    public var label: String { self.descriptor.label }
+    public var dimensions: [(String, String)] { self.descriptor.dimensions }
     public let aggregate: Bool
 
     public var key: TestMetrics.FullKey {
@@ -548,10 +572,9 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
     let lock = NSLock()
     private var _values = [(Date, Double)]()
 
-    init(label: String, dimensions: [(String, String)], aggregate: Bool) {
+    init(descriptor: MetricDescriptor, aggregate: Bool) {
         self.id = UUID().uuidString
-        self.label = label
-        self.dimensions = dimensions
+        self.descriptor = descriptor
         self.aggregate = aggregate
     }
 
@@ -590,9 +613,11 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
 /// A test timer that you can inspect.
 public final class TestTimer: TestMetric, TimerHandler, Equatable {
     public let id: String
-    public let label: String
+    /// The descriptor the timer was created from, including its optional description.
+    public let descriptor: MetricDescriptor
+    public var label: String { self.descriptor.label }
     public var displayUnit: TimeUnit?
-    public let dimensions: [(String, String)]
+    public var dimensions: [(String, String)] { self.descriptor.dimensions }
 
     public var key: TestMetrics.FullKey {
         TestMetrics.FullKey(label: self.label, dimensions: self.dimensions)
@@ -601,11 +626,10 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
     let lock = NSLock()
     private var _values = [(Date, Int64)]()
 
-    init(label: String, dimensions: [(String, String)]) {
+    init(descriptor: MetricDescriptor) {
         self.id = UUID().uuidString
-        self.label = label
+        self.descriptor = descriptor
         self.displayUnit = nil
-        self.dimensions = dimensions
     }
 
     public func preferDisplayUnit(_ unit: TimeUnit) {
