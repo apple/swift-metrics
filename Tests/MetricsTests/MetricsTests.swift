@@ -305,6 +305,15 @@ struct MetricsDimensionQueryTests {
         #expect(metrics.counters(label: "tricky", dimensions: [("a", "b=c")]).count == 1)
     }
 
+    @Test func countersRepeatedDimensionNames() throws {
+        let metrics = TestMetrics()
+        Counter(label: "requests", dimensions: [("tag", "a"), ("tag", "b")], factory: metrics).increment(by: 3)
+        Counter(label: "requests", dimensions: [("tag", "b"), ("tag", "a")], factory: metrics).increment()
+
+        #expect(metrics.counters(label: "requests").count == 1)
+        #expect(try metrics.expectCounter("requests", [("tag", "a"), ("tag", "b")]).values == [3, 1])
+    }
+
     @Test func timersLabelAndDimensions() {
         let metrics = TestMetrics()
         let t1 = Timer(
