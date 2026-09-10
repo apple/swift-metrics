@@ -150,12 +150,21 @@ public final class TestMetrics: MetricsFactory {
 extension TestMetrics.FullKey: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(self.label)
-        hasher.combine(Dictionary(uniqueKeysWithValues: self.dimensions))
+        for (name, value) in Self.sortedDimensions(self.dimensions) {
+            hasher.combine(name)
+            hasher.combine(value)
+        }
     }
 
     public static func == (lhs: TestMetrics.FullKey, rhs: TestMetrics.FullKey) -> Bool {
         lhs.label == rhs.label
-            && Dictionary(uniqueKeysWithValues: lhs.dimensions) == Dictionary(uniqueKeysWithValues: rhs.dimensions)
+            && Self.sortedDimensions(lhs.dimensions).elementsEqual(Self.sortedDimensions(rhs.dimensions)) {
+                $0.0 == $1.0 && $0.1 == $1.1
+            }
+    }
+
+    private static func sortedDimensions(_ dimensions: [(String, String)]) -> [(String, String)] {
+        dimensions.sorted { $0.0 == $1.0 ? $0.1 < $1.1 : $0.0 < $1.0 }
     }
 }
 
