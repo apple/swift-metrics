@@ -11,17 +11,20 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "CoreMetrics"
+            name: "CoreMetrics",
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
             name: "Metrics",
-            dependencies: ["CoreMetrics"]
+            dependencies: ["CoreMetrics"],
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
             name: "MetricsTestKit",
             dependencies: [
                 "Metrics"
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         .testTarget(
             name: "MetricsTests",
