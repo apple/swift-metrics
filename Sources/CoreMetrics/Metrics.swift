@@ -1097,6 +1097,58 @@ public protocol MetricsFactory: _SwiftMetricsSendableProtocol {
     ///   - dimensions: The dimensions for the `TimerHandler`, as `(name, value)` tuples.
     func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler
 
+    /// Create a backing counter handler from a descriptor.
+    ///
+    /// A default implementation is provided which forwards the descriptor's label and dimensions to
+    /// ``makeCounter(label:dimensions:)``, discarding the description. Backends that can surface
+    /// metric descriptions (for example as a Prometheus `HELP` line or an OpenTelemetry instrument
+    /// description) should implement this method.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `CounterHandler`.
+    func makeCounter(descriptor: MetricDescriptor) -> CounterHandler
+
+    /// Create a backing floating-point counter handler from a descriptor.
+    ///
+    /// A default implementation is provided which forwards the descriptor's label and dimensions to
+    /// ``makeFloatingPointCounter(label:dimensions:)``, discarding the description. Backends that can
+    /// surface metric descriptions should implement this method.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `FloatingPointCounterHandler`.
+    func makeFloatingPointCounter(descriptor: MetricDescriptor) -> FloatingPointCounterHandler
+
+    /// Create a backing meter handler from a descriptor.
+    ///
+    /// A default implementation is provided which forwards the descriptor's label and dimensions to
+    /// ``makeMeter(label:dimensions:)``, discarding the description. Backends that can surface
+    /// metric descriptions should implement this method.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `MeterHandler`.
+    func makeMeter(descriptor: MetricDescriptor) -> MeterHandler
+
+    /// Create a backing recorder handler from a descriptor.
+    ///
+    /// A default implementation is provided which forwards the descriptor's label and dimensions to
+    /// ``makeRecorder(label:dimensions:aggregate:)``, discarding the description. Backends that can
+    /// surface metric descriptions should implement this method.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `RecorderHandler`.
+    ///   - aggregate: Whether the returned handler should summarize recorded values as a distribution.
+    func makeRecorder(descriptor: MetricDescriptor, aggregate: Bool) -> RecorderHandler
+
+    /// Create a backing timer handler from a descriptor.
+    ///
+    /// A default implementation is provided which forwards the descriptor's label and dimensions to
+    /// ``makeTimer(label:dimensions:)``, discarding the description. Backends that can surface
+    /// metric descriptions should implement this method.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `TimerHandler`.
+    func makeTimer(descriptor: MetricDescriptor) -> TimerHandler
+
     /// Invoked when the corresponding counter's `destroy()` function is invoked.
     ///
     /// Upon receiving this signal the factory may eagerly release any resources related to this counter.
@@ -1543,6 +1595,42 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         MuxTimer(factories: self.factories, label: label, dimensions: dimensions)
     }
 
+    /// Creates a new counter handler, forwarding the descriptor to all underlying factories.
+    /// - Parameters:
+    ///   - descriptor: The descriptor for the `CounterHandler`.
+    public func makeCounter(descriptor: MetricDescriptor) -> CounterHandler {
+        MuxCounter(factories: self.factories, descriptor: descriptor)
+    }
+
+    /// Creates a new floating point counter handler, forwarding the descriptor to all underlying factories.
+    /// - Parameters:
+    ///   - descriptor: The descriptor for the `FloatingPointCounterHandler`.
+    public func makeFloatingPointCounter(descriptor: MetricDescriptor) -> FloatingPointCounterHandler {
+        MuxFloatingPointCounter(factories: self.factories, descriptor: descriptor)
+    }
+
+    /// Creates a new meter handler, forwarding the descriptor to all underlying factories.
+    /// - Parameters:
+    ///   - descriptor: The descriptor for the `MeterHandler`.
+    public func makeMeter(descriptor: MetricDescriptor) -> MeterHandler {
+        MuxMeter(factories: self.factories, descriptor: descriptor)
+    }
+
+    /// Creates a new recorder handler, forwarding the descriptor to all underlying factories.
+    /// - Parameters:
+    ///   - descriptor: The descriptor for the `RecorderHandler`.
+    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
+    public func makeRecorder(descriptor: MetricDescriptor, aggregate: Bool) -> RecorderHandler {
+        MuxRecorder(factories: self.factories, descriptor: descriptor, aggregate: aggregate)
+    }
+
+    /// Creates a new timer handler, forwarding the descriptor to all underlying factories.
+    /// - Parameters:
+    ///   - descriptor: The descriptor for the `TimerHandler`.
+    public func makeTimer(descriptor: MetricDescriptor) -> TimerHandler {
+        MuxTimer(factories: self.factories, descriptor: descriptor)
+    }
+
     /// Signal the underlying metrics library that this counter will never be updated again.
     /// - Parameter handler: The counter handler to signal.
     public func destroyCounter(_ handler: CounterHandler) {
@@ -1594,6 +1682,10 @@ public final class MultiplexMetricsHandler: MetricsFactory {
             self.counters = factories.map { $0.makeCounter(label: label, dimensions: dimensions) }
         }
 
+        public init(factories: [MetricsFactory], descriptor: MetricDescriptor) {
+            self.counters = factories.map { $0.makeCounter(descriptor: descriptor) }
+        }
+
         func increment(by amount: Int64) {
             for counter in self.counters { counter.increment(by: amount) }
         }
@@ -1609,6 +1701,10 @@ public final class MultiplexMetricsHandler: MetricsFactory {
             self.counters = factories.map { $0.makeFloatingPointCounter(label: label, dimensions: dimensions) }
         }
 
+        public init(factories: [MetricsFactory], descriptor: MetricDescriptor) {
+            self.counters = factories.map { $0.makeFloatingPointCounter(descriptor: descriptor) }
+        }
+
         func increment(by amount: Double) {
             for counter in self.counters { counter.increment(by: amount) }
         }
@@ -1622,6 +1718,10 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         let meters: [MeterHandler]
         public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)]) {
             self.meters = factories.map { $0.makeMeter(label: label, dimensions: dimensions) }
+        }
+
+        public init(factories: [MetricsFactory], descriptor: MetricDescriptor) {
+            self.meters = factories.map { $0.makeMeter(descriptor: descriptor) }
         }
 
         func set(_ value: Int64) {
@@ -1649,6 +1749,10 @@ public final class MultiplexMetricsHandler: MetricsFactory {
             }
         }
 
+        public init(factories: [MetricsFactory], descriptor: MetricDescriptor, aggregate: Bool) {
+            self.recorders = factories.map { $0.makeRecorder(descriptor: descriptor, aggregate: aggregate) }
+        }
+
         func record(_ value: Int64) {
             for recorder in self.recorders { recorder.record(value) }
         }
@@ -1662,6 +1766,10 @@ public final class MultiplexMetricsHandler: MetricsFactory {
         let timers: [TimerHandler]
         public init(factories: [MetricsFactory], label: String, dimensions: [(String, String)]) {
             self.timers = factories.map { $0.makeTimer(label: label, dimensions: dimensions) }
+        }
+
+        public init(factories: [MetricsFactory], descriptor: MetricDescriptor) {
+            self.timers = factories.map { $0.makeTimer(descriptor: descriptor) }
         }
 
         func recordNanoseconds(_ duration: Int64) {
