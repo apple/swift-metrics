@@ -132,7 +132,6 @@ public func withMetricsFactory<Result, Failure: Error>(
 ///   - factory: The metrics factory to use for metric creation within the closure.
 ///   - operation: The async closure to execute with the factory bound.
 /// - Returns: The value returned by the closure.
-#if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
 @inlinable
 public nonisolated(nonsending) func withMetricsFactory<Result, Failure: Error>(
@@ -148,20 +147,3 @@ public nonisolated(nonsending) func withMetricsFactory<Result, Failure: Error>(
         throw error as! Failure
     }
 }
-#else
-@available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
-@inlinable
-public func withMetricsFactory<Result, Failure: Error>(
-    _ factory: MetricsFactory,
-    _ operation: () async throws(Failure) -> Result
-) async throws(Failure) -> Result {
-    do {
-        return try await MetricsSystem.withTaskLocalFactory(factory, operation: operation)
-    } catch {
-        // `withTaskLocalFactory` uses `rethrows`, the underlying `$_taskLocalFactory.withValue` uses `throws`,
-        // so the compiler cannot verify the error type at the boundary. However, the only errors it can propagate
-        // are those thrown by `operation`, which is declared `throws(Failure)`.
-        throw error as! Failure
-    }
-}
-#endif
