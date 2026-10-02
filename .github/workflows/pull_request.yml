@@ -13,7 +13,7 @@ jobs:
     uses: swiftlang/github-workflows/.github/workflows/soundness.yml@0.0.15
     with:
       license_header_check_project_name: "Swift Metrics API"
-      docs_check_container_image: "swift:6.1-noble"
+      docs_check_container_image: "swift:6.2-noble"
 
   unit-tests:
     name: Unit tests
@@ -33,7 +33,7 @@ jobs:
     name: Check cmake lists
     uses: apple/swift-nio/.github/workflows/cmake_tests.yml@main
     with:
-      image: "swift:6.1-noble"
+      image: "swift:6.2-noble"
       update_cmake_lists_config: >-
         {
           "targets": [
