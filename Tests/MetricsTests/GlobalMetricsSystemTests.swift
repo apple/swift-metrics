@@ -109,7 +109,9 @@ struct GlobalMetricsSystemTests {
         }
         let timer = try metrics.expectTimer(name)
         #expect(timer.values.count == 1, "expected number of entries to match")
-        #expect(timer.values[0] > Int64(delay * 1_000_000_000), "expected delay to match")
+        // The clock on some platforms has a coarse resolution. A measured interval can be shorter than the sleep.
+        let tolerance = 0.025
+        #expect(timer.values[0] > Int64((delay - tolerance) * 1_000_000_000), "expected delay to match")
     }
 
     // MARK: - Task-local factory with global fallback
