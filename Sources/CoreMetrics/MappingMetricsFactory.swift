@@ -138,6 +138,56 @@ extension MappingMetricsFactory: MetricsFactory {
         return self.upstream.makeTimer(label: newLabel, dimensions: newDimensions)
     }
 
+    /// Create a backing counter handler with transformed label and dimensions, preserving the description.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `CounterHandler`.
+    public func makeCounter(descriptor: MetricDescriptor) -> CounterHandler {
+        self.upstream.makeCounter(descriptor: self.transform(descriptor))
+    }
+
+    /// Create a backing floating-point counter handler with transformed label and dimensions, preserving the description.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `FloatingPointCounterHandler`.
+    public func makeFloatingPointCounter(descriptor: MetricDescriptor) -> FloatingPointCounterHandler {
+        self.upstream.makeFloatingPointCounter(descriptor: self.transform(descriptor))
+    }
+
+    /// Create a backing meter handler with transformed label and dimensions, preserving the description.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `MeterHandler`.
+    public func makeMeter(descriptor: MetricDescriptor) -> MeterHandler {
+        self.upstream.makeMeter(descriptor: self.transform(descriptor))
+    }
+
+    /// Create a backing recorder handler with transformed label and dimensions, preserving the description.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `RecorderHandler`.
+    ///   - aggregate: A Boolean value that indicates whether to aggregate values.
+    public func makeRecorder(descriptor: MetricDescriptor, aggregate: Bool) -> RecorderHandler {
+        self.upstream.makeRecorder(descriptor: self.transform(descriptor), aggregate: aggregate)
+    }
+
+    /// Create a backing timer handler with transformed label and dimensions, preserving the description.
+    ///
+    /// - parameters:
+    ///   - descriptor: The descriptor for the `TimerHandler`.
+    public func makeTimer(descriptor: MetricDescriptor) -> TimerHandler {
+        self.upstream.makeTimer(descriptor: self.transform(descriptor))
+    }
+
+    /// Applies the label and dimensions transformation to a descriptor, preserving all other metadata.
+    private func transform(_ descriptor: MetricDescriptor) -> MetricDescriptor {
+        let (newLabel, newDimensions) = self.transform(descriptor.label, descriptor.dimensions)
+        var newDescriptor = descriptor
+        newDescriptor.label = newLabel
+        newDescriptor.dimensions = newDimensions
+        return newDescriptor
+    }
+
     /// Invoked when the corresponding counter's `destroy()` function is invoked.
     ///
     /// - parameters:

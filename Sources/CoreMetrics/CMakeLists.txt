@@ -15,6 +15,7 @@
 add_library(CoreMetrics
   "Locks.swift"
   "MappingMetricsFactory.swift"
+  "MetricDescriptor.swift"
   "Metrics.swift"
   "WithMetricsFactory.swift"
 )
