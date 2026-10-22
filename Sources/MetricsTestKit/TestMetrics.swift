@@ -26,8 +26,13 @@
 //===----------------------------------------------------------------------===//
 
 import CoreMetrics
-import Foundation
 import Metrics
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// A metrics factory which records all reported values in memory and lets you inspect them programmatically.
 ///
@@ -40,7 +45,7 @@ import Metrics
 /// Created handlers store all reported values until they are explicitly destroyed via the corresponding
 /// `destroy*` method, or cleared in bulk via ``reset()``.
 public final class TestMetrics: MetricsFactory {
-    private let lock = NSLock()
+    private let lock = Lock()
 
     public typealias Label = String
     public typealias Dimensions = String
@@ -116,7 +121,7 @@ public final class TestMetrics: MetricsFactory {
 
     public func destroyCounter(_ handler: CounterHandler) {
         if let testCounter = handler as? TestCounter {
-            self.lock.withLock {
+            self.lock.withLockVoid {
                 self._counters.removeValue(forKey: testCounter.key)
             }
         }
@@ -124,7 +129,7 @@ public final class TestMetrics: MetricsFactory {
 
     public func destroyMeter(_ handler: MeterHandler) {
         if let testMeter = handler as? TestMeter {
-            self.lock.withLock { () in
+            self.lock.withLockVoid { () in
                 self._meters.removeValue(forKey: testMeter.key)
             }
         }
@@ -132,7 +137,7 @@ public final class TestMetrics: MetricsFactory {
 
     public func destroyRecorder(_ handler: RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
-            self.lock.withLock {
+            self.lock.withLockVoid {
                 self._recorders.removeValue(forKey: testRecorder.key)
             }
         }
@@ -140,7 +145,7 @@ public final class TestMetrics: MetricsFactory {
 
     public func destroyTimer(_ handler: TimerHandler) {
         if let testTimer = handler as? TestTimer {
-            self.lock.withLock {
+            self.lock.withLockVoid {
                 self._timers.removeValue(forKey: testTimer.key)
             }
         }
@@ -394,7 +399,7 @@ public final class TestCounter: TestMetric, CounterHandler, Equatable {
         TestMetrics.FullKey(label: self.label, dimensions: self.dimensions)
     }
 
-    let lock = NSLock()
+    let lock = Lock()
     private var _values = [(Date, Int64)]()
 
     init(label: String, dimensions: [(String, String)]) {
@@ -450,7 +455,7 @@ public final class TestMeter: TestMetric, MeterHandler, Equatable {
         TestMetrics.FullKey(label: self.label, dimensions: self.dimensions)
     }
 
-    let lock = NSLock()
+    let lock = Lock()
     private var _values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)]) {
@@ -554,7 +559,7 @@ public final class TestRecorder: TestMetric, RecorderHandler, Equatable {
         TestMetrics.FullKey(label: self.label, dimensions: self.dimensions)
     }
 
-    let lock = NSLock()
+    let lock = Lock()
     private var _values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)], aggregate: Bool) {
@@ -607,7 +612,7 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
         TestMetrics.FullKey(label: self.label, dimensions: self.dimensions)
     }
 
-    let lock = NSLock()
+    let lock = Lock()
     private var _values = [(Date, Int64)]()
 
     init(label: String, dimensions: [(String, String)]) {
@@ -655,17 +660,6 @@ public final class TestTimer: TestMetric, TimerHandler, Equatable {
 
     public static func == (lhs: TestTimer, rhs: TestTimer) -> Bool {
         lhs.id == rhs.id
-    }
-}
-
-extension NSLock {
-    @discardableResult
-    fileprivate func withLock<T>(_ body: () -> T) -> T {
-        self.lock()
-        defer {
-            self.unlock()
-        }
-        return body()
     }
 }
 

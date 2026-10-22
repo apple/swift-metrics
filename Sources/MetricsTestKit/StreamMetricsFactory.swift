@@ -13,7 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import CoreMetrics
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A `MetricsFactory` that writes one line per metric mutation to a `TextOutputStream`.
 ///
@@ -102,7 +106,7 @@ public struct StreamMetricsFactory: MetricsFactory, Sendable {
 /// `Sendable` value. Holding the stream in a class lets us mutate in place under a lock rather
 /// than working against copies.
 private final class Sink: @unchecked Sendable {
-    private let lock = NSLock()
+    private let lock = Lock()
     private var stream: any (TextOutputStream & Sendable)
 
     init(stream: any (TextOutputStream & Sendable)) {
