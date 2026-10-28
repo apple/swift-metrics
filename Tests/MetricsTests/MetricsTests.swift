@@ -384,8 +384,6 @@ struct MetricsDimensionQueryTests {
 
     @Test func counterTotalSumsAcrossDimensions() {
         let metrics = TestMetrics()
-        MetricsSystem.bootstrapInternal(metrics)
-        defer { MetricsSystem.bootstrapInternal(NOOPMetricsHandler.instance) }
 
         Counter(label: "http_requests", dimensions: [("method", "GET"), ("status", "200")], factory: metrics).increment(
             by: 10
