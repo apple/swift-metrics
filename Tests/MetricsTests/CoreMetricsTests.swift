@@ -330,6 +330,23 @@ struct MetricsTests {
         #expect(testTimer.values[3] == Int64.max, "expected value to match")
     }
 
+    #if !((os(macOS) || targetEnvironment(macCatalyst)) && arch(x86_64))
+    @available(macOS 11, iOS 14, tvOS 14, watchOS 7, *)
+    @Test func timerHandlesFloat16Durations() throws {
+        // create our test metrics, avoid bootstrapping global MetricsSystem
+        let metrics = TestMetrics()
+        // run the test
+        let timer = Timer(label: "test-timer", factory: metrics)
+        let testTimer = try metrics.expectTimer(timer)
+        // the scaled value does not fit in Float16, the conversion must not overflow
+        timer.recordSeconds(Float16(0))
+        timer.recordSeconds(Float16(0.5))
+        timer.recordMilliseconds(Float16(1.5))
+        timer.recordMicroseconds(Float16(100))
+        #expect(testTimer.values == [0, 500_000_000, 1_500_000, 100_000], "expected values to match")
+    }
+    #endif
+
     @Test func gauge() throws {
         // create our test metrics, avoid bootstrapping global MetricsSystem
         let metrics = TestMetrics()
