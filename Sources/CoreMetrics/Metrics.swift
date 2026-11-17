@@ -730,7 +730,8 @@ public final class Timer {
     ///   - duration: Duration to record.
     @inlinable
     public func recordMicroseconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
-        self.recordNanoseconds(Double(duration * 1000) < Double(Int64.max) ? Int64(duration * 1000) : Int64.max)
+        let nanoseconds = Double(duration) * 1000
+        self.recordNanoseconds(nanoseconds < Double(Int64.max) ? Int64(nanoseconds) : Int64.max)
     }
 
     /// Record a duration in milliseconds.
@@ -755,9 +756,8 @@ public final class Timer {
     ///   - duration: Duration to record.
     @inlinable
     public func recordMilliseconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
-        self.recordNanoseconds(
-            Double(duration * 1_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000) : Int64.max
-        )
+        let nanoseconds = Double(duration) * 1_000_000
+        self.recordNanoseconds(nanoseconds < Double(Int64.max) ? Int64(nanoseconds) : Int64.max)
     }
 
     /// Record a duration in seconds.
@@ -782,9 +782,8 @@ public final class Timer {
     ///   - duration: Duration to record.
     @inlinable
     public func recordSeconds<DataType: BinaryFloatingPoint>(_ duration: DataType) {
-        self.recordNanoseconds(
-            Double(duration * 1_000_000_000) < Double(Int64.max) ? Int64(duration * 1_000_000_000) : Int64.max
-        )
+        let nanoseconds = Double(duration) * 1_000_000_000
+        self.recordNanoseconds(nanoseconds < Double(Int64.max) ? Int64(nanoseconds) : Int64.max)
     }
 }
 
